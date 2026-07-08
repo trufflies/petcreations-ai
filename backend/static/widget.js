@@ -1,8 +1,8 @@
 /* Pet Creations AI — embeddable storefront widget.
  * <div id="pcai-root"></div>
  * <script src="https://YOUR-BACKEND/app/widget.js"></script>
- * Flow: upload + email -> style -> AI preview -> free AI tweaks -> choose frame
- *       (AI mounts the portrait in it) -> optional free artist touch-up -> add to cart.
+ * Flow: upload + email -> style -> AI preview -> free AI tweaks -> choose a REAL frame
+ *       (portrait overlaid into the actual frame, instant, no AI) -> free artist touch-up -> add to cart.
  */
 (function () {
   var script = document.currentScript;
@@ -18,6 +18,14 @@
     return "";
   }
   var variantId = detectVariant();
+
+  // Real physical frames — portrait is overlaid into each frame's artwork window (inset % below).
+  var FRAMES = [
+    { key: "antique_gold",   label: "Antique Gold",        l: 7.5, t: 8, w: 85, h: 84 },
+    { key: "antique_silver", label: "Antique Silver",      l: 8,   t: 8, w: 84, h: 84 },
+    { key: "baroque_gold",   label: "Baroque Gold",        l: 9.5, t: 9, w: 81, h: 82 }
+  ];
+  FRAMES.forEach(function (f) { f.img = API + "/app/frames/" + f.key + ".webp"; });
 
   root.innerHTML = '' +
     '<style>' +
@@ -38,12 +46,20 @@
     '#pcai .pc-style.sel{border-color:var(--pc-acc);box-shadow:0 0 0 3px rgba(122,92,62,.12)}' +
     '#pcai .pc-style b{display:block;font-size:15px}' +
     '#pcai .pc-style span{font-size:11px;color:var(--pc-mut)}' +
+    '#pcai .pc-frames{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}' +
+    '#pcai .pc-frame{border:2px solid transparent;border-radius:9px;padding:3px;cursor:pointer;text-align:center}' +
+    '#pcai .pc-frame .pc-fimg{border-radius:5px}' +
+    '#pcai .pc-frame span{font-size:11px;color:var(--pc-mut);display:block;margin-top:3px}' +
+    '#pcai .pc-frame.sel{border-color:var(--pc-acc);box-shadow:0 0 0 3px rgba(122,92,62,.12)}' +
     '#pcai .pc-btn{background:var(--pc-acc);color:#fff;border:0;border-radius:9px;padding:12px 20px;font-size:15px;font-weight:600;cursor:pointer}' +
     '#pcai .pc-btn[disabled]{opacity:.45;cursor:not-allowed}' +
     '#pcai .pc-btn.ghost{background:#fff;color:var(--pc-acc);border:1.5px solid var(--pc-line)}' +
     '#pcai .pc-center{text-align:center}' +
     '#pcai .pc-stage{min-height:200px;display:flex;align-items:center;justify-content:center;text-align:center}' +
-    '#pcai .pc-stage img{max-width:100%;border-radius:12px;box-shadow:0 6px 22px rgba(0,0,0,.18)}' +
+    '#pcai .pc-stage>img{max-width:100%;border-radius:12px;box-shadow:0 6px 22px rgba(0,0,0,.18)}' +
+    '#pcai .pc-framed{position:relative;display:inline-block;max-width:100%;line-height:0}' +
+    '#pcai .pc-framed .pc-fimg{display:block;width:100%}' +
+    '#pcai .pc-framed .pc-fart{position:absolute;object-fit:cover}' +
     '#pcai .pc-spin{width:38px;height:38px;border:4px solid var(--pc-line);border-top-color:var(--pc-acc);border-radius:50%;animation:pcspin 1s linear infinite;margin:0 auto 12px}' +
     '@keyframes pcspin{to{transform:rotate(360deg)}}' +
     '#pcai .pc-retry{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px}' +
@@ -73,12 +89,8 @@
             '<button class="pc-btn ghost" id="pc-retry">Recolor / fix</button>' +
           '</div>' +
           '<div class="pc-note" id="pc-left"></div>' +
-          '<div class="pc-sub">3 &middot; Choose your frame</div>' +
-          '<div class="pc-styles" id="pc-frames">' +
-            '<div class="pc-style pc-frame" data-f="antique_gold"><b>Antique Gold</b></div>' +
-            '<div class="pc-style pc-frame" data-f="antique_silver"><b>Antique Silver</b></div>' +
-            '<div class="pc-style pc-frame" data-f="gold_baroque"><b>Gold Baroque</b><span>Wide</span></div>' +
-          '</div>' +
+          '<div class="pc-sub">3 &middot; See it in your frame</div>' +
+          '<div class="pc-frames" id="pc-frames"></div>' +
           '<label class="pc-artist"><input type="checkbox" id="pc-artist-check"><span><b>Have a real artist perfect it</b> &mdash; free. Our artist hand-refines your portrait before we print it.</span></label>' +
           '<textarea class="pc-field" id="pc-artist-notes" placeholder="Optional: tell our artist what to adjust — e.g. brighten the eyes, remove the leash, warmer background" style="display:none"></textarea>' +
           '<button class="pc-btn" id="pc-add" style="width:100%;justify-content:center;margin-top:14px">Add to cart →</button>' +
@@ -90,14 +102,14 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var file = null, style = null, currentId = null, currentPreview = null, styleLabel = "";
-  var selectedFrame = null, selectedFrameLabel = "", framedPreview = null;
+  var selectedFrame = null, selectedFrameLabel = "";
   var LOADING = ["Studying your pet’s features…", "Preparing the canvas…", "Mixing the paints…", "Applying brushstrokes…", "Adding the finishing details…"];
   var timer = null;
 
   function validEmail(v) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((v || "").trim()); }
   function refresh() { $("pc-go").disabled = !(file && style && validEmail($("pc-email").value)); }
   function clearFrames() {
-    selectedFrame = null; selectedFrameLabel = ""; framedPreview = null;
+    selectedFrame = null; selectedFrameLabel = "";
     Array.prototype.forEach.call(document.querySelectorAll("#pcai .pc-frame"), function (b) { b.classList.remove("sel"); });
   }
 
@@ -126,10 +138,19 @@
       return r.json();
     });
   }
+  function showArt() { $("pc-stage").innerHTML = '<img src="' + currentPreview + "?t=" + Date.now() + '">'; }
+  function renderFrameThumbs() {
+    $("pc-frames").innerHTML = FRAMES.map(function (f) {
+      return '<div class="pc-frame' + (selectedFrame === f.key ? ' sel' : '') + '" data-key="' + f.key + '">' +
+        '<div class="pc-framed"><img class="pc-fimg" src="' + f.img + '"><img class="pc-fart" src="' + currentPreview + '" style="left:' + f.l + '%;top:' + f.t + '%;width:' + f.w + '%;height:' + f.h + '%"></div>' +
+        '<span>' + f.label + '</span></div>';
+    }).join('');
+  }
   function show(d) {
     currentId = d.id; currentPreview = API + d.preview_url;
     clearFrames();
-    $("pc-stage").innerHTML = '<img src="' + currentPreview + "?t=" + Date.now() + '">';
+    showArt();
+    renderFrameThumbs();
     $("pc-actions").style.display = "block";
     var left = d.retries_left;
     if (left > 0) { $("pc-left").textContent = left + " free AI tweak" + (left === 1 ? "" : "s") + " left"; $("pc-retry").disabled = false; }
@@ -148,21 +169,18 @@
     post("/retry", fd).then(function (d) { show(d); $("pc-instruction").value = ""; }).catch(function (e) { $("pc-stage").innerHTML = ""; $("pc-err").textContent = e.message; }).then(stop, stop);
   });
 
+  // Choose a real frame — overlay the portrait into the actual frame window (instant, no AI).
   $("pc-frames").addEventListener("click", function (e) {
-    var c = e.target.closest(".pc-frame"); if (!c || !currentId) return;
-    var fk = c.getAttribute("data-f");
-    $("pc-err").textContent = "";
-    $("pc-stage").innerHTML = '<div><div class="pc-spin"></div><div class="pc-note">Placing your portrait in the frame…</div></div>';
-    var fd = new FormData(); fd.append("id", currentId); fd.append("frame", fk);
-    post("/frame", fd).then(function (d) {
-      selectedFrame = fk; selectedFrameLabel = d.frame_label; framedPreview = API + d.framed_preview_url;
-      $("pc-stage").innerHTML = '<img src="' + framedPreview + "?t=" + Date.now() + '">';
-      Array.prototype.forEach.call(document.querySelectorAll("#pcai .pc-frame"), function (b) { b.classList.remove("sel"); });
-      c.classList.add("sel");
-    }).catch(function (e2) {
-      $("pc-stage").innerHTML = '<img src="' + currentPreview + "?t=" + Date.now() + '">';
-      $("pc-err").textContent = e2.message;
-    });
+    var c = e.target.closest(".pc-frame"); if (!c || !currentPreview) return;
+    var key = c.getAttribute("data-key");
+    var f = FRAMES.filter(function (x) { return x.key === key; })[0];
+    if (selectedFrame === key) { selectedFrame = null; selectedFrameLabel = ""; c.classList.remove("sel"); showArt(); return; }
+    selectedFrame = f.key; selectedFrameLabel = f.label;
+    $("pc-stage").innerHTML =
+      '<div class="pc-framed"><img class="pc-fimg" src="' + f.img + '">' +
+      '<img class="pc-fart" src="' + currentPreview + "?t=" + Date.now() + '" style="left:' + f.l + '%;top:' + f.t + '%;width:' + f.w + '%;height:' + f.h + '%"></div>';
+    Array.prototype.forEach.call(document.querySelectorAll("#pcai .pc-frame"), function (b) { b.classList.remove("sel"); });
+    c.classList.add("sel");
   });
 
   $("pc-artist-check").addEventListener("change", function () {
@@ -172,7 +190,7 @@
   $("pc-add").addEventListener("click", function () {
     if (!variantId) { alert("This block isn’t on a product page yet (no variant). Add it to a product template."); return; }
     var props = { "Style": styleLabel, "_ai_job_id": currentId, "_ai_preview": currentPreview };
-    if (selectedFrame) { props["Frame"] = selectedFrameLabel; props["_ai_framed_preview"] = framedPreview; }
+    if (selectedFrame) { props["Frame"] = selectedFrameLabel; }
     if ($("pc-artist-check").checked) {
       props["Artist touch-up"] = "Yes — hand-refine before printing";
       var notes = $("pc-artist-notes").value.trim();
