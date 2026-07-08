@@ -29,7 +29,7 @@
 
   root.innerHTML = '' +
     '<style>' +
-    '#pcai-root{--pc-ink:#2a2622;--pc-mut:#8a8178;--pc-line:#e7e1d8;--pc-acc:#7a5c3e}' +
+    '#pcai-root{--pc-ink:#343434;--pc-mut:#8a7d68;--pc-line:#ded2bd;--pc-acc:#5e1622;--pc-serif:"Playfair Display",Georgia,serif}' +
     '#pcai-root *{box-sizing:border-box}' +
     '#pcai{max-width:720px;margin:24px auto;color:var(--pc-ink)}' +
     '#pcai .pc-card{border:1px solid var(--pc-line);border-radius:14px;padding:18px;margin:14px 0;background:#fff}' +
@@ -43,14 +43,14 @@
     '#pcai textarea.pc-field{min-height:62px;resize:vertical}' +
     '#pcai .pc-styles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}' +
     '#pcai .pc-style{border:1.5px solid var(--pc-line);border-radius:10px;padding:14px;text-align:center;cursor:pointer}' +
-    '#pcai .pc-style.sel{border-color:var(--pc-acc);box-shadow:0 0 0 3px rgba(122,92,62,.12)}' +
-    '#pcai .pc-style b{display:block;font-size:15px}' +
+    '#pcai .pc-style.sel{border-color:var(--pc-acc);box-shadow:0 0 0 3px rgba(94,22,34,.13)}' +
+    '#pcai .pc-style b{display:block;font-size:16px;font-family:var(--pc-serif)}' +
     '#pcai .pc-style span{font-size:11px;color:var(--pc-mut)}' +
     '#pcai .pc-frames{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}' +
     '#pcai .pc-frame{border:2px solid transparent;border-radius:9px;padding:3px;cursor:pointer;text-align:center}' +
     '#pcai .pc-frame .pc-fimg{border-radius:5px}' +
     '#pcai .pc-frame span{font-size:11px;color:var(--pc-mut);display:block;margin-top:3px}' +
-    '#pcai .pc-frame.sel{border-color:var(--pc-acc);box-shadow:0 0 0 3px rgba(122,92,62,.12)}' +
+    '#pcai .pc-frame.sel{border-color:var(--pc-acc);box-shadow:0 0 0 3px rgba(94,22,34,.13)}' +
     '#pcai .pc-btn{background:var(--pc-acc);color:#fff;border:0;border-radius:9px;padding:12px 20px;font-size:15px;font-weight:600;cursor:pointer}' +
     '#pcai .pc-btn[disabled]{opacity:.45;cursor:not-allowed}' +
     '#pcai .pc-btn.ghost{background:#fff;color:var(--pc-acc);border:1.5px solid var(--pc-line)}' +
