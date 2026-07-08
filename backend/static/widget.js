@@ -22,9 +22,6 @@
     { code: "oil",        label: "Oil Painting",  sub: "Museum oil" },
     { code: "heritage",   label: "Heritage",      sub: "Regal heirloom" }
   ];
-  var PETS = [
-    { code: "1", label: "1 pet" }, { code: "2", label: "2 pets" }, { code: "3", label: "3 pets" }
-  ];
   var SIZES = [
     { code: "S", label: "24 × 18\"" }, { code: "M", label: "32 × 24\"" }, { code: "L", label: "40 × 30\"" }
   ];
@@ -154,10 +151,9 @@
         "</div>" +
 
         "<div class='pc-opt'><div class='pc-label'>1 &middot; Choose your style</div><div class='pc-grid3' id='pc-styles'></div></div>" +
-        "<div class='pc-opt'><div class='pc-label'>2 &middot; How many pets / people</div><div class='pc-grid3' id='pc-pets'></div></div>" +
-        "<div class='pc-opt'><div class='pc-label'>3 &middot; Choose your size <span class='pc-guidelink' id='pc-guidelink'>📐 Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
-        "<div class='pc-opt'><div class='pc-label'>4 &middot; Choose your frame</div><div class='pc-grid3 pc-frameopts' id='pc-frames'></div></div>" +
-        "<div class='pc-opt'><div class='pc-label'>5 &middot; Your pet’s photo</div>" +
+        "<div class='pc-opt'><div class='pc-label'>2 &middot; Choose your size <span class='pc-guidelink' id='pc-guidelink'>📐 Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
+        "<div class='pc-opt'><div class='pc-label'>3 &middot; Choose your frame</div><div class='pc-grid3 pc-frameopts' id='pc-frames'></div></div>" +
+        "<div class='pc-opt'><div class='pc-label'>4 &middot; Your pet’s photo</div>" +
           "<label class='pc-drop' id='pc-drop'><input type='file' id='pc-file' accept='image/*'>" +
           "<div id='pc-dropin'><div class='pc-dropicon'>🐾</div><div class='pc-tiny'>Click to upload a clear, well-lit photo</div></div></label>" +
           "<input class='pc-field' id='pc-email' type='email' placeholder='Your email (so we can send your previews)'>" +
@@ -200,7 +196,6 @@
   function money(c) { return "$" + (c / 100).toFixed(2); }
   function curVar() { return VAR[sel.pets + sel.size + sel.frame]; }
   function priceOf(p, s, f) { return VAR[p + s + f][1]; }
-  function petDelta(c) { return priceOf(c, sel.size, sel.frame) - priceOf("1", sel.size, sel.frame); }
   function sizeDelta(c) { return priceOf(sel.pets, c, sel.frame) - priceOf(sel.pets, "S", sel.frame); }
   function frameDelta(c) { return priceOf(sel.pets, sel.size, c) - priceOf(sel.pets, sel.size, "G"); }
   function frameByCode(c) { return FRAMES.filter(function (f) { return f.code === c; })[0]; }
@@ -219,11 +214,6 @@
       return "<div class='pc-oc" + (sel.style === s.code ? " sel" : "") + "' data-style='" + s.code + "'><b class='pc-serifname'>" + s.label + "</b><small>" + s.sub + "</small></div>";
     }).join("");
   }
-  function renderPets() {
-    $("pc-pets").innerHTML = PETS.map(function (p) {
-      return "<div class='pc-oc" + (sel.pets === p.code ? " sel" : "") + "' data-pets='" + p.code + "'><b>" + p.label + "</b>" + up(petDelta(p.code)) + "</div>";
-    }).join("");
-  }
   function renderSizes() {
     $("pc-sizes").innerHTML = SIZES.map(function (s) {
       return "<div class='pc-oc" + (sel.size === s.code ? " sel" : "") + "' data-size='" + s.code + "'><b>" + s.label + "</b>" + up(sizeDelta(s.code), "Standard") + "</div>";
@@ -234,7 +224,7 @@
       return "<div class='pc-oc" + (sel.frame === f.code ? " sel" : "") + "' data-frame='" + f.code + "'><img src='" + f.img + "' alt='" + f.label + "'><b style='font-size:12px'>" + f.label + "</b>" + up(frameDelta(f.code), "Included") + "</div>";
     }).join("");
   }
-  function renderOptions() { renderPets(); renderSizes(); renderFrames(); renderPrice(); }
+  function renderOptions() { renderSizes(); renderFrames(); renderPrice(); }
 
   function framedHTML(cls, wrapCls) {
     var f = frameByCode(sel.frame);
@@ -307,7 +297,6 @@
 
   // ---- Events -------------------------------------------------------------------------
   $("pc-styles").addEventListener("click", function (e) { var c = e.target.closest("[data-style]"); if (!c) return; sel.style = c.getAttribute("data-style"); renderStyles(); refreshPhase(); });
-  $("pc-pets").addEventListener("click", function (e) { var c = e.target.closest("[data-pets]"); if (!c) return; sel.pets = c.getAttribute("data-pets"); renderOptions(); });
   $("pc-sizes").addEventListener("click", function (e) { var c = e.target.closest("[data-size]"); if (!c) return; sel.size = c.getAttribute("data-size"); renderOptions(); });
   $("pc-frames").addEventListener("click", function (e) { var c = e.target.closest("[data-frame]"); if (!c) return; selectFrame(c.getAttribute("data-frame")); });
   $("pc-thumbs").addEventListener("click", function (e) {
