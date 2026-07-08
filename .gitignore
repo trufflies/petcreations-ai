@@ -24,3 +24,6 @@ backend/bin/
 
 # macOS
 .DS_Store
+
+# logs
+backend/server.log

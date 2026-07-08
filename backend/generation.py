@@ -82,11 +82,31 @@ def _multipart(fields, images, image_field):
     return b"\r\n".join(parts), boundary
 
 
+def _prep_openai_image(image_bytes):
+    """gpt-image-1's edit endpoint is strict about mode/size/format. Normalize any upload to a
+    clean RGB PNG at a sane size so Heritage accepts whatever the other styles do (big phone
+    photos, CMYK, alpha channels, odd formats)."""
+    from io import BytesIO
+    try:
+        from PIL import Image
+        im = Image.open(BytesIO(image_bytes))
+        im = im.convert("RGB")
+        maxdim = 2048
+        if max(im.size) > maxdim:
+            r = maxdim / float(max(im.size))
+            im = im.resize((max(1, int(im.size[0] * r)), max(1, int(im.size[1] * r))))
+        out = BytesIO()
+        im.save(out, format="PNG")
+        return out.getvalue()
+    except Exception as e:
+        raise GenerationError("Could not read that photo — please upload a JPG or PNG. (" + str(e)[:100] + ")")
+
+
 def _openai(prompt, image_bytes, mime, use_reference, size, quality="high", extra_images=None):
     key = os.environ.get("OPENAI_API_KEY")
     if not key:
         raise GenerationError("OPENAI_API_KEY not set")
-    images = [("pet.png", image_bytes, mime)]
+    images = [("pet.png", _prep_openai_image(image_bytes), "image/png")]
     for img in (extra_images or []):
         images.append(img)
     if use_reference and os.path.isfile(HERITAGE_REF):
