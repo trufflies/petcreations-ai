@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pet Creations — AI Portrait Studio (demo)</title>
+<style>
+  :root{ --ink:#2a2622; --muted:#8a8178; --line:#e7e1d8; --bg:#faf7f2; --accent:#7a5c3e; --accent2:#9b7a52; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+  header{text-align:center;padding:28px 16px 8px}
+  header h1{font-family:Georgia,'Times New Roman',serif;font-weight:600;margin:0;font-size:26px;letter-spacing:.2px}
+  header p{color:var(--muted);margin:6px 0 0;font-size:14px}
+  .wrap{max-width:920px;margin:0 auto;padding:18px 16px 60px}
+  .step{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin:16px 0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .step h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 14px}
+  .field{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px}
+  .field:focus{outline:none;border-color:var(--accent2)}
+  /* upload */
+  .drop{border:2px dashed var(--line);border-radius:12px;padding:26px;text-align:center;cursor:pointer;transition:.15s}
+  .drop:hover{border-color:var(--accent2);background:#fffdfa}
+  .drop input{display:none}
+  .drop img{max-height:210px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+  .drop .hint{color:var(--muted);font-size:14px}
+  /* styles */
+  .styles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .style{border:1.5px solid var(--line);border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:.15s}
+  .style:hover{border-color:var(--accent2)}
+  .style.sel{border-color:var(--accent);background:#fbf7f1;box-shadow:0 0 0 3px rgba(122,92,62,.12)}
+  .style .name{font-family:Georgia,serif;font-size:16px}
+  .style .desc{color:var(--muted);font-size:12px;margin-top:4px}
+  /* button */
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;border:0;border-radius:10px;
+       padding:13px 22px;font-size:15px;font-weight:600;cursor:pointer;transition:.15s}
+  .btn:hover{background:#664b31}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.ghost{background:#fff;color:var(--accent);border:1.5px solid var(--line)}
+  .center{text-align:center}
+  /* result */
+  #result{display:none}
+  .stage{position:relative;text-align:center;min-height:220px;display:flex;align-items:center;justify-content:center}
+  .stage img{max-width:100%;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+  .spinner{width:42px;height:42px;border:4px solid var(--line);border-top-color:var(--accent);border-radius:50%;
+           animation:spin 1s linear infinite;margin:0 auto 14px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading{color:var(--muted);font-size:14px}
+  .retry{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;justify-content:center}
+  .retry input{flex:1;min-width:220px}
+  .err{color:#a33;font-size:14px;margin-top:10px;text-align:center}
+  .muted{color:var(--muted);font-size:12px;text-align:center;margin-top:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Pet Creations — AI Portrait Studio</h1>
+  <p>Upload a photo · choose a style · see your portrait in under a minute</p>
+</header>
+
+<div class="wrap">
+  <div class="step">
+    <h2>1 · Your pet's photo</h2>
+    <label class="drop" id="drop">
+      <input type="file" id="file" accept="image/*">
+      <div id="dropInner"><div style="font-size:30px">🐾</div><div class="hint">Click to upload a clear photo of your pet</div></div>
+    </label>
+    <input id="email" type="email" class="field" style="margin-top:14px" placeholder="Your email (so we can send your previews)">
+  </div>
+
+  <div class="step">
+    <h2>2 · Choose a style</h2>
+    <div class="styles" id="styles">
+      <div class="style" data-style="watercolor"><div class="name">Watercolor</div><div class="desc">Soft &amp; elegant</div></div>
+      <div class="style" data-style="oil"><div class="name">Oil Painting</div><div class="desc">Classic museum oil</div></div>
+      <div class="style" data-style="heritage"><div class="name">Heritage</div><div class="desc">Regal old-world heirloom</div></div>
+    </div>
+  </div>
+
+  <div class="center">
+    <button class="btn" id="go" disabled>Create my portrait ✨</button>
+  </div>
+
+  <div class="step" id="result">
+    <h2>Your preview</h2>
+    <div class="stage" id="stage"></div>
+    <div class="retry" id="retryBox" style="display:none">
+      <input id="instruction" class="field" placeholder="Tweak it — e.g. 'warmer tones' or 'darker background'">
+      <button class="btn ghost" id="retry">Recolor / fix</button>
+      <button class="btn" id="love">I love it →</button>
+    </div>
+    <div class="muted" id="retriesLeft"></div>
+    <div class="err" id="err"></div>
+    <div class="muted">Previews are watermarked. The clean, full-resolution file is delivered after you order.</div>
+  </div>
+</div>
+
+<script>
+let file=null, style=null, currentId=null;
+const $=id=>document.getElementById(id);
+
+$('file').addEventListener('change', e=>{
+  file=e.target.files[0]; if(!file) return;
+  const url=URL.createObjectURL(file);
+  $('dropInner').innerHTML=`<img src="${url}"><div class="hint" style="margin-top:8px">${file.name} · click to change</div>`;
+  refresh();
+});
+$('email').addEventListener('input', refresh);
+$('styles').addEventListener('click', e=>{
+  const c=e.target.closest('.style'); if(!c) return;
+  document.querySelectorAll('.style').forEach(s=>s.classList.remove('sel'));
+  c.classList.add('sel'); style=c.dataset.style; refresh();
+});
+function validEmail(v){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.trim()); }
+function refresh(){ $('go').disabled = !(file && style && validEmail($('email').value)); }
+
+const LOADING=["Studying your pet's features…","Preparing the canvas…","Mixing the paints…","Applying brushstrokes…","Adding the finishing details…"];
+let loadTimer=null;
+function showLoading(){
+  $('result').style.display='block'; $('retryBox').style.display='none'; $('err').textContent=''; $('retriesLeft').textContent='';
+  let i=0; const render=()=>{ $('stage').innerHTML=`<div><div class="spinner"></div><div class="loading">${LOADING[i%LOADING.length]}</div></div>`; i++; };
+  render(); loadTimer=setInterval(render,3500);
+  $('result').scrollIntoView({behavior:'smooth'});
+}
+function stopLoading(){ clearInterval(loadTimer); }
+
+async function post(url, form){
+  const r=await fetch(url,{method:'POST',body:form});
+  if(!r.ok){ throw new Error((await r.json().catch(()=>({detail:r.statusText}))).detail || 'error'); }
+  return r.json();
+}
+function showResult(d){
+  currentId=d.id;
+  $('stage').innerHTML=`<img src="${d.preview_url}?t=${Date.now()}">`;
+  $('retryBox').style.display='flex';
+  const left = d.retries_left;
+  if(left>0){ $('retriesLeft').textContent = `${left} free tweak${left===1?'':'s'} left`; $('retry').disabled=false; }
+  else { $('retriesLeft').textContent = 'No free tweaks left — order and our artist will perfect it.'; $('retry').disabled=true; }
+}
+
+$('go').addEventListener('click', async ()=>{
+  showLoading();
+  try{
+    const fd=new FormData(); fd.append('file',file); fd.append('style',style); fd.append('email',$('email').value.trim());
+    showResult(await post('/generate',fd));
+  }catch(e){ $('stage').innerHTML=''; $('err').textContent=e.message; }
+  finally{ stopLoading(); }
+});
+$('retry').addEventListener('click', async ()=>{
+  const ins=$('instruction').value.trim(); if(!ins||!currentId) return;
+  showLoading();
+  try{
+    const fd=new FormData(); fd.append('id',currentId); fd.append('instruction',ins);
+    showResult(await post('/retry',fd)); $('instruction').value='';
+  }catch(e){ $('stage').innerHTML=''; $('err').textContent=e.message; }
+  finally{ stopLoading(); }
+});
+$('love').addEventListener('click', ()=> alert('In the real store this adds the portrait to your cart and checks out on Shopify. (Phase 3)'));
+</script>
+</body>
+</html>

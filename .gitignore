@@ -1,0 +1,24 @@
+# Secrets — never commit API keys
+.env
+*.env
+*.key
+api.env*
+*.env.md
+
+# Generated test output
+likeness-test/output/
+likeness-test/output_openai/
+likeness-test/contact_sheet.html
+likeness-test/compare.html
+
+# Python
+__pycache__/
+*.pyc
+
+# Backend
+backend/venv/
+backend/_enginetest/
+backend/generated/
+
+# macOS
+.DS_Store
