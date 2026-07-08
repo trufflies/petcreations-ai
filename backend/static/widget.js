@@ -53,7 +53,7 @@
     "<style>" +
     "#pcai-root{--pc-bg:#f3ecde;--pc-ink:#343434;--pc-mut:#8a7d68;--pc-line:#dfd2b8;--pc-card:#fffdf7;--pc-acc:#5e1622;--pc-gold:#b08d57;--pc-serif:'Playfair Display',Georgia,serif;background:var(--pc-bg);color:var(--pc-ink);font-family:inherit;width:100vw;max-width:100vw;position:relative;left:calc(50% - 50vw);overflow-x:hidden}" +
     "#pcai-root *{box-sizing:border-box}" +
-    "#pcai{max-width:1280px;margin:0 auto;padding:34px 26px 6px}" +
+    "#pcai{width:94%;max-width:1800px;margin:0 auto;padding:34px 0 6px}" +
     "#pcai .pc-wrap{display:grid;grid-template-columns:1fr;gap:28px}" +
     "@media(min-width:880px){#pcai .pc-wrap{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;align-items:start}#pcai .pc-media{position:sticky;top:20px}}" +
     // media
@@ -118,13 +118,13 @@
     "#pcai .pc-center{text-align:center}" +
     "#pcai .pc-err{color:#a33;font-size:14px;text-align:center;margin-top:8px}" +
     // info accordion
-    "#pcai-root .pc-info{max-width:1280px;margin:24px auto 0;padding:0 26px 34px}" +
+    "#pcai-root .pc-info{width:94%;max-width:1800px;margin:24px auto 0;padding:0 0 34px}" +
     "#pcai-root .pc-info details{border-top:1px solid var(--pc-line)}" +
     "#pcai-root .pc-info summary{cursor:pointer;padding:15px 0;font-family:var(--pc-serif);font-size:17px;font-weight:600;list-style:none;color:var(--pc-ink)}" +
     "#pcai-root .pc-info summary::-webkit-details-marker{display:none}" +
     "#pcai-root .pc-info summary::after{content:'+';float:right;color:var(--pc-mut);font-size:20px;line-height:1}" +
     "#pcai-root .pc-info details[open] summary::after{content:'–'}" +
-    "#pcai-root .pc-info p,#pcai-root .pc-info ul{font-size:14px;line-height:1.62;margin:0 0 12px;color:#4a4038}" +
+    "#pcai-root .pc-info p,#pcai-root .pc-info ul{font-size:14px;line-height:1.62;margin:0 0 12px;color:#4a4038;max-width:860px}" +
     "#pcai-root .pc-info .pc-lead{font-family:var(--pc-serif);font-size:18px;color:var(--pc-ink);margin-bottom:8px}" +
     "#pcai-root .pc-info ul{padding-left:18px}#pcai-root .pc-info li{margin:4px 0}" +
     "#pcai-root .pc-sizeviz{display:flex;align-items:flex-end;gap:18px;margin:10px 0 8px;flex-wrap:wrap}" +
