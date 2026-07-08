@@ -15,7 +15,7 @@ import os
 import urllib.request
 import urllib.error
 
-from styles import STYLES
+from styles import STYLES, FRAMES
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GEMINI_MODEL = "gemini-2.5-flash-image"
@@ -118,6 +118,19 @@ def generate(style, image_bytes, mime="image/jpeg"):
     if cfg["provider"] == "gemini":
         return _gemini(cfg["prompt"], image_bytes, mime)
     return _openai(cfg["prompt"], image_bytes, mime, cfg.get("use_reference", False), cfg.get("size"))
+
+
+def frame(image_bytes, frame_key, mime="image/png"):
+    """Mount an already-generated portrait inside the chosen physical frame as a wall mockup."""
+    cfg = FRAMES.get(frame_key)
+    if not cfg:
+        raise GenerationError(f"Unknown frame '{frame_key}'. Options: {list(FRAMES)}")
+    prompt = (
+        "Take this exact pet portrait and mount it inside " + cfg["prompt"] + ", hanging on a softly "
+        "lit, warm neutral wall, styled like a professional interior product photo. Do NOT alter the "
+        "artwork inside the frame — keep the pet and the painting exactly the same."
+    )
+    return _gemini(prompt, image_bytes, mime)
 
 
 def recolor(style, image_bytes, instruction, mime="image/png"):

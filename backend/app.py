@@ -24,7 +24,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 import generation as gen
-from styles import STYLES
+from styles import STYLES, FRAMES
 from watermark import add_watermark
 
 gen.load_env()
@@ -61,7 +61,9 @@ def _save(art_bytes, style, email, retries):
 
 @app.get("/health")
 def health():
-    return {"ok": True, "styles": {k: v["label"] for k, v in STYLES.items()}}
+    return {"ok": True,
+            "styles": {k: v["label"] for k, v in STYLES.items()},
+            "frames": {k: v["label"] for k, v in FRAMES.items()}}
 
 
 @app.post("/generate")
@@ -96,6 +98,23 @@ def retry(id: str = Form(...), instruction: str = Form(...)):
     except gen.GenerationError as e:
         raise HTTPException(502, str(e))
     return _save(new, job["style"], job["email"], job["retries"] + 1)
+
+
+@app.post("/frame")
+def apply_frame(id: str = Form(...), frame: str = Form(...)):
+    job = JOBS.get(id)
+    if not job:
+        raise HTTPException(404, "unknown id")
+    if frame not in FRAMES:
+        raise HTTPException(400, f"unknown frame '{frame}'")
+    with open(job["full"], "rb") as f:
+        art = f.read()
+    try:
+        framed = gen.frame(art, frame, "image/png")
+    except gen.GenerationError as e:
+        raise HTTPException(502, str(e))
+    saved = _save(framed, job["style"], job["email"], job["retries"])
+    return {"framed_preview_url": saved["preview_url"], "frame": frame, "frame_label": FRAMES[frame]["label"]}
 
 
 # Static mounts (after routes so /health etc. win)

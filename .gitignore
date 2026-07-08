@@ -4,6 +4,7 @@
 *.key
 api.env*
 *.env.md
+.github_pat
 
 # Generated test output
 likeness-test/output/
@@ -19,6 +20,7 @@ __pycache__/
 backend/venv/
 backend/_enginetest/
 backend/generated/
+backend/bin/
 
 # macOS
 .DS_Store
