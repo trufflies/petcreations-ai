@@ -30,7 +30,9 @@ from watermark import add_watermark
 gen.load_env()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-GEN_DIR = os.path.join(HERE, "generated")
+# Persistent storage: set env GEN_DIR to a mounted Render disk (e.g. /data) so generated art +
+# originals survive redeploys/restarts. Falls back to the local (ephemeral) folder for dev.
+GEN_DIR = os.environ.get("GEN_DIR") or os.path.join(HERE, "generated")
 STATIC_DIR = os.path.join(HERE, "static")
 os.makedirs(GEN_DIR, exist_ok=True)
 os.makedirs(STATIC_DIR, exist_ok=True)
@@ -57,7 +59,7 @@ MAX_FREE_RETRIES = 9999  # effectively unlimited for now (soft cap only to stop 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
-def _save(art_bytes, style, email, retries):
+def _save(art_bytes, style, email, retries, original=None, orig_ext=".jpg", original_url=None):
     jid = uuid.uuid4().hex[:12]
     full_path = os.path.join(GEN_DIR, f"{jid}_full.png")
     prev_path = os.path.join(GEN_DIR, f"{jid}_preview.png")
@@ -65,8 +67,17 @@ def _save(art_bytes, style, email, retries):
         f.write(art_bytes)                       # clean full-res (delivered only after purchase)
     with open(prev_path, "wb") as f:
         f.write(add_watermark(art_bytes))        # watermarked preview (safe to show)
-    JOBS[jid] = {"style": style, "full": full_path, "email": email, "retries": retries}
-    return {"id": jid, "style": style, "preview_url": f"/generated/{jid}_preview.png",
+    orig_url = original_url or ""
+    if original:                                 # customer's uploaded photo (for the artist to work from)
+        oname = f"{jid}_original{orig_ext}"
+        with open(os.path.join(GEN_DIR, oname), "wb") as f:
+            f.write(original)
+        orig_url = f"/generated/{oname}"
+    JOBS[jid] = {"style": style, "full": full_path, "email": email, "retries": retries, "original_url": orig_url}
+    return {"id": jid, "style": style,
+            "preview_url": f"/generated/{jid}_preview.png",
+            "full_url": f"/generated/{jid}_full.png",
+            "original_url": orig_url,
             "retries_left": MAX_FREE_RETRIES - retries}
 
 
@@ -91,7 +102,9 @@ def generate(file: UploadFile, style: str = Form(...), email: str = Form(...)):
         art = gen.generate(style, data, file.content_type or "image/jpeg")
     except gen.GenerationError as e:
         raise HTTPException(502, str(e))
-    return _save(art, style, email.strip(), 0)
+    ct = (file.content_type or "").lower()
+    ext = ".png" if "png" in ct else (".webp" if "webp" in ct else ".jpg")
+    return _save(art, style, email.strip(), 0, original=data, orig_ext=ext)
 
 
 @app.post("/retry")
@@ -108,7 +121,7 @@ def retry(id: str = Form(...), instruction: str = Form(...)):
         new = gen.recolor(job["style"], art, instruction, "image/png")
     except gen.GenerationError as e:
         raise HTTPException(502, str(e))
-    return _save(new, job["style"], job["email"], job["retries"] + 1)
+    return _save(new, job["style"], job["email"], job["retries"] + 1, original_url=job.get("original_url"))
 
 
 @app.post("/frame")

@@ -364,7 +364,7 @@
   }
   function stop() { clearInterval(timer); }
   function show(d, style) {
-    results[style || sel.style] = { id: d.id, preview: API + d.preview_url, bust: Date.now() };
+    results[style || sel.style] = { id: d.id, preview: API + d.preview_url, full: API + d.full_url, original: d.original_url ? API + d.original_url : "", bust: Date.now() };
     heroPick = null;
     renderHero(); renderThumbs();
     $("pc-retry").disabled = false; $("pc-instruction").disabled = false;
@@ -419,7 +419,8 @@
   $("pc-add").addEventListener("click", function () {
     var v = curVar(), r = curRes();
     var props = {
-      "Style": labelOf(STYLES, sel.style), "_job_id": r ? r.id : "", "_preview": r ? r.preview : ""
+      "Style": labelOf(STYLES, sel.style), "_job_id": r ? r.id : "",
+      "_preview": r ? r.preview : "", "_fullres": r ? r.full : "", "_original": r ? r.original : ""
     };
     if ($("pc-artist-check").checked) {
       props["Artist refinement"] = "Yes — free, after order (unlimited revisions by email)";
