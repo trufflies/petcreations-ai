@@ -40,6 +40,16 @@ app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def _no_cache_widget(request, call_next):
+    # widget.js is the live storefront embed and changes on every deploy — force the browser
+    # to revalidate it each load (ETag still gives cheap 304s) so updates always show.
+    resp = await call_next(request)
+    if request.url.path == "/app/widget.js":
+        resp.headers["Cache-Control"] = "no-cache, must-revalidate"
+    return resp
+
 # In-memory job store (demo). TODO: replace with a DB + cloud storage for production.
 JOBS = {}
 MAX_FREE_RETRIES = 5
