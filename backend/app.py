@@ -46,7 +46,8 @@ async def _no_cache_widget(request, call_next):
     # widget.js is the live storefront embed and changes on every deploy — force the browser
     # to revalidate it each load (ETag still gives cheap 304s) so updates always show.
     resp = await call_next(request)
-    if request.url.path == "/app/widget.js":
+    p = request.url.path
+    if p == "/app/widget.js" or p.startswith("/app/examples/"):
         resp.headers["Cache-Control"] = "no-cache, must-revalidate"
     return resp
 
