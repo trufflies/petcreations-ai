@@ -67,6 +67,13 @@
     "#pcai{width:94%;max-width:1700px;margin:0 auto;padding:34px 0 6px;text-align:left}" +
     "#pcai .pc-wrap{display:grid;grid-template-columns:1fr;gap:28px}" +
     "@media(min-width:880px){#pcai .pc-wrap{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;align-items:start}#pcai .pc-media{position:sticky;top:20px}}" +
+    // top CTA (mainly to jump mobile users straight to the upload)
+    "#pcai .pc-topcta{background:var(--pc-card);border:1px solid var(--pc-line);border-radius:14px;padding:15px 20px;margin-bottom:26px}" +
+    "#pcai .pc-topcta-in{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}" +
+    "#pcai .pc-topcta-txt b{display:block;font-family:var(--pc-serif);font-size:19px;color:var(--pc-ink);line-height:1.15}" +
+    "#pcai .pc-topcta-txt span{font-size:12.5px;color:var(--pc-mut)}" +
+    "#pcai .pc-topcta .pc-btn{white-space:nowrap;flex:none}" +
+    "@media(max-width:640px){#pcai .pc-topcta-in{flex-direction:column;align-items:stretch;text-align:center}#pcai .pc-topcta .pc-btn{width:100%;margin-top:2px}}" +
     // media
     "#pcai .pc-hero{background:var(--pc-card);border:1px solid var(--pc-line);border-radius:16px;padding:16px;display:flex;align-items:center;justify-content:center;min-height:340px}" +
     "#pcai .pc-hero>img{max-width:100%;max-height:620px;border-radius:8px;box-shadow:0 8px 26px rgba(0,0,0,.14);display:block}" +
@@ -159,7 +166,12 @@
     "#pcai-root .pc-sizebox{border:2px solid var(--pc-acc);border-radius:4px;background:rgba(94,22,34,.05);display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;font-weight:600;color:var(--pc-ink)}" +
     "</style>" +
 
-    "<div id='pcai'><div class='pc-wrap'>" +
+    "<div id='pcai'>" +
+      "<div class='pc-topcta'><div class='pc-topcta-in'>" +
+        "<div class='pc-topcta-txt'><b>See your pet reimagined as a masterpiece</b><span>Upload a photo — your free preview appears in ~60 seconds.</span></div>" +
+        "<button class='pc-btn' id='pc-start'>Get my free preview →</button>" +
+      "</div></div>" +
+      "<div class='pc-wrap'>" +
       // ---- LEFT: media ----
       "<div class='pc-media'>" +
         "<div class='pc-hero' id='pc-hero'></div>" +
@@ -376,6 +388,11 @@
     else if (b.getAttribute("data-ex")) { heroPick = b.getAttribute("data-ex"); renderHero(); renderThumbs(); }
   });
   $("pc-guidelink").addEventListener("click", function () { var d = $("pc-guide"); d.open = true; d.scrollIntoView({ behavior: "smooth", block: "center" }); });
+  $("pc-start").addEventListener("click", function () {
+    var d = $("pc-drop"); if (!d) return;
+    d.scrollIntoView({ behavior: "smooth", block: "center" });
+    d.style.borderColor = "var(--pc-acc)"; setTimeout(function () { d.style.borderColor = ""; }, 1400);
+  });
   $("pc-file").addEventListener("change", function (e) {
     file = e.target.files[0]; if (!file) return;
     $("pc-dropin").innerHTML = "<img src='" + URL.createObjectURL(file) + "'><div class='pc-tiny'>" + file.name + " &middot; click to change</div>";

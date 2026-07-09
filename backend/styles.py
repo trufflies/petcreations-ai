@@ -51,13 +51,16 @@ STYLES = {
         "label": "Monet",
         "provider": "gemini",
         "prompt": _nano(
-            "Render as an Impressionist oil painting in the style of Claude Monet — loose, visible dappled "
-            "brushstrokes, broken colour, soft luminous natural light, and an airy plein-air palette of "
-            "blended pastel and jewel tones. IMPORTANT: completely REPLACE the original photo's background "
-            "— do NOT keep the real-world setting (no grass, floor, furniture, sofa, or room). Place the pet "
-            "against a soft, dreamy Impressionist wash suggesting a sunlit garden (gentle hints of foliage, "
-            "blossoms and sky) in complementary tones. The painting must FILL THE ENTIRE IMAGE edge to edge "
-            "(full bleed) — no white border, no vignette, and no picture frame."
+            "Render as a romantic Impressionist oil painting in the style of Claude Monet's garden scenes "
+            "(like 'A Corner of the Garden with Dahlias', 1873). Keep the pet as the clear FOREGROUND "
+            "subject, painterly yet unmistakably recognizable, nestled in a lush romantic garden. Paint the "
+            "flowers the way MONET does them — NOT detailed or defined blooms, but a haze of many SMALL, "
+            "LOOSE, ABSTRACT dabs and flecks of colour (reds, corals, oranges, golds, creams, touches of "
+            "pink) suggested with quick broken impressionist brushstrokes, scattered through soft green "
+            "foliage and dissolving into a pale luminous cloudy sky with dappled light. Loose visible "
+            "painterly brushwork everywhere, soft diffused light, an airy blended palette. Completely "
+            "REPLACE the photo background (no lawn, floor, furniture or room). FILL THE ENTIRE IMAGE edge "
+            "to edge (full bleed) — no border, no vignette, no picture frame."
         ),
     },
     "oil": {
