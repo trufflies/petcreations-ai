@@ -52,7 +52,7 @@ async def _no_cache_widget(request, call_next):
 
 # In-memory job store (demo). TODO: replace with a DB + cloud storage for production.
 JOBS = {}
-MAX_FREE_RETRIES = 5
+MAX_FREE_RETRIES = 9999  # effectively unlimited for now (soft cap only to stop runaway abuse)
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 

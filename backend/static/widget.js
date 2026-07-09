@@ -3,8 +3,8 @@
  * <script src="https://YOUR-BACKEND/app/widget.js"></script>
  *
  * Renders a complete, native-looking product section (image gallery + buy box) so it can
- * REPLACE the theme's product configurator. Live variant pricing (pets x size x frame),
- * AI style preview, instant recolor, real-frame overlay, artist touch-up, add-to-cart.
+ * REPLACE the theme's product configurator. Live variant pricing (size x frame),
+ * style preview, instant recolor, real-frame overlay, artist refinement, add-to-cart.
  */
 (function () {
   var script = document.currentScript;
@@ -73,7 +73,10 @@
     "@keyframes pcspin{to{transform:rotate(360deg)}}" +
     // buy column
     "#pcai .pc-eyebrow{font-size:11px;letter-spacing:.18em;color:var(--pc-mut);text-transform:uppercase;font-weight:600}" +
-    "#pcai .pc-title{font-family:var(--pc-serif);font-size:30px;line-height:1.12;font-weight:700;margin:6px 0 10px;color:var(--pc-ink)}" +
+    "#pcai .pc-title{font-family:var(--pc-serif);font-size:30px;line-height:1.12;font-weight:700;margin:6px 0 8px;color:var(--pc-ink)}" +
+    "#pcai .pc-reviews{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--pc-ink);margin:0 0 10px;flex-wrap:wrap}" +
+    "#pcai .pc-reviews .pc-stars{color:#e8a91d;letter-spacing:1px;font-size:15px}" +
+    "#pcai .pc-reviews b{font-weight:700}" +
     "#pcai .pc-pricerow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}" +
     "#pcai .pc-pricerow ins{font-size:26px;font-weight:700;text-decoration:none;font-family:var(--pc-serif)}" +
     "#pcai .pc-pricerow del{color:var(--pc-mut);font-size:16px}" +
@@ -88,19 +91,20 @@
     "#pcai .pc-label{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--pc-mut);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}" +
     "#pcai .pc-guidelink{font-size:11px;color:var(--pc-acc);cursor:pointer;text-transform:none;letter-spacing:0;text-decoration:underline}" +
     "#pcai .pc-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}" +
-    "#pcai .pc-oc{border:1.5px solid var(--pc-line);background:var(--pc-card);border-radius:11px;padding:11px 8px;text-align:center;cursor:pointer;transition:.12s}" +
+    "#pcai .pc-oc{position:relative;border:1.5px solid var(--pc-line);background:var(--pc-card);border-radius:11px;padding:11px 8px;text-align:center;cursor:pointer;transition:.12s}" +
     "#pcai .pc-oc:hover{border-color:var(--pc-mut)}" +
     "#pcai .pc-oc.sel{border-color:var(--pc-acc);box-shadow:0 0 0 3px rgba(94,22,34,.13)}" +
     "#pcai .pc-oc b{display:block;font-size:14px}" +
     "#pcai .pc-oc b.pc-serifname{font-family:var(--pc-serif);font-size:16px}" +
     "#pcai .pc-oc small{display:block;font-size:11px;color:var(--pc-mut);margin-top:2px;min-height:14px}" +
     "#pcai .pc-oc small.pc-up{color:var(--pc-acc);font-weight:600}" +
+    "#pcai .pc-pop{display:block;background:var(--pc-acc);color:#fff;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 0;border-radius:6px;margin:-4px -3px 6px}" +
     "#pcai .pc-frameopts .pc-oc{padding:7px 6px}" +
     "#pcai .pc-frameopts .pc-oc img{width:100%;height:50px;object-fit:contain;display:block;margin-bottom:4px}" +
     "#pcai .pc-drop{display:block;border:2px dashed var(--pc-line);border-radius:12px;padding:20px;text-align:center;cursor:pointer;background:var(--pc-card)}" +
     "#pcai .pc-drop:hover{border-color:var(--pc-acc)}" +
     "#pcai .pc-drop input{display:none}" +
-    "#pcai .pc-drop img{max-height:160px;border-radius:9px}" +
+    "#pcai .pc-drop img{max-width:100%;max-height:230px;width:auto;height:auto;object-fit:contain;border-radius:9px;display:block;margin:0 auto}" +
     "#pcai .pc-dropicon{font-size:26px}" +
     "#pcai .pc-field{width:100%;padding:12px;border:1.5px solid var(--pc-line);border-radius:9px;font-size:14px;margin-top:10px;font-family:inherit;background:#fff;color:var(--pc-ink)}" +
     "#pcai textarea.pc-field{min-height:60px;resize:vertical}" +
@@ -109,11 +113,16 @@
     "#pcai .pc-btn[disabled]{opacity:.4;cursor:not-allowed;filter:none}" +
     "#pcai .pc-btn.pc-big{display:block;width:100%;margin-top:16px}" +
     "#pcai .pc-btn.ghost{background:transparent;color:var(--pc-acc);border:1.5px solid var(--pc-acc);padding:12px 18px;letter-spacing:.2px}" +
-    "#pcai .pc-retry{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}" +
+    "#pcai .pc-edit{margin-top:18px;border:1px solid var(--pc-line);border-radius:12px;padding:12px;background:var(--pc-card)}" +
+    "#pcai .pc-edit-head{display:flex;align-items:center;justify-content:space-between;gap:8px}" +
+    "#pcai .pc-edit-head b{font-size:14px}" +
+    "#pcai .pc-tag{font-size:9.5px;font-weight:700;letter-spacing:.03em;padding:3px 8px;border-radius:100px;text-transform:uppercase;white-space:nowrap}" +
+    "#pcai .pc-tag-inst{background:rgba(94,22,34,.1);color:var(--pc-acc)}" +
+    "#pcai .pc-tag-free{background:#e7f2e7;color:#2e7d32}" +
+    "#pcai .pc-retry{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}" +
     "#pcai .pc-retry .pc-field{flex:1;min-width:180px;margin-top:0}" +
-    "#pcai .pc-artist{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;margin:14px 0 2px;cursor:pointer;line-height:1.45}" +
+    "#pcai .pc-artist{display:flex;gap:9px;align-items:flex-start;font-size:13px;margin:14px 0 2px;cursor:pointer;line-height:1.5}" +
     "#pcai .pc-artist input{margin-top:3px}" +
-    "#pcai .pc-ready{font-size:12px;color:var(--pc-mut);text-align:center;margin-top:16px;border-top:1px solid var(--pc-line);padding-top:13px}" +
     "#pcai .pc-tiny{font-size:12px;color:var(--pc-mut)}" +
     "#pcai .pc-center{text-align:center}" +
     "#pcai .pc-err{color:#a33;font-size:14px;text-align:center;margin-top:8px}" +
@@ -142,22 +151,23 @@
       "<div class='pc-buy'>" +
         "<div class='pc-eyebrow'>Heirloom Pet Art</div>" +
         "<h1 class='pc-title'>Custom Heritage Framed Pet Portrait</h1>" +
+        "<div class='pc-reviews'><span class='pc-stars'>★★★★★</span> <b>14,000+</b> five-star reviews</div>" +
         "<div class='pc-pricerow' id='pc-pricerow'></div>" +
-        "<div class='pc-gift'>🎁 Order today — your digital proof arrives within 2 business days.</div>" +
+        "<div class='pc-gift'>🎁 Free shipping — your masterpiece is delivered in 4–7 business days.</div>" +
         "<div class='pc-badges'>" +
           "<div class='pc-badge'><span>🚚</span><b>Fast &amp; Free</b><small>shipping</small></div>" +
           "<div class='pc-badge'><span>⚡</span><b>60-Second</b><small>instant preview</small></div>" +
           "<div class='pc-badge'><span>💖</span><b>30-Day</b><small>happiness guarantee</small></div>" +
         "</div>" +
 
-        "<div class='pc-opt'><div class='pc-label'>1 &middot; Choose your style</div><div class='pc-grid3' id='pc-styles'></div></div>" +
-        "<div class='pc-opt'><div class='pc-label'>2 &middot; Choose your size <span class='pc-guidelink' id='pc-guidelink'>📐 Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
-        "<div class='pc-opt'><div class='pc-label'>3 &middot; Choose your frame</div><div class='pc-grid3 pc-frameopts' id='pc-frames'></div></div>" +
-        "<div class='pc-opt'><div class='pc-label'>4 &middot; Your pet’s photo</div>" +
+        "<div class='pc-opt'><div class='pc-label'>1 &middot; Your pet’s photo</div>" +
           "<label class='pc-drop' id='pc-drop'><input type='file' id='pc-file' accept='image/*'>" +
           "<div id='pc-dropin'><div class='pc-dropicon'>🐾</div><div class='pc-tiny'>Click to upload a clear, well-lit photo</div></div></label>" +
-          "<input class='pc-field' id='pc-email' type='email' placeholder='Your email (so we can send your previews)'>" +
+          "<input class='pc-field' id='pc-email' type='email' placeholder='Your email (so we can send your preview)'>" +
         "</div>" +
+        "<div class='pc-opt'><div class='pc-label'>2 &middot; Choose your style</div><div class='pc-grid3' id='pc-styles'></div></div>" +
+        "<div class='pc-opt'><div class='pc-label'>3 &middot; Choose your size <span class='pc-guidelink' id='pc-guidelink'>📐 Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
+        "<div class='pc-opt'><div class='pc-label'>4 &middot; Choose your frame</div><div class='pc-grid3 pc-frameopts' id='pc-frames'></div></div>" +
 
         "<div id='pc-cta'>" +
           "<button class='pc-btn pc-big' id='pc-go' disabled>Create my portrait ✨</button>" +
@@ -165,17 +175,20 @@
         "</div>" +
 
         "<div id='pc-post' style='display:none'>" +
-          "<div class='pc-retry'>" +
-            "<input class='pc-field' id='pc-instruction' placeholder=\"Tweak it — e.g. 'warmer tones', 'remove the leash'\">" +
-            "<button class='pc-btn ghost' id='pc-retry'>Recolor / fix</button>" +
+          "<div class='pc-edit'>" +
+            "<div class='pc-edit-head'><b>Change colors or fix something</b><span class='pc-tag pc-tag-inst'>Instant · ~30s</span></div>" +
+            "<div class='pc-retry'>" +
+              "<input class='pc-field' id='pc-instruction' placeholder=\"e.g. 'warmer tones', 'remove the leash', 'lighter background'\">" +
+              "<button class='pc-btn ghost' id='pc-retry'>Apply change</button>" +
+            "</div>" +
           "</div>" +
-          "<div class='pc-tiny pc-center' id='pc-left' style='margin-top:8px'></div>" +
-          "<label class='pc-artist'><input type='checkbox' id='pc-artist-check'><span><b>Have a real artist perfect it</b> — free. We hand-refine your portrait before printing.</span></label>" +
-          "<textarea class='pc-field' id='pc-artist-notes' placeholder='Optional: tell our artist what to adjust — e.g. brighten the eyes, warmer background' style='display:none'></textarea>" +
+          "<label class='pc-artist'><input type='checkbox' id='pc-artist-check'>" +
+            "<span><b>Free artist refinement</b> <span class='pc-tag pc-tag-free'>Free · after you order</span><br>" +
+            "Want bigger or very specific changes? A real artist refines your portrait after you order — unlimited revisions by email until you love it. Adds a little to the processing time.</span></label>" +
+          "<textarea class='pc-field' id='pc-artist-notes' placeholder='Optional: what should the artist adjust? e.g. brighten the eyes, remove background objects, match the collar color' style='display:none'></textarea>" +
           "<button class='pc-btn pc-big' id='pc-add'>Add to cart →</button>" +
         "</div>" +
         "<div class='pc-err' id='pc-err'></div>" +
-        "<div class='pc-ready'>⚡ Artwork ready in 2–3 days &middot; Approve a digital proof before we print</div>" +
       "</div>" +
     "</div>" +
 
@@ -184,10 +197,10 @@
       "<details open><summary>Description</summary>" +
         "<p class='pc-lead'>Your pet, immortalized as a masterpiece.</p>" +
         "<p>We reimagine your beloved pet in the style of an old-world oil painting — capturing their personality and expression in rich, timeless detail. Printed on gallery-grade canvas and framed in your choice of ornate gilt, it’s an heirloom piece made to be passed down for generations.</p>" +
-        "<ul><li>Gallery-grade canvas, made &amp; framed in Florida</li><li>Approve a digital proof before anything is printed</li><li>Unlimited revisions until it’s exactly right</li><li>Free shipping on every order</li></ul>" +
+        "<ul><li>Gallery-grade canvas, made &amp; framed in Florida</li><li>Approve your preview before anything is printed</li><li>Unlimited revisions until it’s exactly right</li><li>Free shipping on every order</li></ul>" +
       "</details>" +
       "<details id='pc-guide'><summary>Size guide</summary><div class='pc-sizeviz' id='pc-sizeviz'></div><p class='pc-tiny'>Measured in inches &middot; landscape 4:3 &middot; printed on gallery-grade canvas and framed.</p></details>" +
-      "<details><summary>Guarantee</summary><p>Love it, or we’ll make it right. Approve a digital proof before anything prints, get unlimited revisions until it’s perfect, plus a 30-day happiness guarantee on every order. Trouble uploading a photo? Place your order and email it to support@petcreationsart.com.</p></details>" +
+      "<details><summary>Guarantee</summary><p>Love it, or we’ll make it right. Approve your preview before anything prints, get unlimited revisions until it’s perfect, plus a 30-day happiness guarantee on every order. Trouble uploading a photo? Place your order and email it to support@petcreationsart.com.</p></details>" +
     "</div>" +
     "</div>";
 
@@ -216,7 +229,8 @@
   }
   function renderSizes() {
     $("pc-sizes").innerHTML = SIZES.map(function (s) {
-      return "<div class='pc-oc" + (sel.size === s.code ? " sel" : "") + "' data-size='" + s.code + "'><b>" + s.label + "</b>" + up(sizeDelta(s.code), "Standard") + "</div>";
+      var pop = s.code === "M" ? "<span class='pc-pop'>Most popular</span>" : "";
+      return "<div class='pc-oc" + (sel.size === s.code ? " sel" : "") + "' data-size='" + s.code + "'>" + pop + "<b>" + s.label + "</b>" + up(sizeDelta(s.code), "Standard") + "</div>";
     }).join("");
   }
   function renderFrames() {
@@ -288,9 +302,7 @@
   function show(d) {
     currentId = d.id; currentPreview = API + d.preview_url; cacheBust = Date.now();
     renderHero(); renderThumbs();
-    var left = d.retries_left;
-    if (left > 0) { $("pc-left").textContent = left + " free AI tweak" + (left === 1 ? "" : "s") + " left"; $("pc-retry").disabled = false; $("pc-instruction").disabled = false; }
-    else { $("pc-left").textContent = "No free AI tweaks left — or let a real artist perfect it below."; $("pc-retry").disabled = true; $("pc-instruction").disabled = true; }
+    $("pc-retry").disabled = false; $("pc-instruction").disabled = false;
     refreshPhase();
     $("pc-post").scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
@@ -328,10 +340,10 @@
   $("pc-add").addEventListener("click", function () {
     var v = curVar();
     var props = {
-      "Style": labelOf(STYLES, sel.style), "_ai_job_id": currentId || "", "_ai_preview": currentPreview || ""
+      "Style": labelOf(STYLES, sel.style), "_job_id": currentId || "", "_preview": currentPreview || ""
     };
     if ($("pc-artist-check").checked) {
-      props["Artist touch-up"] = "Yes — hand-refine before printing";
+      props["Artist refinement"] = "Yes — free, after order (unlimited revisions by email)";
       var n = $("pc-artist-notes").value.trim(); if (n) props["Artist notes"] = n;
     }
     $("pc-add").disabled = true; $("pc-add").textContent = "Adding…";
