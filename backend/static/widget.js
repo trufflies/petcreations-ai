@@ -51,9 +51,9 @@
   // ---- Markup -------------------------------------------------------------------------
   root.innerHTML = "" +
     "<style>" +
-    "#pcai-root{--pc-bg:#f3ecde;--pc-ink:#343434;--pc-mut:#8a7d68;--pc-line:#dfd2b8;--pc-card:#fffdf7;--pc-acc:#5e1622;--pc-gold:#b08d57;--pc-serif:'Playfair Display',Georgia,serif;background:var(--pc-bg);color:var(--pc-ink);font-family:inherit;width:100vw;max-width:100vw;position:relative;left:calc(50% - 50vw);overflow-x:hidden}" +
+    "#pcai-root{--pc-bg:#f3ecde;--pc-ink:#343434;--pc-mut:#8a7d68;--pc-line:#dfd2b8;--pc-card:#fffdf7;--pc-acc:#5e1622;--pc-gold:#b08d57;--pc-serif:'Playfair Display',Georgia,serif;background:var(--pc-bg);color:var(--pc-ink);font-family:inherit;width:100%;overflow-x:hidden}" +
     "#pcai-root *{box-sizing:border-box}" +
-    "#pcai{width:96%;max-width:2400px;margin:0 auto;padding:34px 0 6px}" +
+    "#pcai{width:94%;max-width:1700px;margin:0 auto;padding:34px 0 6px}" +
     "#pcai .pc-wrap{display:grid;grid-template-columns:1fr;gap:28px}" +
     "@media(min-width:880px){#pcai .pc-wrap{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;align-items:start}#pcai .pc-media{position:sticky;top:20px}}" +
     // media
@@ -118,7 +118,7 @@
     "#pcai .pc-center{text-align:center}" +
     "#pcai .pc-err{color:#a33;font-size:14px;text-align:center;margin-top:8px}" +
     // info accordion
-    "#pcai-root .pc-info{width:96%;max-width:2400px;margin:24px auto 0;padding:0 0 34px}" +
+    "#pcai-root .pc-info{width:94%;max-width:1700px;margin:24px auto 0;padding:0 0 34px}" +
     "#pcai-root .pc-info details{border-top:1px solid var(--pc-line)}" +
     "#pcai-root .pc-info summary{cursor:pointer;padding:15px 0;font-family:var(--pc-serif);font-size:17px;font-weight:600;list-style:none;color:var(--pc-ink)}" +
     "#pcai-root .pc-info summary::-webkit-details-marker{display:none}" +
@@ -343,5 +343,22 @@
   });
 
   // ---- Init ---------------------------------------------------------------------------
+  // The theme's "Embed code" block wraps us in a narrow (~800px), overflow:hidden container that
+  // caps the width and clips both edges. Widen + unclip every ancestor up to the full-width section
+  // so the generator can fill the real product-section width. Re-run on resize for safety.
+  function unclip() {
+    var p = root.parentElement;
+    while (p && p !== document.body) {
+      var cs = getComputedStyle(p);
+      var mw = parseFloat(cs.maxWidth);
+      if (!isNaN(mw) && mw < 1400) p.style.maxWidth = "none";
+      if (cs.overflowX === "hidden") p.style.overflowX = "visible";
+      if (cs.overflowY === "hidden") p.style.overflowY = "visible";
+      p = p.parentElement;
+    }
+  }
+  unclip();
+  window.addEventListener("resize", unclip);
+
   renderStyles(); renderOptions(); renderHero(); renderThumbs(); renderSizeViz(); refreshPhase();
 })();
