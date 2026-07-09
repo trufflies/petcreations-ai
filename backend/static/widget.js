@@ -74,6 +74,23 @@
     "#pcai .pc-topcta-txt span{font-size:12.5px;color:var(--pc-mut)}" +
     "#pcai .pc-topcta .pc-btn{white-space:nowrap;flex:none}" +
     "@media(max-width:640px){#pcai .pc-topcta-in{flex-direction:column;align-items:stretch;text-align:center}#pcai .pc-topcta .pc-btn{width:100%;margin-top:2px}}" +
+    // mobile tightening
+    "@media(max-width:640px){" +
+      "#pcai{width:92%;padding-top:22px}" +
+      "#pcai .pc-hero{min-height:230px;padding:12px}" +
+      "#pcai .pc-hero>img,#pcai .pc-framed>.pc-fimg{max-height:420px}" +
+      "#pcai .pc-title{font-size:24px}" +
+      "#pcai .pc-topcta-txt b{font-size:17px}" +
+      "#pcai .pc-styleimg{height:100px}" +
+      "#pcai .pc-oc{padding:8px 5px}" +
+      "#pcai #pc-styles .pc-oc{padding:7px 5px 9px}" +
+      "#pcai .pc-oc b{font-size:12.5px}#pcai .pc-oc b.pc-serifname{font-size:13.5px}#pcai .pc-oc small{font-size:10px}" +
+      "#pcai .pc-badges{gap:6px}#pcai .pc-badge{padding:9px 3px}#pcai .pc-badge b{font-size:10.5px}#pcai .pc-badge small{font-size:9px}" +
+      "#pcai .pc-frameopts .pc-oc img{height:44px}" +
+      "#pcai .pc-btn{padding:14px 18px;font-size:14.5px}" +
+      "#pcai-root .pc-info svg{max-width:100%;height:auto}" +
+      "#pcai-root .pc-info summary{font-size:16px}" +
+    "}" +
     // media
     "#pcai .pc-hero{background:var(--pc-card);border:1px solid var(--pc-line);border-radius:16px;padding:16px;display:flex;align-items:center;justify-content:center;min-height:340px}" +
     "#pcai .pc-hero>img{max-width:100%;max-height:620px;border-radius:8px;box-shadow:0 8px 26px rgba(0,0,0,.14);display:block}" +
