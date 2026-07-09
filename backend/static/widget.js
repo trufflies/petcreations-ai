@@ -1,4 +1,4 @@
-/* Pet Creations AI — embeddable storefront widget (full product section).
+/* Pet Creations — embeddable storefront widget (full product section).
  * <div id="pcai-root"></div>
  * <script src="https://YOUR-BACKEND/app/widget.js"></script>
  *
@@ -53,7 +53,7 @@
     "<style>" +
     "#pcai-root{--pc-bg:#f3ecde;--pc-ink:#343434;--pc-mut:#8a7d68;--pc-line:#dfd2b8;--pc-card:#fffdf7;--pc-acc:#5e1622;--pc-gold:#b08d57;--pc-serif:'Playfair Display',Georgia,serif;background:var(--pc-bg);color:var(--pc-ink);font-family:inherit;width:100%;overflow-x:hidden}" +
     "#pcai-root *{box-sizing:border-box}" +
-    "#pcai{width:94%;max-width:1700px;margin:0 auto;padding:34px 0 6px}" +
+    "#pcai{width:94%;max-width:1700px;margin:0 auto;padding:34px 0 6px;text-align:left}" +
     "#pcai .pc-wrap{display:grid;grid-template-columns:1fr;gap:28px}" +
     "@media(min-width:880px){#pcai .pc-wrap{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;align-items:start}#pcai .pc-media{position:sticky;top:20px}}" +
     // media
@@ -108,7 +108,7 @@
     "#pcai .pc-dropicon{font-size:26px}" +
     "#pcai .pc-field{width:100%;padding:12px;border:1.5px solid var(--pc-line);border-radius:9px;font-size:14px;margin-top:10px;font-family:inherit;background:#fff;color:var(--pc-ink)}" +
     "#pcai textarea.pc-field{min-height:60px;resize:vertical}" +
-    "#pcai .pc-btn{background:var(--pc-acc);color:#fff;border:0;border-radius:100px;padding:15px 26px;font-size:15px;font-weight:600;letter-spacing:.4px;cursor:pointer;font-family:inherit}" +
+    "#pcai .pc-btn{background:var(--pc-acc);color:#fff;border:0;border-radius:100px;padding:15px 26px;font-size:15px;font-weight:600;letter-spacing:.4px;cursor:pointer;font-family:inherit;text-align:center}" +
     "#pcai .pc-btn:hover{filter:brightness(1.08)}" +
     "#pcai .pc-btn[disabled]{opacity:.4;cursor:not-allowed;filter:none}" +
     "#pcai .pc-btn.pc-big{display:block;width:100%;margin-top:16px}" +
@@ -199,7 +199,27 @@
         "<p>We reimagine your beloved pet in the style of an old-world oil painting — capturing their personality and expression in rich, timeless detail. Printed on gallery-grade canvas and framed in your choice of ornate gilt, it’s an heirloom piece made to be passed down for generations.</p>" +
         "<ul><li>Gallery-grade canvas, made &amp; framed in Florida</li><li>Approve your preview before anything is printed</li><li>Unlimited revisions until it’s exactly right</li><li>Free shipping on every order</li></ul>" +
       "</details>" +
-      "<details id='pc-guide'><summary>Size guide</summary><div class='pc-sizeviz' id='pc-sizeviz'></div><p class='pc-tiny'>Measured in inches &middot; landscape 4:3 &middot; printed on gallery-grade canvas and framed.</p></details>" +
+      "<details id='pc-guide'><summary>Size guide</summary>" +
+        "<svg viewBox='0 0 760 600' width='100%' style='max-width:560px;display:block;margin:8px auto 4px' xmlns='http://www.w3.org/2000/svg'>" +
+          "<g fill='none' stroke='#b7986a' stroke-width='2'>" +
+            "<rect x='220' y='40' width='320' height='240' rx='3'/><rect x='227' y='47' width='306' height='226' rx='2' stroke='#d8c39a'/>" +
+            "<rect x='252' y='88' width='256' height='192' rx='3'/><rect x='259' y='95' width='242' height='178' rx='2' stroke='#d8c39a'/>" +
+            "<rect x='284' y='136' width='192' height='144' rx='3'/><rect x='291' y='143' width='178' height='130' rx='2' stroke='#d8c39a'/>" +
+          "</g>" +
+          "<g fill='#3a2f28' font-family='Playfair Display,Georgia,serif' font-size='20' text-anchor='middle'>" +
+            "<text x='380' y='71'>40 × 30</text><text x='380' y='119'>32 × 24</text><text x='380' y='214'>24 × 18</text>" +
+          "</g>" +
+          "<g fill='#c4ad84'>" +
+            "<rect x='60' y='348' width='640' height='72' rx='24'/>" +
+            "<rect x='44' y='372' width='90' height='120' rx='22'/><rect x='626' y='372' width='90' height='120' rx='22'/>" +
+            "<rect x='110' y='406' width='540' height='80' rx='16'/>" +
+            "<rect x='150' y='486' width='15' height='24' rx='3'/><rect x='330' y='486' width='15' height='24' rx='3'/><rect x='415' y='486' width='15' height='24' rx='3'/><rect x='595' y='486' width='15' height='24' rx='3'/>" +
+          "</g>" +
+          "<line x1='378' y1='406' x2='378' y2='486' stroke='#ac9569' stroke-width='2'/>" +
+          "<line x1='40' y1='510' x2='720' y2='510' stroke='#dcccae' stroke-width='2'/>" +
+          "<text x='380' y='550' fill='#8a7d68' font-family='Playfair Display,Georgia,serif' font-style='italic' font-size='15' text-anchor='middle'>All sizes in inches — shown to scale against a standard 84&quot; sofa</text>" +
+        "</svg>" +
+        "<p class='pc-tiny' style='text-align:center'>Measured in inches &middot; landscape 4:3 &middot; printed on gallery-grade canvas and framed.</p></details>" +
       "<details><summary>Guarantee</summary><p>Love it, or we’ll make it right. Approve your preview before anything prints, get unlimited revisions until it’s perfect, plus a 30-day happiness guarantee on every order. Trouble uploading a photo? Place your order and email it to support@petcreationsart.com.</p></details>" +
     "</div>" +
     "</div>";
@@ -260,13 +280,6 @@
       }).join("");
     }
   }
-  function renderSizeViz() {
-    var sc = 3.4;
-    $("pc-sizeviz").innerHTML = [[24, 18], [32, 24], [40, 30]].map(function (d) {
-      return "<div class='pc-sizebox' style='width:" + (d[0] * sc) + "px;height:" + (d[1] * sc) + "px'>" + d[0] + "″ × " + d[1] + "″</div>";
-    }).join("");
-  }
-
   function updateGo() {
     var ok = file && sel.style && validEmail($("pc-email").value);
     $("pc-go").disabled = !ok;
@@ -372,5 +385,5 @@
   unclip();
   window.addEventListener("resize", unclip);
 
-  renderStyles(); renderOptions(); renderHero(); renderThumbs(); renderSizeViz(); refreshPhase();
+  renderStyles(); renderOptions(); renderHero(); renderThumbs(); refreshPhase();
 })();
