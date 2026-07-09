@@ -45,8 +45,10 @@
 
   // ---- State --------------------------------------------------------------------------
   var sel = { style: null, pets: "1", size: "S", frame: "G" };
-  var file = null, currentId = null, currentPreview = null, generatedStyle = null;
-  var heroExample = EXAMPLES[0], cacheBust = 0, timer = null;
+  var file = null, timer = null, heroExample = EXAMPLES[0];
+  // Per-style session cache so switching styles (and back) never re-generates: code -> {id, preview, bust}
+  var results = {};
+  function curRes() { return results[sel.style] || null; }
 
   // ---- Markup -------------------------------------------------------------------------
   root.innerHTML = "" +
@@ -184,6 +186,7 @@
               "<input class='pc-field' id='pc-instruction' placeholder=\"e.g. 'warmer tones', 'remove the leash', 'lighter background'\">" +
               "<button class='pc-btn ghost' id='pc-retry'>Apply change</button>" +
             "</div>" +
+            "<div class='pc-tiny' style='margin-top:9px'>Want a completely different take? <span id='pc-regen' style='color:var(--pc-acc);cursor:pointer;text-decoration:underline'>Generate a new version</span></div>" +
           "</div>" +
           "<label class='pc-artist'><input type='checkbox' id='pc-artist-check'>" +
             "<span><b>Free artist refinement</b> <span class='pc-tag pc-tag-free'>Free · after you order</span><br>" +
@@ -266,18 +269,19 @@
   function renderOptions() { renderSizes(); renderFrames(); renderPrice(); }
 
   function framedHTML(cls, wrapCls) {
-    var f = frameByCode(sel.frame);
+    var f = frameByCode(sel.frame), r = curRes();
     return "<div class='pc-framed" + (wrapCls ? " " + wrapCls : "") + "'><img class='pc-fimg' src='" + f.img + "'>" +
-      "<img class='" + cls + "' src='" + currentPreview + "?t=" + cacheBust + "' style='left:" + f.l + "%;top:" + f.t + "%;width:" + f.w + "%;height:" + f.h + "%'></div>";
+      "<img class='" + cls + "' src='" + r.preview + "?t=" + r.bust + "' style='left:" + f.l + "%;top:" + f.t + "%;width:" + f.w + "%;height:" + f.h + "%'></div>";
   }
   function renderHero() {
-    $("pc-hero").innerHTML = currentPreview ? framedHTML("pc-fart") : "<img src='" + heroExample + "'>";
+    $("pc-hero").innerHTML = curRes() ? framedHTML("pc-fart") : "<img src='" + heroExample + "'>";
   }
   function renderThumbs() {
-    if (currentPreview) {
+    var r = curRes();
+    if (r) {
       $("pc-thumbs").innerHTML = FRAMES.map(function (f) {
         return "<button class='pc-thumb" + (sel.frame === f.code ? " sel" : "") + "' data-frame='" + f.code + "' title='" + f.label + "'>" +
-          "<div class='pc-framed'><img class='pc-fimg' src='" + f.img + "'><img class='pc-fart' src='" + currentPreview + "?t=" + cacheBust + "' style='left:" + f.l + "%;top:" + f.t + "%;width:" + f.w + "%;height:" + f.h + "%'></div></button>";
+          "<div class='pc-framed'><img class='pc-fimg' src='" + f.img + "'><img class='pc-fart' src='" + r.preview + "?t=" + r.bust + "' style='left:" + f.l + "%;top:" + f.t + "%;width:" + f.w + "%;height:" + f.h + "%'></div></button>";
       }).join("");
     } else {
       $("pc-thumbs").innerHTML = EXAMPLES.map(function (src) {
@@ -291,11 +295,11 @@
     $("pc-gohint").style.display = ok ? "none" : "block";
   }
   function refreshPhase() {
-    var fresh = currentPreview && generatedStyle === sel.style;
+    var fresh = !!curRes();
     $("pc-post").style.display = fresh ? "block" : "none";
     $("pc-cta").style.display = fresh ? "none" : "block";
-    $("pc-go").textContent = currentPreview ? "Regenerate ✨" : "Create my portrait ✨";
-    $("pc-heronote").textContent = currentPreview
+    $("pc-go").textContent = "Create my portrait ✨";
+    $("pc-heronote").textContent = fresh
       ? "Preview is watermarked — your final artwork is clean, full-resolution & hand-checked before printing."
       : "✨ Upload your pet’s photo — your live preview appears here in ~60 seconds.";
     updateGo();
@@ -317,16 +321,22 @@
     $("pc-hero").scrollIntoView({ behavior: "smooth", block: "center" });
   }
   function stop() { clearInterval(timer); }
-  function show(d) {
-    currentId = d.id; currentPreview = API + d.preview_url; cacheBust = Date.now();
+  function show(d, style) {
+    results[style || sel.style] = { id: d.id, preview: API + d.preview_url, bust: Date.now() };
     renderHero(); renderThumbs();
     $("pc-retry").disabled = false; $("pc-instruction").disabled = false;
     refreshPhase();
     $("pc-post").scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
+  function doGenerate(style) {
+    if (!file || !style) return;
+    loading();
+    var fd = new FormData(); fd.append("file", file); fd.append("style", style); fd.append("email", $("pc-email").value.trim());
+    post("/generate", fd).then(function (d) { show(d, style); }).catch(function (e) { renderHero(); $("pc-err").textContent = e.message; }).then(stop, stop);
+  }
 
   // ---- Events -------------------------------------------------------------------------
-  $("pc-styles").addEventListener("click", function (e) { var c = e.target.closest("[data-style]"); if (!c) return; sel.style = c.getAttribute("data-style"); renderStyles(); refreshPhase(); });
+  $("pc-styles").addEventListener("click", function (e) { var c = e.target.closest("[data-style]"); if (!c) return; sel.style = c.getAttribute("data-style"); renderStyles(); renderHero(); renderThumbs(); refreshPhase(); });
   $("pc-sizes").addEventListener("click", function (e) { var c = e.target.closest("[data-size]"); if (!c) return; sel.size = c.getAttribute("data-size"); renderOptions(); });
   $("pc-frames").addEventListener("click", function (e) { var c = e.target.closest("[data-frame]"); if (!c) return; selectFrame(c.getAttribute("data-frame")); });
   $("pc-thumbs").addEventListener("click", function (e) {
@@ -345,20 +355,23 @@
 
   $("pc-go").addEventListener("click", function () {
     if (!(file && sel.style && validEmail($("pc-email").value))) return;
-    loading();
-    var fd = new FormData(); fd.append("file", file); fd.append("style", sel.style); fd.append("email", $("pc-email").value.trim());
-    post("/generate", fd).then(function (d) { generatedStyle = sel.style; show(d); }).catch(function (e) { renderHero(); $("pc-err").textContent = e.message; }).then(stop, stop);
+    doGenerate(sel.style);
+  });
+  $("pc-regen").addEventListener("click", function () {
+    if (!file || !sel.style) return;
+    doGenerate(sel.style);
   });
   $("pc-retry").addEventListener("click", function () {
-    var ins = $("pc-instruction").value.trim(); if (!ins || !currentId) return;
+    var r = curRes(), ins = $("pc-instruction").value.trim(); if (!ins || !r) return;
+    var genStyle = sel.style;
     loading();
-    var fd = new FormData(); fd.append("id", currentId); fd.append("instruction", ins);
-    post("/retry", fd).then(function (d) { show(d); $("pc-instruction").value = ""; }).catch(function (e) { renderHero(); $("pc-err").textContent = e.message; }).then(stop, stop);
+    var fd = new FormData(); fd.append("id", r.id); fd.append("instruction", ins);
+    post("/retry", fd).then(function (d) { show(d, genStyle); $("pc-instruction").value = ""; }).catch(function (e) { renderHero(); $("pc-err").textContent = e.message; }).then(stop, stop);
   });
   $("pc-add").addEventListener("click", function () {
-    var v = curVar();
+    var v = curVar(), r = curRes();
     var props = {
-      "Style": labelOf(STYLES, sel.style), "_job_id": currentId || "", "_preview": currentPreview || ""
+      "Style": labelOf(STYLES, sel.style), "_job_id": r ? r.id : "", "_preview": r ? r.preview : ""
     };
     if ($("pc-artist-check").checked) {
       props["Artist refinement"] = "Yes — free, after order (unlimited revisions by email)";
