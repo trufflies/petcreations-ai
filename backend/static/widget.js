@@ -98,6 +98,8 @@
     "#pcai .pc-oc b.pc-serifname{font-family:var(--pc-serif);font-size:16px}" +
     "#pcai .pc-oc small{display:block;font-size:11px;color:var(--pc-mut);margin-top:2px;min-height:14px}" +
     "#pcai .pc-oc small.pc-up{color:var(--pc-acc);font-weight:600}" +
+    "#pcai #pc-styles .pc-oc{padding:7px 7px 10px}" +
+    "#pcai .pc-styleimg{width:100%;height:96px;object-fit:cover;border-radius:8px;display:block;margin-bottom:7px}" +
     "#pcai .pc-pop{display:block;background:var(--pc-acc);color:#fff;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 0;border-radius:6px;margin:-4px -3px 6px}" +
     "#pcai .pc-frameopts .pc-oc{padding:7px 6px}" +
     "#pcai .pc-frameopts .pc-oc img{width:100%;height:50px;object-fit:contain;display:block;margin-bottom:4px}" +
@@ -244,7 +246,9 @@
   }
   function renderStyles() {
     $("pc-styles").innerHTML = STYLES.map(function (s) {
-      return "<div class='pc-oc" + (sel.style === s.code ? " sel" : "") + "' data-style='" + s.code + "'><b class='pc-serifname'>" + s.label + "</b><small>" + s.sub + "</small></div>";
+      return "<div class='pc-oc" + (sel.style === s.code ? " sel" : "") + "' data-style='" + s.code + "'>" +
+        "<img class='pc-styleimg' src='" + API + "/app/examples/" + s.code + ".jpg' alt='" + s.label + "'>" +
+        "<b class='pc-serifname'>" + s.label + "</b><small>" + s.sub + "</small></div>";
     }).join("");
   }
   function renderSizes() {
