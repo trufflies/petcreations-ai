@@ -84,7 +84,7 @@
     "#pcai .pc-gift{font-size:12.5px;color:var(--pc-acc);background:rgba(94,22,34,.06);border-radius:8px;padding:8px 11px;margin:12px 0 0}" +
     "#pcai .pc-badges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 4px}" +
     "#pcai .pc-badge{border:1px solid var(--pc-line);border-radius:12px;padding:10px 6px;text-align:center;background:var(--pc-card)}" +
-    "#pcai .pc-badge span{font-size:18px;display:block;line-height:1}" +
+    "#pcai .pc-badge svg{width:23px;height:23px;display:block;margin:0 auto 4px;stroke:var(--pc-acc);fill:none}" +
     "#pcai .pc-badge b{display:block;font-size:12px;margin-top:4px}" +
     "#pcai .pc-badge small{font-size:10px;color:var(--pc-mut)}" +
     "#pcai .pc-opt{margin:18px 0 0}" +
@@ -99,7 +99,7 @@
     "#pcai .pc-oc small{display:block;font-size:11px;color:var(--pc-mut);margin-top:2px;min-height:14px}" +
     "#pcai .pc-oc small.pc-up{color:var(--pc-acc);font-weight:600}" +
     "#pcai #pc-styles .pc-oc{padding:7px 7px 10px}" +
-    "#pcai .pc-styleimg{width:100%;height:96px;object-fit:cover;border-radius:8px;display:block;margin-bottom:7px}" +
+    "#pcai .pc-styleimg{width:100%;height:126px;object-fit:cover;object-position:center 22%;border-radius:8px;display:block;margin-bottom:7px}" +
     "#pcai .pc-pop{display:block;background:var(--pc-acc);color:#fff;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 0;border-radius:6px;margin:-4px -3px 6px}" +
     "#pcai .pc-frameopts .pc-oc{padding:7px 6px}" +
     "#pcai .pc-frameopts .pc-oc img{width:100%;height:50px;object-fit:contain;display:block;margin-bottom:4px}" +
@@ -157,15 +157,16 @@
         "<div class='pc-pricerow' id='pc-pricerow'></div>" +
         "<div class='pc-gift'>🎁 Free shipping — your masterpiece is delivered in 4–7 business days.</div>" +
         "<div class='pc-badges'>" +
-          "<div class='pc-badge'><span>🚚</span><b>Fast &amp; Free</b><small>shipping</small></div>" +
-          "<div class='pc-badge'><span>⚡</span><b>60-Second</b><small>instant preview</small></div>" +
-          "<div class='pc-badge'><span>💖</span><b>30-Day</b><small>happiness guarantee</small></div>" +
+          "<div class='pc-badge'><svg viewBox='0 0 24 24' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M3 7h10v8H3z'/><path d='M13 10h4l3 3v2h-7z'/><circle cx='7' cy='17.5' r='1.4'/><circle cx='17' cy='17.5' r='1.4'/></svg><b>Fast &amp; Free</b><small>shipping</small></div>" +
+          "<div class='pc-badge'><svg viewBox='0 0 24 24' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='13.5' r='6.5'/><path d='M12 13.5V10'/><path d='M10 3.5h4'/><path d='M12 3.5v2'/></svg><b>60-Second</b><small>instant preview</small></div>" +
+          "<div class='pc-badge'><svg viewBox='0 0 24 24' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3l7 3v5c0 4.4-3 7.4-7 8.8-4-1.4-7-4.4-7-8.8V6z'/><path d='M9 12l2 2 4-4'/></svg><b>30-Day</b><small>happiness guarantee</small></div>" +
         "</div>" +
 
         "<div class='pc-opt'><div class='pc-label'>1 &middot; Your pet’s photo</div>" +
           "<label class='pc-drop' id='pc-drop'><input type='file' id='pc-file' accept='image/*'>" +
           "<div id='pc-dropin'><div class='pc-dropicon'>🐾</div><div class='pc-tiny'>Click to upload a clear, well-lit photo</div></div></label>" +
           "<input class='pc-field' id='pc-email' type='email' placeholder='Your email (so we can send your preview)'>" +
+          "<div class='pc-tiny' style='margin-top:5px'>We’ll only use it to send your preview — no spam, ever.</div>" +
         "</div>" +
         "<div class='pc-opt'><div class='pc-label'>2 &middot; Choose your style</div><div class='pc-grid3' id='pc-styles'></div></div>" +
         "<div class='pc-opt'><div class='pc-label'>3 &middot; Choose your size <span class='pc-guidelink' id='pc-guidelink'>📐 Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
