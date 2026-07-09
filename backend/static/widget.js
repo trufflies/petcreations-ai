@@ -18,9 +18,9 @@
   var VAR = {"1SG":[48111346254042,15999,19999],"1SR":[48111363915994,15999,19999],"1SB":[48111363948762,20999,26299],"1MG":[48111346286810,19999,24999],"1MR":[48111363981530,19999,24999],"1MB":[48111364014298,25999,32499],"1LG":[48111346319578,26999,33799],"1LR":[48111364047066,26999,33799],"1LB":[48111364079834,33999,42499],"2SG":[48111346385114,18999,23799],"2SR":[48111364178138,18999,23799],"2SB":[48111364210906,23999,29999],"2MG":[48111346417882,22999,28799],"2MR":[48111364243674,22999,28799],"2MB":[48111364276442,28999,36299],"2LG":[48111346450650,25999,32499],"2LR":[48111364309210,25999,32499],"2LB":[48111364341978,36999,46299],"3SG":[48111346516186,21999,27499],"3SR":[48111364440282,21999,27499],"3SB":[48111364473050,26999,33799],"3MG":[48111346548954,25999,32499],"3MR":[48111364505818,25999,32499],"3MB":[48111364538586,31999,39999],"3LG":[48111346581722,32999,41299],"3LR":[48111364571354,32999,41299],"3LB":[48111364604122,39999,49999]};
 
   var STYLES = [
-    { code: "watercolor", label: "Watercolor",   sub: "Soft & elegant" },
-    { code: "oil",        label: "Oil Painting",  sub: "Museum oil" },
-    { code: "heritage",   label: "Heritage",      sub: "Regal heirloom" }
+    { code: "monet",    label: "Monet",        sub: "Impressionist" },
+    { code: "oil",      label: "Oil Painting", sub: "Museum oil" },
+    { code: "heritage", label: "Heritage",     sub: "Regal heirloom" }
   ];
   var SIZES = [
     { code: "S", label: "24 × 18\"" }, { code: "M", label: "32 × 24\"" }, { code: "L", label: "40 × 30\"" }
@@ -42,10 +42,19 @@
     CDN + "ChatGPT_Image_Jun_5_2026_07_05_06_PM.png"
   ];
   var LOADING = ["Studying your pet’s features…", "Preparing the canvas…", "Mixing the paints…", "Applying brushstrokes…", "Adding the finishing details…"];
+  // Rotated in the preview loader (Bondel-style social proof while they wait ~60s)
+  var REVIEWS = [
+    { n: "Rachel T. · Portland, OR", t: "Didn't expect much — then I unwrapped it. Every bit of Bella's fluff, those eyes. I gasped out loud." },
+    { n: "Marcus D. · Austin, TX", t: "The oil painting of our lab looks like it belongs in a museum. The framing is stunning." },
+    { n: "Priya S. · Chicago, IL", t: "Cried when it arrived — it's exactly our girl, captured her soul. Worth every penny." },
+    { n: "Tom & Elena · Denver, CO", t: "Hung it over the mantel and everyone asks where we got it. Heirloom quality, truly." },
+    { n: "Jasmine W. · Seattle, WA", t: "The preview alone sold me in 60 seconds. The final canvas blew it out of the water." },
+    { n: "Diego M. · Miami, FL", t: "Our late boy, immortalized. I can't put into words what this means to our family. Thank you." }
+  ];
 
   // ---- State --------------------------------------------------------------------------
   var sel = { style: null, pets: "1", size: "S", frame: "G" };
-  var file = null, timer = null, heroExample = EXAMPLES[0];
+  var file = null, timer = null, heroPick = null;
   // Per-style session cache so switching styles (and back) never re-generates: code -> {id, preview, bust}
   var results = {};
   function curRes() { return results[sel.style] || null; }
@@ -73,6 +82,12 @@
     "#pcai .pc-heronote{font-size:12px;color:var(--pc-mut);text-align:center;margin-top:11px}" +
     "#pcai .pc-spin{width:40px;height:40px;border:4px solid var(--pc-line);border-top-color:var(--pc-acc);border-radius:50%;animation:pcspin 1s linear infinite;margin:0 auto 12px}" +
     "@keyframes pcspin{to{transform:rotate(360deg)}}" +
+    "#pcai .pc-loading{max-width:360px;margin:0 auto}" +
+    "#pcai .pc-loadrev{margin-top:18px;padding:13px 15px;border:1px solid var(--pc-line);border-radius:12px;background:#fff;text-align:left}" +
+    "#pcai .pc-lr-stars{color:#e8a91d;font-size:13px;letter-spacing:1px}" +
+    "#pcai .pc-lr-t{font-size:13px;line-height:1.5;color:var(--pc-ink);margin:5px 0 6px;font-style:italic}" +
+    "#pcai .pc-lr-n{font-size:11px;color:var(--pc-mut);font-weight:600}" +
+    "@keyframes pcfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}" +
     // buy column
     "#pcai .pc-eyebrow{font-size:11px;letter-spacing:.18em;color:var(--pc-mut);text-transform:uppercase;font-weight:600}" +
     "#pcai .pc-title{font-family:var(--pc-serif);font-size:30px;line-height:1.12;font-weight:700;margin:6px 0 8px;color:var(--pc-ink)}" +
@@ -274,20 +289,25 @@
       "<img class='" + cls + "' src='" + r.preview + "?t=" + r.bust + "' style='left:" + f.l + "%;top:" + f.t + "%;width:" + f.w + "%;height:" + f.h + "%'></div>";
   }
   function renderHero() {
-    $("pc-hero").innerHTML = curRes() ? framedHTML("pc-fart") : "<img src='" + heroExample + "'>";
+    if (heroPick) $("pc-hero").innerHTML = "<img src='" + heroPick + "'>";
+    else if (curRes()) $("pc-hero").innerHTML = framedHTML("pc-fart");
+    else $("pc-hero").innerHTML = "<img src='" + EXAMPLES[0] + "'>";
   }
   function renderThumbs() {
-    var r = curRes();
-    if (r) {
-      $("pc-thumbs").innerHTML = FRAMES.map(function (f) {
-        return "<button class='pc-thumb" + (sel.frame === f.code ? " sel" : "") + "' data-frame='" + f.code + "' title='" + f.label + "'>" +
+    var r = curRes(), html = "";
+    if (r) {  // customer's portrait in each frame
+      html += FRAMES.map(function (f) {
+        var s = (!heroPick && sel.frame === f.code) ? " sel" : "";
+        return "<button class='pc-thumb" + s + "' data-frame='" + f.code + "' title='" + f.label + "'>" +
           "<div class='pc-framed'><img class='pc-fimg' src='" + f.img + "'><img class='pc-fart' src='" + r.preview + "?t=" + r.bust + "' style='left:" + f.l + "%;top:" + f.t + "%;width:" + f.w + "%;height:" + f.h + "%'></div></button>";
       }).join("");
-    } else {
-      $("pc-thumbs").innerHTML = EXAMPLES.map(function (src) {
-        return "<button class='pc-thumb" + (heroExample === src ? " sel" : "") + "' data-ex='" + src + "'><img src='" + src + "'></button>";
-      }).join("");
     }
+    // example gallery — kept visible even after a preview (incl. the size-comparison shot)
+    html += EXAMPLES.map(function (src) {
+      var s = (heroPick === src || (!r && !heroPick && src === EXAMPLES[0])) ? " sel" : "";
+      return "<button class='pc-thumb" + s + "' data-ex='" + src + "'><img src='" + src + "'></button>";
+    }).join("");
+    $("pc-thumbs").innerHTML = html;
   }
   function updateGo() {
     var ok = file && sel.style && validEmail($("pc-email").value);
@@ -315,14 +335,25 @@
   }
   function loading() {
     $("pc-err").textContent = "";
-    $("pc-hero").innerHTML = "<div class='pc-center'><div class='pc-spin'></div><div class='pc-tiny' id='pc-loadmsg'></div></div>";
-    var i = 0; function r() { var m = $("pc-loadmsg"); if (m) m.textContent = LOADING[i % LOADING.length]; i++; }
-    r(); timer = setInterval(r, 3200);
+    $("pc-hero").innerHTML = "<div class='pc-center pc-loading'><div class='pc-spin'></div><div class='pc-tiny' id='pc-loadmsg'></div><div class='pc-loadrev' id='pc-loadrev'></div></div>";
+    var i = 0, j = 0;
+    function tick() {
+      var m = $("pc-loadmsg"); if (m) m.textContent = LOADING[i % LOADING.length];
+      var rv = $("pc-loadrev");
+      if (rv && i % 2 === 0) {
+        var rev = REVIEWS[j % REVIEWS.length]; j++;
+        rv.innerHTML = "<div class='pc-lr-stars'>★★★★★</div><div class='pc-lr-t'>“" + rev.t + "”</div><div class='pc-lr-n'>— " + rev.n + "</div>";
+        rv.style.animation = "none"; void rv.offsetWidth; rv.style.animation = "pcfade .5s ease";
+      }
+      i++;
+    }
+    tick(); timer = setInterval(tick, 3000);
     $("pc-hero").scrollIntoView({ behavior: "smooth", block: "center" });
   }
   function stop() { clearInterval(timer); }
   function show(d, style) {
     results[style || sel.style] = { id: d.id, preview: API + d.preview_url, bust: Date.now() };
+    heroPick = null;
     renderHero(); renderThumbs();
     $("pc-retry").disabled = false; $("pc-instruction").disabled = false;
     refreshPhase();
@@ -336,13 +367,13 @@
   }
 
   // ---- Events -------------------------------------------------------------------------
-  $("pc-styles").addEventListener("click", function (e) { var c = e.target.closest("[data-style]"); if (!c) return; sel.style = c.getAttribute("data-style"); renderStyles(); renderHero(); renderThumbs(); refreshPhase(); });
+  $("pc-styles").addEventListener("click", function (e) { var c = e.target.closest("[data-style]"); if (!c) return; sel.style = c.getAttribute("data-style"); heroPick = null; renderStyles(); renderHero(); renderThumbs(); refreshPhase(); });
   $("pc-sizes").addEventListener("click", function (e) { var c = e.target.closest("[data-size]"); if (!c) return; sel.size = c.getAttribute("data-size"); renderOptions(); });
   $("pc-frames").addEventListener("click", function (e) { var c = e.target.closest("[data-frame]"); if (!c) return; selectFrame(c.getAttribute("data-frame")); });
   $("pc-thumbs").addEventListener("click", function (e) {
     var b = e.target.closest(".pc-thumb"); if (!b) return;
-    if (b.getAttribute("data-frame")) selectFrame(b.getAttribute("data-frame"));
-    else if (b.getAttribute("data-ex")) { heroExample = b.getAttribute("data-ex"); renderHero(); renderThumbs(); }
+    if (b.getAttribute("data-frame")) { heroPick = null; selectFrame(b.getAttribute("data-frame")); }
+    else if (b.getAttribute("data-ex")) { heroPick = b.getAttribute("data-ex"); renderHero(); renderThumbs(); }
   });
   $("pc-guidelink").addEventListener("click", function () { var d = $("pc-guide"); d.open = true; d.scrollIntoView({ behavior: "smooth", block: "center" }); });
   $("pc-file").addEventListener("change", function (e) {

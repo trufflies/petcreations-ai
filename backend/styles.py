@@ -47,16 +47,17 @@ _HERITAGE = (
 )
 
 STYLES = {
-    "watercolor": {
-        "label": "Watercolor",
+    "monet": {
+        "label": "Monet",
         "provider": "gemini",
         "prompt": _nano(
-            "Render as a soft, elegant watercolor painting of the pet with gentle color washes, subtle "
-            "paper texture, and delicate brushstrokes. IMPORTANT: completely REPLACE the original photo's "
-            "background — do NOT keep the real-world setting (no grass, floor, furniture, sofa, or room). "
-            "Place the pet against a soft, abstract watercolor wash in gentle complementary tones. The "
-            "wash must FILL THE ENTIRE BACKGROUND edge to edge (full bleed) so the colour reaches all four "
-            "edges of the image — no white border and no vignette."
+            "Render as an Impressionist oil painting in the style of Claude Monet — loose, visible dappled "
+            "brushstrokes, broken colour, soft luminous natural light, and an airy plein-air palette of "
+            "blended pastel and jewel tones. IMPORTANT: completely REPLACE the original photo's background "
+            "— do NOT keep the real-world setting (no grass, floor, furniture, sofa, or room). Place the pet "
+            "against a soft, dreamy Impressionist wash suggesting a sunlit garden (gentle hints of foliage, "
+            "blossoms and sky) in complementary tones. The painting must FILL THE ENTIRE IMAGE edge to edge "
+            "(full bleed) — no white border, no vignette, and no picture frame."
         ),
     },
     "oil": {
