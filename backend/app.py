@@ -86,7 +86,9 @@ def _save(art_bytes, style, email, retries, original=None, orig_ext=".jpg", orig
 def health():
     return {"ok": True,
             "styles": {k: v["label"] for k, v in STYLES.items()},
-            "frames": {k: v["label"] for k, v in FRAMES.items()}}
+            "frames": {k: v["label"] for k, v in FRAMES.items()},
+            "email_configured": bool(os.environ.get("RESEND_API_KEY")),
+            "persistent_storage": bool(os.environ.get("GEN_DIR"))}
 
 
 @app.post("/generate")
