@@ -19,11 +19,12 @@ import os
 import re
 import uuid
 
-from fastapi import FastAPI, UploadFile, Form, HTTPException
+from fastapi import FastAPI, UploadFile, Form, HTTPException, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 import generation as gen
+import email_send
 from styles import STYLES, FRAMES
 from watermark import add_watermark
 
@@ -89,7 +90,8 @@ def health():
 
 
 @app.post("/generate")
-def generate(file: UploadFile, style: str = Form(...), email: str = Form(...)):
+def generate(file: UploadFile, background: BackgroundTasks,
+             style: str = Form(...), email: str = Form(...)):
     if style not in STYLES:
         raise HTTPException(400, f"unknown style '{style}'")
     if not EMAIL_RE.match((email or "").strip()):
@@ -104,7 +106,13 @@ def generate(file: UploadFile, style: str = Form(...), email: str = Form(...)):
         raise HTTPException(502, str(e))
     ct = (file.content_type or "").lower()
     ext = ".png" if "png" in ct else (".webp" if "webp" in ct else ".jpg")
-    return _save(art, style, email.strip(), 0, original=data, orig_ext=ext)
+    saved = _save(art, style, email.strip(), 0, original=data, orig_ext=ext)
+    # Email the customer their preview once the response is on its way out.
+    # Runs after the response, is a no-op until RESEND_API_KEY is set, and can
+    # never raise into the request (send_preview_email swallows its own errors).
+    background.add_task(email_send.send_preview_email, email.strip(),
+                        saved["preview_url"], STYLES[style]["label"])
+    return saved
 
 
 @app.post("/retry")
