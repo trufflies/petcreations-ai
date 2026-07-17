@@ -35,6 +35,8 @@
   var CDN = "https://cdn.shopify.com/s/files/1/0055/0957/8803/files/";
   var EXAMPLES = [
     CDN + "ChatGPTImageJun23_2026_09_21_46PM.png",
+    CDN + "cat_heritage_2.png?v=1784330546",
+    CDN + "cat_heritage_1.png?v=1784330546",
     CDN + "image0_9_dc9c6ca1-b37a-4302-b2b6-915e82b8439e.png",
     CDN + "ChatGPT_Image_Jun_23_2026_10_21_29_PM.png",
     CDN + "ChatGPT_Image_Jun_23_2026_10_23_53_PM.png",
