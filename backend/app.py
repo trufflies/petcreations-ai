@@ -91,6 +91,33 @@ def health():
             "persistent_storage": bool(os.environ.get("GEN_DIR"))}
 
 
+@app.get("/stats")
+def stats():
+    """Preview-session analytics counted from files on the persistent disk.
+    Each customer upload+generate saves one '<id>_original.<ext>', so those count the
+    real preview sessions; '<id>_full.png' also counts retries/recolors."""
+    import glob
+    import time
+    now = time.time()
+    originals = glob.glob(os.path.join(GEN_DIR, "*_original*"))
+    renders = glob.glob(os.path.join(GEN_DIR, "*_full.png"))
+
+    def within(files, secs):
+        n = 0
+        for f in files:
+            try:
+                if now - os.path.getmtime(f) < secs:
+                    n += 1
+            except OSError:
+                pass
+        return n
+
+    return {"preview_sessions_total": len(originals),
+            "preview_sessions_24h": within(originals, 86400),
+            "preview_sessions_1h": within(originals, 3600),
+            "total_renders_incl_retries": len(renders)}
+
+
 @app.post("/generate")
 def generate(file: UploadFile, background: BackgroundTasks,
              style: str = Form(...), email: str = Form(...)):
