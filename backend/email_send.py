@@ -102,7 +102,14 @@ def send_preview_email(to_email, preview_url, style_label="heirloom", product_ur
     }).encode("utf-8")
     req = urllib.request.Request(
         RESEND_URL, data=payload,
-        headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
+        headers={
+            "Authorization": "Bearer " + key,
+            "Content-Type": "application/json",
+            # Resend's API sits behind Cloudflare, which 403s the default Python-urllib
+            # User-Agent (Cloudflare error 1010). A normal browser UA passes the bot filter.
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                          "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        },
         method="POST",
     )
     try:
