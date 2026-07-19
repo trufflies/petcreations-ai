@@ -201,7 +201,7 @@
       "<div class='pc-buy'>" +
         "<div class='pc-eyebrow'>Heirloom Pet Art</div>" +
         "<h1 class='pc-title'>Custom Heritage Framed Pet Portrait</h1>" +
-        "<div class='pc-reviews'><span class='pc-stars'>★★★★★</span> <b>4.8</b>/5 &middot; 14,376+ happy customers</div>" +
+        "<div class='pc-reviews'><span class='pc-stars'>★★★★★</span> <b>4.9</b>/5 &middot; 14,668+ happy customers</div>" +
         "<div class='pc-pricerow' id='pc-pricerow'></div>" +
         "<div class='pc-gift'>🎁 Free shipping — your masterpiece is delivered in 4–7 business days.</div>" +
         "<div class='pc-badges'>" +
