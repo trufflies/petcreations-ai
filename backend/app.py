@@ -98,6 +98,7 @@ def stats():
     real preview sessions; '<id>_full.png' also counts retries/recolors."""
     import glob
     import time
+    import datetime
     now = time.time()
     originals = glob.glob(os.path.join(GEN_DIR, "*_original*"))
     renders = glob.glob(os.path.join(GEN_DIR, "*_full.png"))
@@ -112,10 +113,27 @@ def stats():
                 pass
         return n
 
+    # Daily breakdown, bucketed by US Eastern date (UTC-4/EDT) so days line up with
+    # the store owner's clock. Last 14 days, most recent first.
+    counts = {}
+    for f in originals:
+        try:
+            d = (datetime.datetime.utcfromtimestamp(os.path.getmtime(f))
+                 - datetime.timedelta(hours=4)).strftime("%Y-%m-%d")
+            counts[d] = counts.get(d, 0) + 1
+        except OSError:
+            pass
+    today_et = (datetime.datetime.utcnow() - datetime.timedelta(hours=4)).date()
+    by_day = []
+    for i in range(14):
+        d = (today_et - datetime.timedelta(days=i)).strftime("%Y-%m-%d")
+        by_day.append({"date": d, "sessions": counts.get(d, 0)})
+
     return {"preview_sessions_total": len(originals),
             "preview_sessions_24h": within(originals, 86400),
             "preview_sessions_1h": within(originals, 3600),
-            "total_renders_incl_retries": len(renders)}
+            "total_renders_incl_retries": len(renders),
+            "by_day_eastern": by_day}
 
 
 @app.post("/generate")
