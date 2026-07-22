@@ -22,6 +22,7 @@ import uuid
 from fastapi import FastAPI, UploadFile, Form, HTTPException, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 import generation as gen
 import email_send
@@ -91,8 +92,7 @@ def health():
             "persistent_storage": bool(os.environ.get("GEN_DIR"))}
 
 
-@app.get("/stats")
-def stats():
+def _compute_stats():
     """Preview-session analytics counted from files on the persistent disk.
     Each customer upload+generate saves one '<id>_original.<ext>', so those count the
     real preview sessions; '<id>_full.png' also counts retries/recolors."""
@@ -134,6 +134,93 @@ def stats():
             "preview_sessions_1h": within(originals, 3600),
             "total_renders_incl_retries": len(renders),
             "by_day_eastern": by_day}
+
+
+@app.get("/stats.json")
+def stats_json():
+    """Raw analytics as JSON (for anything programmatic)."""
+    return _compute_stats()
+
+
+# Human-friendly stats page. __STATS__/__DAYS__ are token-replaced (not %-format /
+# .format) so the literal { } in the CSS below don't need escaping.
+STATS_PAGE = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="120">
+<title>Pet Creations &mdash; Preview Stats</title>
+<style>
+  :root{--burg:#5E1622;--parch:#F3ECDE;--ink:#2b1a12;--line:#e3d8c5;--mut:#7a6a5c;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--parch);color:var(--ink);
+       font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:560px;margin:0 auto;padding:34px 20px 60px;}
+  h1{font-family:Georgia,"Times New Roman",serif;color:var(--burg);
+     font-size:27px;margin:0 0 3px;letter-spacing:.2px;}
+  .sub{color:var(--mut);font-size:13px;margin:0 0 26px;}
+  .stat{display:flex;justify-content:space-between;align-items:baseline;
+        padding:13px 0;border-bottom:1px solid var(--line);}
+  .stat .label{color:#5f5045;}
+  .stat .value{font-family:Georgia,serif;color:var(--burg);font-size:25px;font-weight:700;
+               font-variant-numeric:tabular-nums;}
+  h2{font-family:Georgia,serif;color:var(--burg);font-size:17px;margin:32px 0 12px;}
+  .day{display:flex;align-items:center;gap:11px;padding:5px 0;font-size:14px;}
+  .day .d{width:52px;color:var(--mut);font-variant-numeric:tabular-nums;flex:none;}
+  .day .track{flex:1;display:flex;align-items:center;}
+  .day .bar{height:15px;background:var(--burg);border-radius:3px;}
+  .day .n{width:30px;text-align:right;color:var(--burg);font-weight:600;
+          font-variant-numeric:tabular-nums;flex:none;}
+  .day.today .d{color:var(--burg);font-weight:700;}
+  .day.today .d::after{content:" \\2022";color:var(--burg);}
+  .foot{margin-top:30px;color:#a2917f;font-size:12px;}
+  .foot a{color:#a2917f;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Preview Stats</h1>
+    <p class="sub">petcreationsart.com &middot; instant-preview sessions</p>
+    __STATS__
+    <h2>Last 14 days</h2>
+    __DAYS__
+    <p class="foot">Auto-refreshes every 2 min &middot; <a href="/stats.json">raw JSON</a></p>
+  </div>
+</body>
+</html>"""
+
+
+@app.get("/stats", response_class=HTMLResponse)
+def stats_page():
+    """Human-friendly analytics page (bookmark this one). Raw JSON at /stats.json."""
+    import datetime
+    s = _compute_stats()
+    rows = [("All-time previews", s["preview_sessions_total"]),
+            ("Last 24 hours", s["preview_sessions_24h"]),
+            ("Last hour", s["preview_sessions_1h"]),
+            ("Total renders (incl. retries)", s["total_renders_incl_retries"])]
+    stat_html = "".join(
+        "<div class='stat'><span class='label'>{}</span>"
+        "<span class='value'>{}</span></div>".format(label, val)
+        for label, val in rows)
+
+    days = s["by_day_eastern"]
+    peak = max((d["sessions"] for d in days), default=0) or 1
+    today = days[0]["date"] if days else ""
+    day_html = ""
+    for d in days:
+        dt = datetime.datetime.strptime(d["date"], "%Y-%m-%d")
+        label = dt.strftime("%b") + " " + str(dt.day)
+        width = max(int(round(d["sessions"] / peak * 210)), 3) if d["sessions"] else 0
+        bar = "<span class='bar' style='width:{}px'></span>".format(width) if width else ""
+        cls = "day today" if d["date"] == today else "day"
+        day_html += ("<div class='{}'><span class='d'>{}</span>"
+                     "<span class='track'>{}</span>"
+                     "<span class='n'>{}</span></div>").format(cls, label, bar, d["sessions"])
+
+    return STATS_PAGE.replace("__STATS__", stat_html).replace("__DAYS__", day_html)
 
 
 @app.post("/generate")
