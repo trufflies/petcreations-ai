@@ -153,6 +153,17 @@ def frame(image_bytes, frame_key, mime="image/png"):
     return _gemini(prompt, image_bytes, mime)
 
 
+def mockup(prompt, image_bytes, mime="image/jpeg", size="1536x1024", frame_ref=None, quality="medium"):
+    """Place an uploaded artwork into a photorealistic room/detail mockup (Haus of Lumen).
+    An optional frame_ref image nudges gpt-image-1 to match a specific frame profile/finish."""
+    extra, full = [], prompt
+    if frame_ref:
+        extra.append(("frame_ref.png", _prep_openai_image(frame_ref), "image/png"))
+        full += " Match the exact frame profile and finish shown in the attached frame reference image."
+    return _openai(full, image_bytes, mime, use_reference=False, size=size,
+                   quality=quality, extra_images=extra)
+
+
 def recolor(style, image_bytes, instruction, mime="image/png"):
     """Retry / recolor / fix: apply a follow-up edit instruction to an already-generated image."""
     cfg = STYLES.get(style, {})

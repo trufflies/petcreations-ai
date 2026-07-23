@@ -23,10 +23,13 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTa
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from typing import List
+from pydantic import BaseModel
 
 import generation as gen
 import email_send
 import listing
+import mockups
 from styles import STYLES, FRAMES
 from watermark import add_watermark
 
@@ -307,6 +310,59 @@ def make_listing(image: UploadFile,
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail="Listing failed: " + str(e)[:200])
+
+
+@app.post("/mockup")
+def make_mockup(image: UploadFile, scene: str = Form(...),
+                frame: UploadFile = File(default=None)):
+    """Generate one Haus of Lumen mockup scene from an uploaded artwork (gpt-image-1)."""
+    if scene not in mockups.SCENES:
+        raise HTTPException(status_code=400, detail="Unknown scene '%s'" % scene)
+    cfg = mockups.SCENES[scene]
+    try:
+        img = image.file.read()
+        if not img:
+            raise HTTPException(status_code=400, detail="No artwork image received.")
+        fref = frame.file.read() if frame is not None else None
+        out = gen.mockup(cfg["prompt"], img, image.content_type or "image/jpeg",
+                         cfg["size"], fref or None)
+    except gen.GenerationError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Mockup failed: " + str(e)[:200])
+    name = "mockup_%s_%s.png" % (scene, uuid.uuid4().hex[:12])
+    with open(os.path.join(GEN_DIR, name), "wb") as f:
+        f.write(out)
+    return {"scene": scene, "label": cfg["label"], "url": "/generated/" + name}
+
+
+class BundleReq(BaseModel):
+    files: List[str] = []
+    listing_text: str = ""
+    name: str = "haus-of-lumen-listing"
+
+
+@app.post("/bundle")
+def bundle(req: BundleReq):
+    """Zip a set of generated mockups (by /generated filename) + the listing text into one download."""
+    import io
+    import zipfile
+    from fastapi.responses import StreamingResponse
+    mem = io.BytesIO()
+    with zipfile.ZipFile(mem, "w", zipfile.ZIP_DEFLATED) as z:
+        for i, fn in enumerate(req.files):
+            safe = os.path.basename(fn)                 # prevent path traversal
+            p = os.path.join(GEN_DIR, safe)
+            if os.path.isfile(p):
+                z.write(p, arcname="%02d_%s" % (i + 1, safe))
+        if req.listing_text.strip():
+            z.writestr("listing.txt", req.listing_text)
+    mem.seek(0)
+    fname = "".join(c for c in req.name if c.isalnum() or c in "-_") or "bundle"
+    return StreamingResponse(mem, media_type="application/zip",
+        headers={"Content-Disposition": 'attachment; filename="%s.zip"' % fname})
 
 
 # Static mounts (after routes so /health etc. win)
