@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Haus of Lumen — Etsy Listing Generator</title>
+<style>
+  :root{--bg:#f5f2ec;--panel:#fffdf9;--ink:#2b2723;--mut:#8b8073;--line:#e4ddd0;--accent:#6f6250;--accent2:#b98a4b;--danger:#a5453a;--ok:#4e7a52;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:820px;margin:0 auto;padding:32px 20px 80px;}
+  h1{font-family:Georgia,serif;font-weight:600;font-size:28px;margin:0 0 2px;}
+  .tag{color:var(--mut);font-size:13px;margin:0 0 26px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(60,50,35,.05);}
+  .lbl{font-weight:600;font-size:13px;letter-spacing:.02em;margin:0 0 8px;display:flex;align-items:center;gap:8px;}
+  .lbl .opt{font-weight:400;color:var(--mut);}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:640px){.row{grid-template-columns:1fr;}}
+  .drop{border:2px dashed var(--line);border-radius:10px;background:#fdfbf6;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--mut);cursor:pointer;transition:.15s;padding:20px;min-height:130px;overflow:hidden;}
+  .drop:hover,.drop.over{border-color:var(--accent2);background:#fdf8ef;color:var(--accent);}
+  .drop img{max-width:100%;max-height:150px;border-radius:6px;}
+  .drop .big{font-size:14px;color:var(--ink);}
+  .drop .sm{font-size:12px;margin-top:3px;}
+  textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit;color:var(--ink);background:#fff;resize:vertical;}
+  textarea:focus{outline:none;border-color:var(--accent2);}
+  details{margin-top:2px;}
+  summary{cursor:pointer;color:var(--accent);font-size:13px;}
+  .btn{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:9px;padding:11px 20px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;}
+  .btn:hover{background:#5c5140;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn.ghost{background:transparent;color:var(--accent);font-weight:500;}
+  .btn.ghost:hover{background:#f0ebe1;}
+  .copy{border:1px solid var(--line);background:#fff;color:var(--accent);border-radius:7px;padding:5px 11px;font:inherit;font-size:12.5px;cursor:pointer;white-space:nowrap;}
+  .copy:hover{background:#f6f1e8;}
+  .copy.done{background:var(--ok);color:#fff;border-color:var(--ok);}
+  .res{display:none;}
+  .res h2{font-family:Georgia,serif;font-size:16px;margin:0;}
+  .rhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .count{font-size:12px;color:var(--mut);}
+  .count.bad{color:var(--danger);font-weight:600;}
+  .count.good{color:var(--ok);}
+  .titlebox{font-size:15px;background:#fbf8f2;border:1px solid var(--line);border-radius:8px;padding:10px 12px;}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;}
+  .chip{background:#f1ece1;border:1px solid var(--line);border-radius:20px;padding:4px 11px;font-size:13px;display:flex;align-items:center;gap:6px;}
+  .chip .c{font-size:10.5px;color:var(--mut);}
+  .chip.bad{border-color:var(--danger);color:var(--danger);}
+  .descbox{white-space:pre-wrap;background:#fbf8f2;border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:14px;line-height:1.6;}
+  .err{display:none;background:#fbecea;border:1px solid #e6c4bf;color:#8a3229;border-radius:8px;padding:11px 14px;font-size:13.5px;margin-bottom:14px;}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:7px;}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .foot{color:var(--mut);font-size:12px;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Haus of Lumen — Etsy Listing Generator</h1>
+  <p class="tag">Drop in a new artwork (and your keyword screenshot) → get an Etsy-ready title, 13 tags, and a description in your voice.</p>
+
+  <div id="err" class="err"></div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <div class="lbl">1 · Artwork <span class="opt">(required)</span></div>
+        <div class="drop" id="artDrop"><div class="big">+ Add artwork</div><div class="sm">click or drag your image</div>
+          <input type="file" accept="image/*" hidden id="artInput"></div>
+      </div>
+      <div>
+        <div class="lbl">2 · Keyword screenshot <span class="opt">(optional, boosts SEO)</span></div>
+        <div class="drop" id="kwDrop"><div class="big">+ Add keyword research</div><div class="sm">e.g. Etsy Marketplace Insights</div>
+          <input type="file" accept="image/*" hidden id="kwInput"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <details open>
+      <summary>3 · Your description template &amp; product notes (prefilled — edit anytime)</summary>
+      <div class="lbl" style="margin-top:14px;">Sample description (voice to match)</div>
+      <textarea id="template" rows="10"></textarea>
+      <div class="lbl" style="margin-top:12px;">Product notes for this piece</div>
+      <textarea id="notes" rows="3"></textarea>
+    </details>
+  </div>
+
+  <button class="btn" id="go" disabled>Generate listing</button>
+  <span class="foot" style="margin-left:12px;">≈ a penny per run · powered by your OpenAI key</span>
+
+  <div class="res card" id="res" style="margin-top:20px;">
+    <div class="rhead"><h2>Title</h2><div><span class="count" id="titleCount"></span> <button class="copy" data-copy="title">Copy</button></div></div>
+    <div class="titlebox" id="title"></div>
+
+    <div class="rhead" style="margin-top:20px;"><h2>Tags <span class="count" id="tagCount"></span></h2><button class="copy" data-copy="tags">Copy all</button></div>
+    <div class="chips" id="tags"></div>
+
+    <div class="rhead" style="margin-top:20px;"><h2>Description</h2><button class="copy" data-copy="desc">Copy</button></div>
+    <div class="descbox" id="desc"></div>
+
+    <div id="kwUsedWrap" style="margin-top:18px;display:none;">
+      <div class="lbl">Keywords woven in</div><div class="chips" id="kwUsed"></div>
+    </div>
+    <div style="margin-top:20px;"><button class="btn ghost" id="regen">↻ Regenerate</button></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const DEFAULT_TEMPLATE = `Bring timeless, gallery-style character to your space with this extra large vintage landscape wall art — a moody, painterly scene in soft, natural tones. Designed to anchor a living room, above the sofa, over a fireplace, or in a dining room or bedroom.
+
+Why this piece is different from most oversized wall art you'll find:
+— High quality floating frame, fully assembled and ready to hang out of the box. No wrinkly scroll rods, no poster-style hangers, no unassembled aluminum frames to fight with.
+— Premium heavyweight canvas with a true oil-painting texture and rich, fade-resistant color.
+— Made and shipped by us directly from our Florida studio — not drop-shipped from overseas.
+
+SIZES
+60" x 40" oversized (shown) — our specialty size, ideal above a standard sofa.
+
+DETAILS
+Several floating frame and ornate-style frame options, ready to hang with hardware included
+Premium artist-grade canvas
+Vintage-style landscape art print
+
+SHIPPING
+Made to order and carefully packaged to arrive ready to display. Ships from Florida, USA within 3–5 business days.
+
+Questions about sizing or a custom request? Send us a message — we're happy to help you find the right fit for your wall.`;
+const DEFAULT_NOTES = `Framed canvas wall art. Specialty size: extra large 60"x40". Free shipping. Made to order (HDF), ships from Florida USA in 3–5 business days. Slim floating frame + ornate frame options.`;
+
+document.getElementById("template").value = DEFAULT_TEMPLATE;
+document.getElementById("notes").value = DEFAULT_NOTES;
+
+let artFile=null, kwFile=null, lastData=null;
+const $=id=>document.getElementById(id);
+
+function wireDrop(dropId,inputId,onFile){
+  const drop=$(dropId), input=$(inputId);
+  drop.addEventListener("click",()=>input.click());
+  input.addEventListener("change",e=>{ if(e.target.files[0]) onFile(e.target.files[0]); });
+  ["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
+  ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
+  drop.addEventListener("drop",e=>{const f=[...e.dataTransfer.files].find(x=>x.type.startsWith("image/"));if(f)onFile(f);});
+}
+function showThumb(dropId,file){
+  const url=URL.createObjectURL(file);
+  $(dropId).innerHTML='<img src="'+url+'">';
+}
+wireDrop("artDrop","artInput",f=>{artFile=f; showThumb("artDrop",f); $("go").disabled=false;});
+wireDrop("kwDrop","kwInput",f=>{kwFile=f; showThumb("kwDrop",f);});
+
+async function generate(){
+  if(!artFile) return;
+  $("err").style.display="none";
+  const btn=$("go"); const prev=btn.textContent;
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Generating…';
+  $("regen").disabled=true;
+  try{
+    const fd=new FormData();
+    fd.append("image", artFile);
+    if(kwFile) fd.append("keywords", kwFile);
+    fd.append("template", $("template").value);
+    fd.append("notes", $("notes").value);
+    const r=await fetch("/listing",{method:"POST",body:fd});
+    if(!r.ok){ let d; try{d=(await r.json()).detail;}catch(e){d="HTTP "+r.status;} throw new Error(d); }
+    lastData=await r.json();
+    render(lastData);
+  }catch(e){
+    $("err").textContent="Couldn't generate: "+e.message;
+    $("err").style.display="block";
+  }finally{
+    btn.disabled=false; btn.textContent=prev; $("regen").disabled=false;
+  }
+}
+function render(d){
+  $("res").style.display="block";
+  // title
+  $("title").textContent=d.title||"";
+  const tl=(d.title||"").length;
+  const tc=$("titleCount"); tc.textContent=tl+"/140"; tc.className="count "+(tl>140?"bad":(tl>=70?"good":""));
+  // tags
+  const tags=d.tags||[];
+  $("tagCount").textContent="("+tags.length+"/13)";
+  $("tags").innerHTML="";
+  tags.forEach(t=>{
+    const over=t.length>20;
+    const c=document.createElement("span"); c.className="chip"+(over?" bad":"");
+    c.innerHTML=t.replace(/</g,"&lt;")+' <span class="c">'+t.length+'</span>';
+    $("tags").appendChild(c);
+  });
+  // description
+  $("desc").textContent=d.description||"";
+  // keywords used
+  const kw=d.keywords_used||[];
+  $("kwUsedWrap").style.display = kw.length?"block":"none";
+  $("kwUsed").innerHTML=kw.map(k=>'<span class="chip">'+String(k).replace(/</g,"&lt;")+'</span>').join("");
+  $("res").scrollIntoView({behavior:"smooth",block:"start"});
+}
+async function copyText(txt,btn){
+  try{ await navigator.clipboard.writeText(txt); const o=btn.textContent; btn.textContent="Copied ✓"; btn.classList.add("done");
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove("done");},1400);
+  }catch(e){ alert("Copy failed — select and copy manually."); }
+}
+document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{
+  if(!lastData) return;
+  const k=b.dataset.copy;
+  if(k==="title") copyText(lastData.title||"",b);
+  else if(k==="tags") copyText((lastData.tags||[]).join(", "),b);
+  else if(k==="desc") copyText(lastData.description||"",b);
+}));
+$("go").addEventListener("click",generate);
+$("regen").addEventListener("click",generate);
+</script>
+</body>
+</html>

@@ -19,13 +19,14 @@ import os
 import re
 import uuid
 
-from fastapi import FastAPI, UploadFile, Form, HTTPException, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 import generation as gen
 import email_send
+import listing
 from styles import STYLES, FRAMES
 from watermark import add_watermark
 
@@ -281,6 +282,31 @@ def apply_frame(id: str = Form(...), frame: str = Form(...)):
         raise HTTPException(502, str(e))
     saved = _save(framed, job["style"], job["email"], job["retries"])
     return {"framed_preview_url": saved["preview_url"], "frame": frame, "frame_label": FRAMES[frame]["label"]}
+
+
+@app.post("/listing")
+def make_listing(image: UploadFile,
+                 keywords: UploadFile = File(default=None),
+                 template: str = Form(default=""),
+                 notes: str = Form(default="")):
+    """Etsy listing generator for Haus of Lumen: artwork (+ optional keyword-research screenshot
+    and sample description) -> {title, tags, description}. Uses gpt-4o-mini via OPENAI_API_KEY."""
+    try:
+        img = image.file.read()
+        if not img:
+            raise HTTPException(status_code=400, detail="No artwork image received.")
+        kb, kmime = None, "image/png"
+        if keywords is not None:
+            kb = keywords.file.read() or None
+            kmime = keywords.content_type or "image/png"
+        return listing.generate_listing(
+            img, image.content_type or "image/jpeg", kb, kmime, template, notes)
+    except listing.ListingError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Listing failed: " + str(e)[:200])
 
 
 # Static mounts (after routes so /health etc. win)
