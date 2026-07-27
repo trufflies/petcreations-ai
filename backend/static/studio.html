@@ -8,53 +8,57 @@
   :root{--bg:#f5f2ec;--panel:#fffdf9;--ink:#2b2723;--mut:#8b8073;--line:#e4ddd0;--accent:#6f6250;--accent2:#b98a4b;--danger:#a5453a;--ok:#4e7a52;}
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;}
-  .wrap{max-width:960px;margin:0 auto;padding:32px 20px 90px;}
+  .wrap{max-width:820px;margin:0 auto;padding:32px 20px 80px;}
   h1{font-family:Georgia,serif;font-weight:600;font-size:28px;margin:0 0 2px;}
-  .tag{color:var(--mut);font-size:13px;margin:0 0 24px;}
+  .tag{color:var(--mut);font-size:13px;margin:0 0 26px;}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(60,50,35,.05);}
-  .lbl{font-weight:600;font-size:13px;margin:0 0 8px;}
+  .lbl{font-weight:600;font-size:13px;letter-spacing:.02em;margin:0 0 8px;display:flex;align-items:center;gap:8px;}
   .lbl .opt{font-weight:400;color:var(--mut);}
   .row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   @media(max-width:640px){.row{grid-template-columns:1fr;}}
-  .drop{border:2px dashed var(--line);border-radius:10px;background:#fdfbf6;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--mut);cursor:pointer;transition:.15s;padding:18px;min-height:130px;overflow:hidden;}
+  .drop{border:2px dashed var(--line);border-radius:10px;background:#fdfbf6;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--mut);cursor:pointer;transition:.15s;padding:20px;min-height:130px;overflow:hidden;}
   .drop:hover,.drop.over{border-color:var(--accent2);background:#fdf8ef;color:var(--accent);}
   .drop img{max-width:100%;max-height:150px;border-radius:6px;}
-  .drop .big{font-size:14px;color:var(--ink);} .drop .sm{font-size:12px;margin-top:3px;}
+  .drop .big{font-size:14px;color:var(--ink);}
+  .drop .sm{font-size:12px;margin-top:3px;}
+  .thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .thumbs figure{margin:0;position:relative;}
+  .thumbs img{width:66px;height:66px;object-fit:cover;border-radius:7px;border:1px solid var(--line);display:block;}
+  .thumbs .x{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:1;cursor:pointer;}
   textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit;color:var(--ink);background:#fff;resize:vertical;}
   textarea:focus{outline:none;border-color:var(--accent2);}
+  details{margin-top:2px;}
   summary{cursor:pointer;color:var(--accent);font-size:13px;}
   .btn{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:9px;padding:11px 20px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;}
-  .btn:hover{background:#5c5140;} .btn:disabled{opacity:.45;cursor:not-allowed;}
-  .btn.ghost{background:transparent;color:var(--accent);font-weight:500;} .btn.ghost:hover{background:#f0ebe1;}
+  .btn:hover{background:#5c5140;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn.ghost{background:transparent;color:var(--accent);font-weight:500;}
+  .btn.ghost:hover{background:#f0ebe1;}
   .copy{border:1px solid var(--line);background:#fff;color:var(--accent);border-radius:7px;padding:5px 11px;font:inherit;font-size:12.5px;cursor:pointer;white-space:nowrap;}
-  .copy:hover{background:#f6f1e8;} .copy.done{background:var(--ok);color:#fff;border-color:var(--ok);}
-  .prog{font-size:13px;color:var(--mut);margin:10px 2px;min-height:18px;}
-  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--accent2);border-top-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:7px;}
-  @keyframes sp{to{transform:rotate(360deg)}}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
-  .tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
-  .tile .ph{aspect-ratio:3/2;display:flex;align-items:center;justify-content:center;background:#f1ece1;color:var(--mut);font-size:12.5px;text-align:center;padding:10px;}
-  .tile img{width:100%;display:block;}
-  .tile .tb{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-top:1px solid var(--line);}
-  .tile .tn{font-size:12.5px;color:var(--mut);}
-  .tile.err .ph{color:var(--danger);}
+  .copy:hover{background:#f6f1e8;}
+  .copy.done{background:var(--ok);color:#fff;border-color:var(--ok);}
+  .res{display:none;}
   .res h2{font-family:Georgia,serif;font-size:16px;margin:0;}
   .rhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
-  .count{font-size:12px;color:var(--mut);} .count.good{color:var(--ok);} .count.bad{color:var(--danger);font-weight:600;}
+  .count{font-size:12px;color:var(--mut);}
+  .count.bad{color:var(--danger);font-weight:600;}
+  .count.good{color:var(--ok);}
   .titlebox{font-size:15px;background:#fbf8f2;border:1px solid var(--line);border-radius:8px;padding:10px 12px;}
   .chips{display:flex;flex-wrap:wrap;gap:7px;}
   .chip{background:#f1ece1;border:1px solid var(--line);border-radius:20px;padding:4px 11px;font-size:13px;display:flex;align-items:center;gap:6px;}
-  .chip .c{font-size:10.5px;color:var(--mut);} .chip.bad{border-color:var(--danger);color:var(--danger);}
+  .chip .c{font-size:10.5px;color:var(--mut);}
+  .chip.bad{border-color:var(--danger);color:var(--danger);}
   .descbox{white-space:pre-wrap;background:#fbf8f2;border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:14px;line-height:1.6;}
   .err{display:none;background:#fbecea;border:1px solid #e6c4bf;color:#8a3229;border-radius:8px;padding:11px 14px;font-size:13.5px;margin-bottom:14px;}
-  .foot{color:var(--mut);font-size:12px;}
-  .bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:7px;}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .foot{color:var(--mut);font-size:12px;margin-top:8px;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Haus of Lumen — Listing Studio</h1>
-  <p class="tag">One artwork in → 5 room mockups + an Etsy title, tags & description → download the whole set as one folder.</p>
+  <p class="tag">Drop in a new artwork (and any keyword screenshots) → get an Etsy-ready title, 13 tags, and a description in your voice.</p>
 
   <div id="err" class="err"></div>
 
@@ -66,46 +70,50 @@
           <input type="file" accept="image/*" hidden id="artInput"></div>
       </div>
       <div>
-        <div class="lbl">Frame reference <span class="opt">(optional — improves frame accuracy)</span></div>
-        <div class="drop" id="frDrop"><div class="big">+ Add frame photo</div><div class="sm">your oak floating-frame sample</div>
-          <input type="file" accept="image/*" hidden id="frInput"></div>
+        <div class="lbl">2 · Keyword screenshots <span class="opt">(optional — add as many as you like)</span></div>
+        <div class="drop" id="kwDrop"><div class="big">+ Add keyword research</div><div class="sm">e.g. Etsy Marketplace Insights · multiple OK</div>
+          <input type="file" accept="image/*" multiple hidden id="kwInput"></div>
+        <div class="thumbs" id="kwThumbs"></div>
       </div>
     </div>
-    <details style="margin-top:14px;">
-      <summary>Listing voice &amp; product notes (prefilled — edit anytime)</summary>
-      <div class="lbl" style="margin-top:12px;">Sample description (voice to match)</div>
-      <textarea id="template" rows="8"></textarea>
-      <div class="lbl" style="margin-top:10px;">Product notes</div>
+  </div>
+
+  <div class="card">
+    <details open>
+      <summary>3 · Your description template &amp; product notes (prefilled — edit anytime)</summary>
+      <div class="lbl" style="margin-top:14px;">Sample description (voice to match)</div>
+      <textarea id="template" rows="10"></textarea>
+      <div class="lbl" style="margin-top:12px;">Product notes for this piece</div>
       <textarea id="notes" rows="3"></textarea>
     </details>
   </div>
 
-  <div class="bar">
-    <button class="btn" id="go" disabled>Generate everything</button>
-    <button class="btn ghost" id="dl" disabled>⬇ Download all (.zip)</button>
-    <span class="foot">5 mockups (~$0.35) + listing (~1¢) · ~2–3 min</span>
-  </div>
-  <div class="prog" id="prog"></div>
+  <button class="btn" id="go" disabled>Generate listing</button>
+  <span class="foot" style="margin-left:12px;">≈ a penny per run · powered by your OpenAI key</span>
 
-  <div id="grid" class="grid" style="margin-top:8px;"></div>
-
-  <div class="res card" id="res" style="display:none;margin-top:18px;">
+  <div class="res card" id="res" style="margin-top:20px;">
     <div class="rhead"><h2>Title</h2><div><span class="count" id="titleCount"></span> <button class="copy" data-copy="title">Copy</button></div></div>
     <div class="titlebox" id="title"></div>
-    <div class="rhead" style="margin-top:18px;"><h2>Tags <span class="count" id="tagCount"></span></h2><button class="copy" data-copy="tags">Copy all</button></div>
+
+    <div class="rhead" style="margin-top:20px;"><h2>Tags <span class="count" id="tagCount"></span></h2><button class="copy" data-copy="tags">Copy all</button></div>
     <div class="chips" id="tags"></div>
-    <div class="rhead" style="margin-top:18px;"><h2>Description</h2><button class="copy" data-copy="desc">Copy</button></div>
+
+    <div class="rhead" style="margin-top:20px;"><h2>Description</h2><button class="copy" data-copy="desc">Copy</button></div>
     <div class="descbox" id="desc"></div>
+
+    <div id="kwUsedWrap" style="margin-top:18px;display:none;">
+      <div class="lbl">Keywords woven in</div><div class="chips" id="kwUsed"></div>
+    </div>
+    <div style="margin-top:20px;"><button class="btn ghost" id="regen">↻ Regenerate</button></div>
   </div>
 </div>
 
 <script>
 "use strict";
-const SCENES=[["dining","Dining room"],["living_front","Living room (front)"],["living_angled","Living room (angled)"],["corner","Corner close-up"],["details","Details graphic"]];
-const DEFAULT_TEMPLATE=`Bring timeless, gallery-style character to your space with this vintage landscape canvas wall art — a moody, painterly scene in soft, natural tones. Designed to anchor a living room, above the sofa, over a fireplace, or in a dining room or bedroom.
+const DEFAULT_TEMPLATE = `Bring timeless, gallery-style character to your space with this vintage landscape canvas wall art — a moody, painterly scene in soft, natural tones. Designed to anchor a living room, above the sofa, over a fireplace, or in a dining room or bedroom.
 
 Why this piece is different from most wall art you'll find:
-— High quality frame, fully assembled and ready to hang out of the box.
+— High quality frame, fully assembled and ready to hang out of the box. No wrinkly scroll rods, no poster-style hangers, no unassembled aluminum frames to fight with.
 — Museum-quality print on premium cotton canvas with rich, fade-resistant color and a soft painterly look.
 — Made and shipped by us directly from our Florida studio — not drop-shipped from overseas.
 
@@ -126,101 +134,95 @@ Choose your size and frame at checkout
 SHIPPING
 Made to order and carefully packaged to arrive ready to display. Ships from Florida, USA within 3–5 business days.
 
-Questions about sizing or a custom request? Send us a message — we're happy to help.`;
-const DEFAULT_NOTES=`Framed canvas PRINT — printed on premium cotton canvas, NOT an original painting (state this clearly). Sizes (in): 24x18, 32x24, 40x30, 60x40 (60x40 = oversized hero size). Frames — Ornate: antique gold, antique silver, baroque gold (wide); Floating: natural, oak, brushed gold, white, black. Free shipping. Made to order (HDF), ships from Florida USA in 3–5 business days.`;
+Questions about sizing or a custom request? Send us a message — we're happy to help you find the right fit for your wall.`;
+const DEFAULT_NOTES = `Framed canvas PRINT — printed on premium cotton canvas, NOT an original painting (state this clearly). Sizes (in): 24x18, 32x24, 40x30, 60x40 (60x40 = oversized hero size). Frames — Ornate: antique gold, antique silver, baroque gold (wide); Floating: natural, oak, brushed gold, white, black. Free shipping. Made to order (HDF), ships from Florida USA in 3–5 business days.`;
+
 const $=id=>document.getElementById(id);
-$("template").value=DEFAULT_TEMPLATE; $("notes").value=DEFAULT_NOTES;
+$("template").value=DEFAULT_TEMPLATE;
+$("notes").value=DEFAULT_NOTES;
 
-let artFile=null, frFile=null, listing=null, files=[];
+let artFile=null, kwFiles=[], lastData=null;
 
-function wireDrop(dropId,inputId,onFile){
+function wireDrop(dropId,inputId,onFiles){
   const drop=$(dropId), input=$(inputId);
   drop.addEventListener("click",()=>input.click());
-  input.addEventListener("change",e=>{if(e.target.files[0])onFile(e.target.files[0]);});
+  input.addEventListener("change",e=>{ if(e.target.files.length) onFiles([...e.target.files]); input.value=""; });
   ["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
   ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
-  drop.addEventListener("drop",e=>{const f=[...e.dataTransfer.files].find(x=>x.type.startsWith("image/"));if(f)onFile(f);});
+  drop.addEventListener("drop",e=>{const fs=[...e.dataTransfer.files].filter(x=>x.type.startsWith("image/"));if(fs.length)onFiles(fs);});
 }
-const thumb=(id,f)=>{$(id).innerHTML='<img src="'+URL.createObjectURL(f)+'">';};
-wireDrop("artDrop","artInput",f=>{artFile=f;thumb("artDrop",f);$("go").disabled=false;});
-wireDrop("frDrop","frInput",f=>{frFile=f;thumb("frDrop",f);});
+function showThumb(dropId,file){ $(dropId).innerHTML='<img src="'+URL.createObjectURL(file)+'">'; }
 
-function tile(key,label){
-  let el=document.getElementById("t_"+key);
-  if(!el){ el=document.createElement("div"); el.className="tile"; el.id="t_"+key;
-    el.innerHTML='<div class="ph"><span class="spin"></span>'+label+'…</div><div class="tb"><span class="tn">'+label+'</span></div>';
-    $("grid").appendChild(el);
-  }
-  return el;
-}
-async function genScene(key,label){
-  const el=tile(key,label);
-  const fd=new FormData(); fd.append("image",artFile); fd.append("scene",key); if(frFile)fd.append("frame",frFile);
-  try{
-    const r=await fetch("/mockup",{method:"POST",body:fd});
-    if(!r.ok){let d;try{d=(await r.json()).detail;}catch(e){d="HTTP "+r.status;}throw new Error(d);}
-    const j=await r.json();
-    const base=j.url.split("/").pop(); files.push(base);
-    el.innerHTML='<a href="'+j.url+'" target="_blank"><img src="'+j.url+'"></a>'+
-      '<div class="tb"><span class="tn">'+label+'</span><a class="copy" href="'+j.url+'" download>Download</a></div>';
-  }catch(e){
-    el.classList.add("err");
-    el.innerHTML='<div class="ph">'+label+' failed:<br>'+e.message+'</div><div class="tb"><span class="tn">'+label+'</span><button class="copy" onclick="retry(\''+key+'\',\''+label+'\')">Retry</button></div>';
-  }
-}
-window.retry=(k,l)=>genScene(k,l);
+wireDrop("artDrop","artInput",fs=>{artFile=fs[0]; showThumb("artDrop",artFile); $("go").disabled=false;});
+wireDrop("kwDrop","kwInput",fs=>{ kwFiles=kwFiles.concat(fs); renderKw(); });
 
-async function genListing(){
-  const fd=new FormData(); fd.append("image",artFile); fd.append("template",$("template").value); fd.append("notes",$("notes").value);
-  const r=await fetch("/listing",{method:"POST",body:fd});
-  if(!r.ok){let d;try{d=(await r.json()).detail;}catch(e){d="HTTP "+r.status;}throw new Error(d);}
-  return r.json();
-}
-function renderListing(d){
-  listing=d; $("res").style.display="block";
-  $("title").textContent=d.title||"";
-  const tl=(d.title||"").length, tc=$("titleCount"); tc.textContent=tl+"/140"; tc.className="count "+(tl>140?"bad":(tl>=70?"good":""));
-  const tags=d.tags||[]; $("tagCount").textContent="("+tags.length+"/13)";
-  $("tags").innerHTML=""; tags.forEach(t=>{const c=document.createElement("span");c.className="chip"+(t.length>20?" bad":"");c.innerHTML=t.replace(/</g,"&lt;")+' <span class="c">'+t.length+'</span>';$("tags").appendChild(c);});
-  $("desc").textContent=d.description||"";
+function renderKw(){
+  const box=$("kwThumbs"); box.innerHTML="";
+  kwFiles.forEach((f,i)=>{
+    const fig=document.createElement("figure");
+    fig.innerHTML='<img src="'+URL.createObjectURL(f)+'"><button class="x" title="remove">×</button>';
+    fig.querySelector(".x").addEventListener("click",()=>{ kwFiles.splice(i,1); renderKw(); });
+    box.appendChild(fig);
+  });
 }
 
 async function generate(){
-  if(!artFile)return;
-  $("err").style.display="none"; $("grid").innerHTML=""; $("res").style.display="none";
-  files=[]; listing=null;
-  $("go").disabled=true; $("dl").disabled=true;
-  const listingP=genListing().then(renderListing).catch(e=>{$("err").textContent="Listing failed: "+e.message;$("err").style.display="block";});
-  for(let i=0;i<SCENES.length;i++){
-    $("prog").innerHTML='<span class="spin"></span>Generating mockups… '+(i+1)+'/'+SCENES.length+' — '+SCENES[i][1];
-    await genScene(SCENES[i][0],SCENES[i][1]);
-  }
-  $("prog").textContent="Finishing the listing…";
-  await listingP;
-  $("prog").textContent="Done — "+files.length+"/5 mockups ready.";
-  $("go").disabled=false;
-  $("dl").disabled = files.length===0 && !listing;
-}
-function listingText(){
-  if(!listing)return "";
-  return "TITLE\n"+(listing.title||"")+"\n\nTAGS\n"+((listing.tags||[]).join(", "))+"\n\nDESCRIPTION\n"+(listing.description||"")+"\n";
-}
-async function downloadAll(){
-  const btn=$("dl"); const o=btn.textContent; btn.disabled=true; btn.textContent="Zipping…";
+  if(!artFile) return;
+  $("err").style.display="none";
+  const btn=$("go"); const prev=btn.textContent;
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Generating…';
+  $("regen").disabled=true;
   try{
-    const r=await fetch("/bundle",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({files:files, listing_text:listingText(), name:"haus-of-lumen-listing"})});
-    if(!r.ok)throw new Error("HTTP "+r.status);
-    const blob=await r.blob(); const u=URL.createObjectURL(blob);
-    const a=document.createElement("a"); a.href=u; a.download="haus-of-lumen-listing.zip"; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(u),4000);
-  }catch(e){ alert("Download failed: "+e.message); }
-  finally{ btn.disabled=false; btn.textContent=o; }
+    const fd=new FormData();
+    fd.append("image", artFile);
+    kwFiles.forEach(f=>fd.append("keywords", f));
+    fd.append("template", $("template").value);
+    fd.append("notes", $("notes").value);
+    const r=await fetch("/listing",{method:"POST",body:fd});
+    if(!r.ok){ let d; try{d=(await r.json()).detail;}catch(e){d="HTTP "+r.status;} throw new Error(d); }
+    lastData=await r.json();
+    render(lastData);
+  }catch(e){
+    $("err").textContent="Couldn't generate: "+e.message;
+    $("err").style.display="block";
+  }finally{
+    btn.disabled=false; btn.textContent=prev; $("regen").disabled=false;
+  }
 }
-async function copyText(txt,btn){try{await navigator.clipboard.writeText(txt);const o=btn.textContent;btn.textContent="Copied ✓";btn.classList.add("done");setTimeout(()=>{btn.textContent=o;btn.classList.remove("done");},1400);}catch(e){alert("Copy failed.");}}
-document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{if(!listing)return;const k=b.dataset.copy;if(k==="title")copyText(listing.title||"",b);else if(k==="tags")copyText((listing.tags||[]).join(", "),b);else copyText(listing.description||"",b);}));
+function render(d){
+  $("res").style.display="block";
+  $("title").textContent=d.title||"";
+  const tl=(d.title||"").length;
+  const tc=$("titleCount"); tc.textContent=tl+"/140"; tc.className="count "+(tl>140?"bad":(tl>=70?"good":""));
+  const tags=d.tags||[];
+  $("tagCount").textContent="("+tags.length+"/13)";
+  $("tags").innerHTML="";
+  tags.forEach(t=>{
+    const over=t.length>20;
+    const c=document.createElement("span"); c.className="chip"+(over?" bad":"");
+    c.innerHTML=t.replace(/</g,"&lt;")+' <span class="c">'+t.length+'</span>';
+    $("tags").appendChild(c);
+  });
+  $("desc").textContent=d.description||"";
+  const kw=d.keywords_used||[];
+  $("kwUsedWrap").style.display = kw.length?"block":"none";
+  $("kwUsed").innerHTML=kw.map(k=>'<span class="chip">'+String(k).replace(/</g,"&lt;")+'</span>').join("");
+  $("res").scrollIntoView({behavior:"smooth",block:"start"});
+}
+async function copyText(txt,btn){
+  try{ await navigator.clipboard.writeText(txt); const o=btn.textContent; btn.textContent="Copied ✓"; btn.classList.add("done");
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove("done");},1400);
+  }catch(e){ alert("Copy failed — select and copy manually."); }
+}
+document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{
+  if(!lastData) return;
+  const k=b.dataset.copy;
+  if(k==="title") copyText(lastData.title||"",b);
+  else if(k==="tags") copyText((lastData.tags||[]).join(", "),b);
+  else if(k==="desc") copyText(lastData.description||"",b);
+}));
 $("go").addEventListener("click",generate);
-$("dl").addEventListener("click",downloadAll);
+$("regen").addEventListener("click",generate);
 </script>
 </body>
 </html>

@@ -2,8 +2,9 @@
 Etsy listing generator for Haus of Lumen — title / tags / description.
 
 Public API:
-    generate_listing(image_bytes, mime, keywords_bytes=None, keywords_mime=None,
-                     template="", notes="") -> {"title", "tags", "description", "keywords_used"}
+    generate_listing(image_bytes, mime, keyword_images=None, template="", notes="")
+        keyword_images: optional list of (bytes, mime) keyword-research screenshots
+        -> {"title", "tags", "description", "keywords_used"}
 
 Uses OpenAI chat completions (gpt-4o-mini, vision) via the SAME OPENAI_API_KEY already configured
 for image generation. Text generation is cheap (~a cent per listing). urllib only, zero new deps.
@@ -65,27 +66,26 @@ def _data_url(image_bytes, mime):
     return "data:%s;base64,%s" % (mime or "image/png", base64.b64encode(image_bytes).decode())
 
 
-def generate_listing(image_bytes, mime="image/jpeg", keywords_bytes=None,
-                     keywords_mime=None, template="", notes=""):
+def generate_listing(image_bytes, mime="image/jpeg", keyword_images=None, template="", notes=""):
     key = os.environ.get("OPENAI_API_KEY")
     if not key:
         raise ListingError("OPENAI_API_KEY not set")
 
+    keyword_images = keyword_images or []
     ask = "Create an Etsy listing (title, exactly 13 tags, description) for this artwork."
     if (template or "").strip():
         ask += ("\n\nMatch the VOICE, structure, and sections of this sample description "
                 "(rewrite fresh for THIS artwork, do not copy verbatim):\n\n" + template.strip()[:6000])
     if (notes or "").strip():
         ask += "\n\nSeller context for this piece: " + notes.strip()[:1200]
-    if keywords_bytes:
-        ask += ("\n\nThe attached keyword-research screenshot has real Etsy search phrases and their "
-                "search volumes — prioritize the highest-volume relevant ones.")
+    if keyword_images:
+        ask += ("\n\nThe attached keyword-research screenshot(s) have real Etsy search phrases and "
+                "their search volumes — read ALL of them and prioritize the highest-volume relevant ones.")
 
     content = [{"type": "text", "text": ask},
                {"type": "image_url", "image_url": {"url": _data_url(image_bytes, mime)}}]
-    if keywords_bytes:
-        content.append({"type": "image_url",
-                        "image_url": {"url": _data_url(keywords_bytes, keywords_mime)}})
+    for kb, kmime in keyword_images:
+        content.append({"type": "image_url", "image_url": {"url": _data_url(kb, kmime)}})
 
     body = json.dumps({
         "model": CHAT_MODEL,

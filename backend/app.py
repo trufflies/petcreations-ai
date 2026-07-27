@@ -28,6 +28,7 @@ from pydantic import BaseModel
 
 import generation as gen
 import email_send
+import klaviyo_send
 import listing
 import mockups
 from styles import STYLES, FRAMES
@@ -227,6 +228,52 @@ def stats_page():
     return STATS_PAGE.replace("__STATS__", stat_html).replace("__DAYS__", day_html)
 
 
+GALLERY_PAGE = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pet Creations &mdash; Preview Gallery</title>
+<style>
+  body{margin:0;background:#f3ecde;color:#2b211c;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 18px 70px;}
+  h1{font-family:Georgia,serif;font-weight:600;font-size:26px;margin:0 0 2px;}
+  .sub{color:#8a7d6f;font-size:13px;margin:0 0 22px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;}
+  figure{margin:0;background:#fbf7ee;border:1px solid #e4dccb;border-radius:10px;overflow:hidden;}
+  figure img{width:100%;display:block;aspect-ratio:1/1;object-fit:cover;background:#efe7d8;}
+  figcaption{font-size:11.5px;color:#8a7d6f;padding:6px 8px;}
+  .foot{color:#8a7d6f;font-size:12px;margin-top:24px;}
+  a{color:#7a5c42;}
+</style></head>
+<body><div class="wrap">
+  <h1>Preview Gallery</h1>
+  <p class="sub">petcreationsart.com &middot; __COUNT__ generated previews (newest first, watermarked)</p>
+  <div class="grid">__GRID__</div>
+  <p class="foot">Every preview a visitor generated &middot; raw counts at <a href="/stats">/stats</a></p>
+</div></body></html>"""
+
+
+@app.get("/gallery", response_class=HTMLResponse)
+def gallery():
+    """Browse every generated preview (watermarked). Unlisted — bookmark it."""
+    import glob
+    import datetime
+    previews = glob.glob(os.path.join(GEN_DIR, "*_preview.png"))
+    previews.sort(key=lambda f: os.path.getmtime(f), reverse=True)
+    cards = []
+    for f in previews[:400]:
+        name = os.path.basename(f)
+        try:
+            d = (datetime.datetime.utcfromtimestamp(os.path.getmtime(f))
+                 - datetime.timedelta(hours=4)).strftime("%b %d, %Y &middot; %I:%M %p")
+        except OSError:
+            d = ""
+        cards.append('<figure><a href="/generated/%s" target="_blank">'
+                     '<img loading="lazy" src="/generated/%s"></a>'
+                     '<figcaption>%s</figcaption></figure>' % (name, name, d))
+    grid = "\n".join(cards) or "<p>No previews yet.</p>"
+    return GALLERY_PAGE.replace("__COUNT__", str(len(previews))).replace("__GRID__", grid)
+
+
 @app.post("/generate")
 def generate(file: UploadFile, background: BackgroundTasks,
              style: str = Form(...), email: str = Form(...)):
@@ -250,6 +297,9 @@ def generate(file: UploadFile, background: BackgroundTasks,
     # never raise into the request (send_preview_email swallows its own errors).
     background.add_task(email_send.send_preview_email, email.strip(),
                         saved["preview_url"], STYLES[style]["label"])
+    # Also push the lead into Klaviyo (no-op until KLAVIYO_API_KEY/LIST_ID are set; never raises).
+    background.add_task(klaviyo_send.add_to_list, email.strip(),
+                        STYLES[style]["label"], saved["preview_url"])
     return saved
 
 
@@ -289,21 +339,23 @@ def apply_frame(id: str = Form(...), frame: str = Form(...)):
 
 @app.post("/listing")
 def make_listing(image: UploadFile,
-                 keywords: UploadFile = File(default=None),
+                 keywords: List[UploadFile] = File(default=[]),
                  template: str = Form(default=""),
                  notes: str = Form(default="")):
-    """Etsy listing generator for Haus of Lumen: artwork (+ optional keyword-research screenshot
-    and sample description) -> {title, tags, description}. Uses gpt-4o-mini via OPENAI_API_KEY."""
+    """Etsy listing generator for Haus of Lumen: artwork (+ optional keyword-research screenshots
+    and sample description) -> {title, tags, description}. Uses gpt-4o-mini via OPENAI_API_KEY.
+    'keywords' accepts one OR many screenshots — all are read."""
     try:
         img = image.file.read()
         if not img:
             raise HTTPException(status_code=400, detail="No artwork image received.")
-        kb, kmime = None, "image/png"
-        if keywords is not None:
-            kb = keywords.file.read() or None
-            kmime = keywords.content_type or "image/png"
+        kw_images = []
+        for kf in (keywords or []):
+            b = kf.file.read()
+            if b:
+                kw_images.append((b, kf.content_type or "image/png"))
         return listing.generate_listing(
-            img, image.content_type or "image/jpeg", kb, kmime, template, notes)
+            img, image.content_type or "image/jpeg", kw_images, template, notes)
     except listing.ListingError as e:
         raise HTTPException(status_code=502, detail=str(e))
     except HTTPException:
