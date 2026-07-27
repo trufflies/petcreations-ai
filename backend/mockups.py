@@ -38,7 +38,7 @@ SCENES = {
     "corner": {"label": "Corner close-up", "size": "1536x1024", "prompt":
         FAITHFUL + "Extreme close-up of the bottom-right CORNER of the piece in " + FRAME + ", angled to "
         "reveal the oak wood grain and square profile, the small floating gap between canvas and frame, "
-        "and the heavy oil-painting canvas texture of the art. Soft directional daylight, shallow depth "
+        "and the fine cotton-canvas weave and soft painterly print texture of the art. Soft directional daylight, shallow depth "
         "of field, warm neutral wall behind. " + STYLE},
 
     "details": {"label": "Details graphic", "size": "1536x1024", "prompt":
