@@ -28,7 +28,7 @@ from pydantic import BaseModel
 
 import generation as gen
 import email_send
-import klaviyo_send
+import omnisend_send
 import listing
 import mockups
 from styles import STYLES, FRAMES
@@ -297,8 +297,8 @@ def generate(file: UploadFile, background: BackgroundTasks,
     # never raise into the request (send_preview_email swallows its own errors).
     background.add_task(email_send.send_preview_email, email.strip(),
                         saved["preview_url"], STYLES[style]["label"])
-    # Also push the lead into Klaviyo (no-op until KLAVIYO_API_KEY/LIST_ID are set; never raises).
-    background.add_task(klaviyo_send.add_to_list, email.strip(),
+    # Also push the lead into Omnisend (no-op until OMNISEND_API_KEY is set; never raises).
+    background.add_task(omnisend_send.add_contact, email.strip(),
                         STYLES[style]["label"], saved["preview_url"])
     return saved
 
