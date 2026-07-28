@@ -27,3 +27,7 @@ backend/bin/
 
 # logs
 backend/server.log
+
+# Local tunnel/server logs — noise, not source
+backend/tunnel.log
+backend/server.log
