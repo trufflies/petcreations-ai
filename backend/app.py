@@ -90,7 +90,10 @@ def _save(art_bytes, style, email, retries, original=None, orig_ext=".jpg", orig
 
 @app.get("/health")
 def health():
+    # `commit` is set by Render on every build. Without it there's no way to tell which code is
+    # actually serving — which cost a lot of guesswork today while deploys were silently not firing.
     return {"ok": True,
+            "commit": os.environ.get("RENDER_GIT_COMMIT", "")[:7] or "unknown",
             "styles": {k: v["label"] for k, v in STYLES.items()},
             "frames": {k: v["label"] for k, v in FRAMES.items()},
             "email_configured": bool(os.environ.get("RESEND_API_KEY")),
