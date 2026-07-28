@@ -28,10 +28,13 @@
     { code: "M", label: "32 × 24\"", in: 32 },
     { code: "L", label: "40 × 30\"", in: 40 }
   ];
-  // The room photo's 60" loveseat spans ~60.5% of the frame, so one inch ≈ 1.008% of width.
+  // Room geometry, measured off the photo rather than guessed:
+  //   the 60" loveseat spans 46% of the width  -> one inch ≈ 0.767% of width
+  //   the top of its back sits at 56% height   -> art hangs 6" above that
   // A loveseat rather than a sofa on purpose: the same canvas reads far grander beside it.
-  var WALL_PPI = 60.5 / 60;
+  var WALL_PPI = 46 / 60;
   var ROOM_HW = 1024 / 1536;      // room photo aspect, for turning a width % into a height %
+  var WALL_BASE = 49.1;           // bottom of the artwork, % of image height
   // `bare`  = gallery-wrapped canvas (no mockup image — drawn in CSS from the art itself)
   // l/t/w/h = art window inside the full wall-mockup, used for the hero
   // cut     = art window inside the *_cut crop (mockup trimmed to the moulding), used on the wall
@@ -427,7 +430,7 @@
     }
     return "<div class='pc-wall'><img class='pc-wallbg' src='" + API + "/app/wall/room.webp' alt='Room'>" +
       "<div class='pc-wallart" + (f.bare ? " bare" : "") + "' style='width:" + w.toFixed(1) +
-        "%;height:" + h.toFixed(1) + "%;top:" + (55 - h).toFixed(1) + "%'>" + inner + "</div>" +
+        "%;height:" + h.toFixed(1) + "%;top:" + (WALL_BASE - h).toFixed(1) + "%'>" + inner + "</div>" +
       "<div class='pc-wallcap'><span>Shown to scale &middot; " + sz.label +
         (f.bare ? " gallery-wrapped canvas" : " in " + f.label) + "</span></div></div>";
   }
