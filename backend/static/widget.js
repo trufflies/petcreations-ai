@@ -246,7 +246,6 @@
           "<label class='pc-drop' id='pc-drop'><input type='file' id='pc-file' accept='image/*'>" +
           "<div id='pc-dropin'><div class='pc-dropicon'>🐾</div><div class='pc-tiny'>Click to upload a clear, well-lit photo</div></div></label>" +
           "<input class='pc-field' id='pc-email' type='email' placeholder='Your email (so we can send your preview)'>" +
-          "<div class='pc-tiny' style='margin-top:5px'>We’ll use it to send your preview.</div>" +
         "</div>" +
         "<div class='pc-opt'><div class='pc-label'>2 &middot; Choose your style</div><div class='pc-grid3' id='pc-styles'></div></div>" +
         "<div class='pc-opt'><div class='pc-label'>3 &middot; Choose your size <span class='pc-guidelink' id='pc-guidelink'>📐 Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
