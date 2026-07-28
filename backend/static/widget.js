@@ -134,7 +134,8 @@
     "#pcai .pc-wf-G{background:linear-gradient(145deg,#dcbc7c,#a87e3c 45%,#e8d19d)}" +
     "#pcai .pc-wf-R{background:linear-gradient(145deg,#dedede,#98989a 45%,#f1f1f1)}" +
     "#pcai .pc-wf-B{padding:2.9%;background:linear-gradient(145deg,#e2bf79,#976c2c 45%,#f2d9a0)}" +
-    "#pcai .pc-wallcap{position:absolute;left:0;right:0;bottom:7px;text-align:center;font-size:11px;color:#6d6154;line-height:1.4}" +
+    "#pcai .pc-wallcap{position:absolute;left:0;right:0;bottom:10px;text-align:center;line-height:1.4;pointer-events:none}" +
+    "#pcai .pc-wallcap span{display:inline-block;background:rgba(255,253,247,.88);color:#4a4036;font-size:11px;padding:4px 12px;border-radius:100px}" +
     "#pcai .pc-thumbs{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}" +
     "#pcai .pc-thumb{width:70px;height:70px;border-radius:10px;overflow:hidden;border:2px solid transparent;cursor:pointer;background:var(--pc-card);padding:0;line-height:0}" +
     "#pcai .pc-thumb.sel{border-color:var(--pc-acc)}" +
@@ -406,8 +407,8 @@
       "<div class='pc-wallart" + (f.bare ? " bare" : " pc-wf pc-wf-" + f.code) + "' style='width:" +
         w.toFixed(1) + "%;height:" + h.toFixed(1) + "%;top:" + (55 - h).toFixed(1) + "%'>" +
         "<img src='" + r.preview + "?t=" + r.bust + "'></div>" +
-      "<div class='pc-wallcap'>Shown to scale &middot; " + sz.label +
-        (f.bare ? " gallery-wrapped canvas" : " in " + f.label) + "</div></div>";
+      "<div class='pc-wallcap'><span>Shown to scale &middot; " + sz.label +
+        (f.bare ? " gallery-wrapped canvas" : " in " + f.label) + "</span></div></div>";
   }
   function renderViewTabs() {
     var box = $("pc-viewtabs");
