@@ -13,9 +13,9 @@
   if (!root) { console.error("[pcai] #pcai-root not found"); return; }
 
   // ---- Product data (pulled from the live product feed) -------------------------------
-  // key = pets + size(S/M/L) + frame(G=Antique Gold, R=Antique Silver, B=Baroque Gold Wide)
+  // key = size(S/M/L) + frame(U=Unframed, G=Antique Gold, R=Antique Silver, B=Baroque Gold Wide)
   // value = [variantId, priceCents, compareAtCents]
-  var VAR = {"1SG":[48111346254042,15999,19999],"1SR":[48111363915994,15999,19999],"1SB":[48111363948762,20999,26299],"1MG":[48111346286810,19999,24999],"1MR":[48111363981530,19999,24999],"1MB":[48111364014298,25999,32499],"1LG":[48111346319578,26999,33799],"1LR":[48111364047066,26999,33799],"1LB":[48111364079834,33999,42499],"2SG":[48111346385114,18999,23799],"2SR":[48111364178138,18999,23799],"2SB":[48111364210906,23999,29999],"2MG":[48111346417882,22999,28799],"2MR":[48111364243674,22999,28799],"2MB":[48111364276442,28999,36299],"2LG":[48111346450650,25999,32499],"2LR":[48111364309210,25999,32499],"2LB":[48111364341978,36999,46299],"3SG":[48111346516186,21999,27499],"3SR":[48111364440282,21999,27499],"3SB":[48111364473050,26999,33799],"3MG":[48111346548954,25999,32499],"3MR":[48111364505818,25999,32499],"3MB":[48111364538586,31999,39999],"3LG":[48111346581722,32999,41299],"3LR":[48111364571354,32999,41299],"3LB":[48111364604122,39999,49999]};
+  var VAR = {"SU":[48277732983002,7999,9999],"SG":[48111346254042,15999,19999],"SR":[48111363915994,15999,19999],"SB":[48111363948762,20999,26299],"MU":[48277733015770,10999,13799],"MG":[48111346286810,19999,24999],"MR":[48111363981530,19999,24999],"MB":[48111364014298,25999,32499],"LU":[48277733048538,16999,21299],"LG":[48111346319578,26999,33799],"LR":[48111364047066,26999,33799],"LB":[48111364079834,33999,42499]};
 
   var STYLES = [
     { code: "monet",    label: "Monet",        sub: "Impressionist" },
@@ -25,12 +25,14 @@
   var SIZES = [
     { code: "S", label: "24 × 18\"" }, { code: "M", label: "32 × 24\"" }, { code: "L", label: "40 × 30\"" }
   ];
+  // `bare` = the gallery-wrapped canvas (no frame mockup image — drawn in CSS from the art itself)
   var FRAMES = [
+    { code: "U", key: null,             label: "Unframed",            bare: true },
     { code: "G", key: "antique_gold",   label: "Antique Gold",       l: 7.5, t: 8, w: 85, h: 84 },
     { code: "R", key: "antique_silver", label: "Antique Silver",     l: 8,   t: 8, w: 84, h: 84 },
     { code: "B", key: "baroque_gold",   label: "Baroque Gold (Wide)", l: 9.5, t: 9, w: 81, h: 82 }
   ];
-  FRAMES.forEach(function (f) { f.img = API + "/app/frames/" + f.key + ".webp"; });
+  FRAMES.forEach(function (f) { if (f.key) f.img = API + "/app/frames/" + f.key + ".webp"; });
 
   var CDN = "https://cdn.shopify.com/s/files/1/0055/0957/8803/files/";
   var EXAMPLES = [
@@ -55,7 +57,7 @@
   ];
 
   // ---- State --------------------------------------------------------------------------
-  var sel = { style: null, pets: "1", size: "S", frame: "G" };
+  var sel = { style: null, size: "S", frame: "U" };
   var file = null, timer = null, heroPick = null;
   // Per-style session cache so switching styles (and back) never re-generates: code -> {id, preview, bust}
   var results = {};
@@ -80,7 +82,7 @@
     "@media(max-width:640px){" +
       "#pcai{width:92%;padding-top:22px}" +
       "#pcai .pc-hero{min-height:230px;padding:12px}" +
-      "#pcai .pc-hero>img,#pcai .pc-framed>.pc-fimg{max-height:420px}" +
+      "#pcai .pc-hero>img,#pcai .pc-framed>.pc-fimg,#pcai .pc-canvas>img{max-height:420px}" +
       "#pcai .pc-title{font-size:24px}" +
       "#pcai .pc-topcta-txt b{font-size:17px}" +
       "#pcai .pc-styleimg{height:100px}" +
@@ -88,7 +90,7 @@
       "#pcai #pc-styles .pc-oc{padding:7px 5px 9px}" +
       "#pcai .pc-oc b{font-size:12.5px}#pcai .pc-oc b.pc-serifname{font-size:13.5px}#pcai .pc-oc small{font-size:10px}" +
       "#pcai .pc-badges{gap:6px}#pcai .pc-badge{padding:9px 3px}#pcai .pc-badge b{font-size:10.5px}#pcai .pc-badge small{font-size:9px}" +
-      "#pcai .pc-frameopts .pc-oc img{height:44px}" +
+      "#pcai .pc-frameopts .pc-oc img{height:44px}#pcai .pc-swatch{height:44px}" +
       "#pcai .pc-btn{padding:14px 18px;font-size:14.5px}" +
       "#pcai-root .pc-info svg{max-width:100%;height:auto}" +
       "#pcai-root .pc-info summary{font-size:16px}" +
@@ -99,6 +101,13 @@
     "#pcai .pc-framed{position:relative;display:inline-block;line-height:0;max-width:100%}" +
     "#pcai .pc-framed>.pc-fimg{display:block;max-width:100%;max-height:620px}" +
     "#pcai .pc-framed>.pc-fart{position:absolute;object-fit:cover}" +
+    // unframed = gallery wrap: bare art, lifted off the wall, with the shaded 1.5" bottom edge
+    "#pcai .pc-canvas{position:relative;display:inline-block;line-height:0;max-width:100%}" +
+    "#pcai .pc-canvas>img{display:block;max-width:100%;max-height:620px;box-shadow:0 14px 32px rgba(0,0,0,.28),0 3px 8px rgba(0,0,0,.16)}" +
+    "#pcai .pc-canvas:after{content:'';position:absolute;left:0;right:0;bottom:0;height:6px;background:linear-gradient(rgba(0,0,0,.32),rgba(0,0,0,.05));pointer-events:none}" +
+    "#pcai .pc-thumb .pc-canvas{width:100%;height:100%}" +
+    "#pcai .pc-thumb .pc-canvas>img{width:100%;height:100%;object-fit:cover;box-shadow:none}" +
+    "#pcai .pc-thumb .pc-canvas:after{height:3px}" +
     "#pcai .pc-thumbs{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}" +
     "#pcai .pc-thumb{width:70px;height:70px;border-radius:10px;overflow:hidden;border:2px solid transparent;cursor:pointer;background:var(--pc-card);padding:0;line-height:0}" +
     "#pcai .pc-thumb.sel{border-color:var(--pc-acc)}" +
@@ -133,6 +142,7 @@
     "#pcai .pc-opt{margin:18px 0 0}" +
     "#pcai .pc-label{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--pc-mut);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}" +
     "#pcai .pc-guidelink{font-size:11px;color:var(--pc-acc);cursor:pointer;text-transform:none;letter-spacing:0;text-decoration:underline}" +
+    "#pcai .pc-optional{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--pc-mut);border:1px solid var(--pc-line);border-radius:100px;padding:2px 9px;background:var(--pc-card)}" +
     "#pcai .pc-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}" +
     "#pcai .pc-oc{position:relative;border:1.5px solid var(--pc-line);background:var(--pc-card);border-radius:11px;padding:11px 8px;text-align:center;cursor:pointer;transition:.12s}" +
     "#pcai .pc-oc:hover{border-color:var(--pc-mut)}" +
@@ -144,8 +154,13 @@
     "#pcai #pc-styles .pc-oc{padding:7px 7px 10px}" +
     "#pcai .pc-styleimg{width:100%;height:126px;object-fit:cover;object-position:center 22%;border-radius:8px;display:block;margin-bottom:7px}" +
     "#pcai .pc-pop{display:block;background:var(--pc-acc);color:#fff;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 0;border-radius:6px;margin:-4px -3px 6px}" +
+    "#pcai .pc-frameopts{grid-template-columns:repeat(4,1fr)}" +          // 4 options now (Unframed + 3 frames)
+    "@media(max-width:640px){#pcai .pc-frameopts{grid-template-columns:repeat(2,1fr)}}" +
     "#pcai .pc-frameopts .pc-oc{padding:7px 6px}" +
     "#pcai .pc-frameopts .pc-oc img{width:100%;height:50px;object-fit:contain;display:block;margin-bottom:4px}" +
+    "#pcai .pc-swatch{height:50px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}" +
+    "#pcai .pc-swatch>i{display:block;position:relative;width:56px;height:42px;background:#eadfc8 center 25%/cover no-repeat;box-shadow:0 4px 9px rgba(0,0,0,.30),0 1px 2px rgba(0,0,0,.2)}" +
+    "#pcai .pc-swatch>i:after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(rgba(0,0,0,.34),rgba(0,0,0,.06))}" +
     "#pcai .pc-drop{display:block;border:2px dashed var(--pc-line);border-radius:12px;padding:20px;text-align:center;cursor:pointer;background:var(--pc-card)}" +
     "#pcai .pc-drop:hover{border-color:var(--pc-acc)}" +
     "#pcai .pc-drop input{display:none}" +
@@ -200,7 +215,7 @@
       // ---- RIGHT: buy box ----
       "<div class='pc-buy'>" +
         "<div class='pc-eyebrow'>Heirloom Pet Art</div>" +
-        "<h1 class='pc-title'>Custom Heritage Framed Pet Portrait</h1>" +
+        "<h1 class='pc-title'>Custom Heritage Pet Portrait</h1>" +
         "<div class='pc-reviews'><span class='pc-stars'>★★★★★</span> <b>4.9</b>/5 &middot; 14,668+ happy customers</div>" +
         "<div class='pc-pricerow' id='pc-pricerow'></div>" +
         "<div class='pc-gift'>🎁 Free shipping — your masterpiece is delivered in 4–7 business days.</div>" +
@@ -218,7 +233,7 @@
         "</div>" +
         "<div class='pc-opt'><div class='pc-label'>2 &middot; Choose your style</div><div class='pc-grid3' id='pc-styles'></div></div>" +
         "<div class='pc-opt'><div class='pc-label'>3 &middot; Choose your size <span class='pc-guidelink' id='pc-guidelink'>📐 Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
-        "<div class='pc-opt'><div class='pc-label'>4 &middot; Choose your frame</div><div class='pc-grid3 pc-frameopts' id='pc-frames'></div></div>" +
+        "<div class='pc-opt'><div class='pc-label'>4 &middot; Add a frame <span class='pc-optional'>optional</span></div><div class='pc-grid3 pc-frameopts' id='pc-frames'></div></div>" +
 
         "<div id='pc-cta'>" +
           "<button class='pc-btn pc-big' id='pc-go' disabled>Create my portrait ✨</button>" +
@@ -248,8 +263,8 @@
     "<div class='pc-info'>" +
       "<details open><summary>Description</summary>" +
         "<p class='pc-lead'>Your pet, immortalized as a masterpiece.</p>" +
-        "<p>We reimagine your beloved pet in the style of an old-world oil painting — capturing their personality and expression in rich, timeless detail. Printed on gallery-grade canvas and framed in your choice of ornate gilt, it’s an heirloom piece made to be passed down for generations.</p>" +
-        "<ul><li>Gallery-grade canvas, made &amp; framed in Florida</li><li>Approve your preview before anything is printed</li><li>Unlimited revisions until it’s exactly right</li><li>Free shipping on every order</li></ul>" +
+        "<p>We reimagine your beloved pet in the style of an old-world oil painting — capturing their personality and expression in rich, timeless detail. Printed on gallery-grade cotton canvas and hand-stretched over solid wood, it arrives ready to hang straight out of the box. Add an ornate gilt frame if you’d like the full heirloom treatment.</p>" +
+        "<ul><li>Gallery-grade cotton canvas, made &amp; framed in Florida</li><li>Ready to hang — gallery-wrapped 1.5&quot; edges, hardware included</li><li>Approve your preview before anything is printed</li><li>Unlimited revisions until it’s exactly right</li><li>Free shipping on every order</li></ul>" +
       "</details>" +
       "<details id='pc-guide'><summary>Size guide</summary>" +
         "<svg viewBox='0 0 760 600' width='100%' style='max-width:560px;display:block;margin:8px auto 4px' xmlns='http://www.w3.org/2000/svg'>" +
@@ -271,7 +286,7 @@
           "<line x1='40' y1='510' x2='720' y2='510' stroke='#dcccae' stroke-width='2'/>" +
           "<text x='380' y='550' fill='#8a7d68' font-family='Playfair Display,Georgia,serif' font-style='italic' font-size='15' text-anchor='middle'>All sizes in inches — shown to scale against a standard 84&quot; sofa</text>" +
         "</svg>" +
-        "<p class='pc-tiny' style='text-align:center'>Measured in inches &middot; landscape 4:3 &middot; printed on gallery-grade canvas and framed.</p></details>" +
+        "<p class='pc-tiny' style='text-align:center'>Measured in inches &middot; landscape 4:3 &middot; printed on gallery-grade canvas. Frame optional &mdash; sizes shown are the canvas; a frame adds ~3&quot; on each side.</p></details>" +
       "<details><summary>Guarantee</summary><p>Love it, or we’ll make it right. Approve your preview before anything prints, get unlimited revisions until it’s perfect, plus a 30-day happiness guarantee on every order. Trouble uploading a photo? Place your order and email it to support@petcreationsart.com.</p></details>" +
     "</div>" +
     "</div>";
@@ -279,10 +294,15 @@
   // ---- Helpers ------------------------------------------------------------------------
   var $ = function (id) { return document.getElementById(id); };
   function money(c) { return "$" + (c / 100).toFixed(2); }
-  function curVar() { return VAR[sel.pets + sel.size + sel.frame]; }
-  function priceOf(p, s, f) { return VAR[p + s + f][1]; }
-  function sizeDelta(c) { return priceOf(sel.pets, c, sel.frame) - priceOf(sel.pets, "S", sel.frame); }
-  function frameDelta(c) { return priceOf(sel.pets, sel.size, c) - priceOf(sel.pets, sel.size, "G"); }
+  function curVar() { return VAR[sel.size + sel.frame]; }
+  function priceOf(s, f) { return VAR[s + f][1]; }
+  function sizeDelta(c) { return priceOf(c, sel.frame) - priceOf("S", sel.frame); }
+  // A frame is only offered if its variant actually exists in the map, so a half-finished Shopify
+  // rollout hides the option instead of white-screening on an undefined variant.
+  function hasVar(c) { return SIZES.every(function (s) { return VAR[s.code + c]; }); }
+  function liveFrames() { return FRAMES.filter(function (f) { return hasVar(f.code); }); }
+  function baseFrame() { return hasVar("U") ? "U" : "G"; }
+  function frameDelta(c) { return priceOf(sel.size, c) - priceOf(sel.size, baseFrame()); }
   function frameByCode(c) { return FRAMES.filter(function (f) { return f.code === c; })[0]; }
   function labelOf(arr, c) { var x = arr.filter(function (o) { return o.code === c; })[0]; return x ? x.label : c; }
   function validEmail(v) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((v || "").trim()); }
@@ -308,16 +328,29 @@
     }).join("");
   }
   function renderFrames() {
-    $("pc-frames").innerHTML = FRAMES.map(function (f) {
-      return "<div class='pc-oc" + (sel.frame === f.code ? " sel" : "") + "' data-frame='" + f.code + "'><img src='" + f.img + "' alt='" + f.label + "'><b style='font-size:12px'>" + f.label + "</b>" + up(frameDelta(f.code), "Included") + "</div>";
+    // The unframed swatch shows the customer's own art once they have a preview (else a sample),
+    // bare and edge-lit — so it reads as "same art, no frame" beside the three frame mockups.
+    var r = curRes(), bareArt = r ? r.preview + "?t=" + r.bust : API + "/app/examples/oil.jpg";
+    $("pc-frames").innerHTML = liveFrames().map(function (f) {
+      var swatch = f.bare
+        ? "<div class='pc-swatch'><i style=\"background-image:url('" + bareArt + "')\"></i></div>"
+        : "<img src='" + f.img + "' alt='" + f.label + "'>";
+      return "<div class='pc-oc" + (sel.frame === f.code ? " sel" : "") + "' data-frame='" + f.code + "'>" + swatch +
+        "<b style='font-size:12px'>" + f.label + "</b>" + up(frameDelta(f.code), f.bare ? "Ready to hang" : "") + "</div>";
     }).join("");
   }
   function renderOptions() { renderSizes(); renderFrames(); renderPrice(); }
 
+  // Unframed renders as a gallery wrap: the bare art with wrap-depth shading (no mockup image).
+  function artIn(f, art, cls, wrapCls) {
+    var w = wrapCls ? " " + wrapCls : "";
+    if (f.bare) return "<div class='pc-canvas" + w + "'><img src='" + art + "'></div>";
+    return "<div class='pc-framed" + w + "'><img class='pc-fimg' src='" + f.img + "'>" +
+      "<img class='" + cls + "' src='" + art + "' style='left:" + f.l + "%;top:" + f.t + "%;width:" + f.w + "%;height:" + f.h + "%'></div>";
+  }
   function framedHTML(cls, wrapCls) {
-    var f = frameByCode(sel.frame), r = curRes();
-    return "<div class='pc-framed" + (wrapCls ? " " + wrapCls : "") + "'><img class='pc-fimg' src='" + f.img + "'>" +
-      "<img class='" + cls + "' src='" + r.preview + "?t=" + r.bust + "' style='left:" + f.l + "%;top:" + f.t + "%;width:" + f.w + "%;height:" + f.h + "%'></div>";
+    var r = curRes();
+    return artIn(frameByCode(sel.frame), r.preview + "?t=" + r.bust, cls, wrapCls);
   }
   function renderHero() {
     if (heroPick) $("pc-hero").innerHTML = "<img src='" + heroPick + "'>";
@@ -327,10 +360,10 @@
   function renderThumbs() {
     var r = curRes(), html = "";
     if (r) {  // customer's portrait in each frame
-      html += FRAMES.map(function (f) {
+      html += liveFrames().map(function (f) {
         var s = (!heroPick && sel.frame === f.code) ? " sel" : "";
         return "<button class='pc-thumb" + s + "' data-frame='" + f.code + "' title='" + f.label + "'>" +
-          "<div class='pc-framed'><img class='pc-fimg' src='" + f.img + "'><img class='pc-fart' src='" + r.preview + "?t=" + r.bust + "' style='left:" + f.l + "%;top:" + f.t + "%;width:" + f.w + "%;height:" + f.h + "%'></div></button>";
+          artIn(f, r.preview + "?t=" + r.bust, "pc-fart") + "</button>";
       }).join("");
     }
     // example gallery — kept visible even after a preview (incl. the size-comparison shot)
@@ -385,7 +418,7 @@
   function show(d, style) {
     results[style || sel.style] = { id: d.id, preview: API + d.preview_url, full: API + d.full_url, original: d.original_url ? API + d.original_url : "", bust: Date.now() };
     heroPick = null;
-    renderHero(); renderThumbs();
+    renderFrames(); renderHero(); renderThumbs();   // renderFrames: swap the unframed swatch to their art
     $("pc-retry").disabled = false; $("pc-instruction").disabled = false;
     refreshPhase();
     $("pc-post").scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -398,7 +431,7 @@
   }
 
   // ---- Events -------------------------------------------------------------------------
-  $("pc-styles").addEventListener("click", function (e) { var c = e.target.closest("[data-style]"); if (!c) return; sel.style = c.getAttribute("data-style"); heroPick = null; renderStyles(); renderHero(); renderThumbs(); refreshPhase(); });
+  $("pc-styles").addEventListener("click", function (e) { var c = e.target.closest("[data-style]"); if (!c) return; sel.style = c.getAttribute("data-style"); heroPick = null; renderStyles(); renderFrames(); renderHero(); renderThumbs(); refreshPhase(); });
   $("pc-sizes").addEventListener("click", function (e) { var c = e.target.closest("[data-size]"); if (!c) return; sel.size = c.getAttribute("data-size"); renderOptions(); });
   $("pc-frames").addEventListener("click", function (e) { var c = e.target.closest("[data-frame]"); if (!c) return; selectFrame(c.getAttribute("data-frame")); });
   $("pc-thumbs").addEventListener("click", function (e) {
@@ -471,5 +504,6 @@
   unclip();
   window.addEventListener("resize", unclip);
 
+  sel.frame = baseFrame();   // Unframed if its variants are live, else fall back to Antique Gold
   renderStyles(); renderOptions(); renderHero(); renderThumbs(); refreshPhase();
 })();
