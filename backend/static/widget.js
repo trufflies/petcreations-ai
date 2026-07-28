@@ -22,9 +22,14 @@
     { code: "oil",      label: "Oil Painting", sub: "Museum oil" },
     { code: "heritage", label: "Heritage",     sub: "Regal heirloom" }
   ];
+  // `in` = canvas width in inches, used to size the art to scale in the room view
   var SIZES = [
-    { code: "S", label: "24 × 18\"" }, { code: "M", label: "32 × 24\"" }, { code: "L", label: "40 × 30\"" }
+    { code: "S", label: "24 × 18\"", in: 24 },
+    { code: "M", label: "32 × 24\"", in: 32 },
+    { code: "L", label: "40 × 30\"", in: 40 }
   ];
+  // The room photo's 84" sofa spans ~83.2% of the frame, so one inch ≈ 0.99% of width.
+  var WALL_PPI = 83.2 / 84;
   // `bare` = the gallery-wrapped canvas (no frame mockup image — drawn in CSS from the art itself)
   var FRAMES = [
     { code: "U", key: null,             label: "Unframed",            bare: true },
@@ -58,7 +63,7 @@
 
   // ---- State --------------------------------------------------------------------------
   var sel = { style: null, size: "S", frame: "U" };
-  var file = null, timer = null, heroPick = null;
+  var file = null, timer = null, heroPick = null, view = "art";   // view: "art" | "wall"
   // Per-style session cache so switching styles (and back) never re-generates.
   // Each style keeps EVERY render it produced — retries add a version rather than replacing one,
   // so nobody loses a portrait they liked by tweaking it. code -> {list:[{id,preview,full,...}], i}
@@ -89,7 +94,8 @@
     "@media(max-width:640px){" +
       "#pcai{width:92%;padding-top:22px}" +
       "#pcai .pc-hero{min-height:230px;padding:12px}" +
-      "#pcai .pc-hero>img,#pcai .pc-framed>.pc-fimg,#pcai .pc-canvas>img{max-height:420px}" +
+      "#pcai .pc-hero>img,#pcai .pc-framed>.pc-fimg,#pcai .pc-canvas>img,#pcai .pc-wallbg{max-height:420px}" +
+      "#pcai .pc-viewtabs button{padding:6px 13px;font-size:12px}" +
       "#pcai .pc-title{font-size:24px}" +
       "#pcai .pc-topcta-txt b{font-size:17px}" +
       "#pcai .pc-styleimg{height:100px}" +
@@ -115,6 +121,20 @@
     "#pcai .pc-thumb .pc-canvas{width:100%;height:100%}" +
     "#pcai .pc-thumb .pc-canvas>img{width:100%;height:100%;object-fit:cover;box-shadow:none}" +
     "#pcai .pc-thumb .pc-canvas:after{height:3px}" +
+    // room view — art composited onto a bare wall, scaled against the sofa
+    "#pcai .pc-viewtabs{display:flex;gap:6px;margin-bottom:11px;justify-content:center}" +
+    "#pcai .pc-viewtabs button{border:1px solid var(--pc-line);background:var(--pc-card);color:var(--pc-mut);font-family:inherit;font-size:12.5px;padding:7px 16px;border-radius:100px;cursor:pointer}" +
+    "#pcai .pc-viewtabs button.sel{background:var(--pc-acc);border-color:var(--pc-acc);color:#fff}" +
+    "#pcai .pc-wall{position:relative;display:inline-block;line-height:0;max-width:100%}" +
+    "#pcai .pc-wallbg{display:block;max-width:100%;max-height:620px;border-radius:10px}" +
+    "#pcai .pc-wallart{position:absolute;left:50%;transform:translateX(-50%);box-sizing:border-box;box-shadow:0 12px 24px rgba(0,0,0,.30),0 2px 6px rgba(0,0,0,.22)}" +
+    "#pcai .pc-wallart>img{width:100%;height:100%;object-fit:cover;display:block}" +
+    // frames approximated as a bevelled border at this scale — the real mockups are their own wall scenes
+    "#pcai .pc-wf{padding:1.7%}" +
+    "#pcai .pc-wf-G{background:linear-gradient(145deg,#dcbc7c,#a87e3c 45%,#e8d19d)}" +
+    "#pcai .pc-wf-R{background:linear-gradient(145deg,#dedede,#98989a 45%,#f1f1f1)}" +
+    "#pcai .pc-wf-B{padding:2.9%;background:linear-gradient(145deg,#e2bf79,#976c2c 45%,#f2d9a0)}" +
+    "#pcai .pc-wallcap{position:absolute;left:0;right:0;bottom:7px;text-align:center;font-size:11px;color:#6d6154;line-height:1.4}" +
     "#pcai .pc-thumbs{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}" +
     "#pcai .pc-thumb{width:70px;height:70px;border-radius:10px;overflow:hidden;border:2px solid transparent;cursor:pointer;background:var(--pc-card);padding:0;line-height:0}" +
     "#pcai .pc-thumb.sel{border-color:var(--pc-acc)}" +
@@ -225,6 +245,10 @@
       "<div class='pc-wrap'>" +
       // ---- LEFT: media ----
       "<div class='pc-media'>" +
+        "<div class='pc-viewtabs' id='pc-viewtabs' style='display:none'>" +
+          "<button data-view='art' class='sel'>Your artwork</button>" +
+          "<button data-view='wall'>See it on the wall</button>" +
+        "</div>" +
         "<div class='pc-hero' id='pc-hero'></div>" +
         "<div class='pc-thumbs' id='pc-thumbs'></div>" +
         "<div class='pc-heronote' id='pc-heronote'>✨ Upload your pet’s photo — your live preview appears here in ~60 seconds.</div>" +
@@ -306,7 +330,7 @@
           "<line x1='40' y1='510' x2='720' y2='510' stroke='#dcccae' stroke-width='2'/>" +
           "<text x='380' y='550' fill='#8a7d68' font-family='Playfair Display,Georgia,serif' font-style='italic' font-size='15' text-anchor='middle'>All sizes in inches — shown to scale against a standard 84&quot; sofa</text>" +
         "</svg>" +
-        "<p class='pc-tiny' style='text-align:center'>Measured in inches &middot; landscape 4:3 &middot; printed on gallery-grade canvas. Frame optional &mdash; sizes shown are the canvas; a frame adds ~3&quot; on each side.</p></details>" +
+        "<p class='pc-tiny' style='text-align:center'>Measured in inches &middot; landscape 4:3 &middot; printed on gallery-grade canvas. Frame optional &mdash; sizes shown are the canvas; a frame adds about 1&ndash;2&quot; on each side.</p></details>" +
       "<details><summary>Guarantee</summary><p>Love it, or we’ll make it right. Approve your preview before anything prints, get unlimited revisions until it’s perfect, plus a 30-day happiness guarantee on every order. Trouble uploading a photo? Place your order and email it to support@petcreationsart.com.</p></details>" +
     "</div>" +
     "</div>";
@@ -372,9 +396,29 @@
     var r = curRes();
     return artIn(frameByCode(sel.frame), r.preview + "?t=" + r.bust, cls, wrapCls);
   }
+  // Room view: the art sized against a real 84" sofa, so 24x18 vs 40x30 is finally tangible.
+  function wallHTML() {
+    var r = curRes(), f = frameByCode(sel.frame);
+    var sz = SIZES.filter(function (s) { return s.code === sel.size; })[0] || SIZES[0];
+    var w = sz.in * WALL_PPI;          // canvas width as % of the room's width
+    var h = w * 1.125;                 // 4:3 art inside a 3:2 room photo
+    return "<div class='pc-wall'><img class='pc-wallbg' src='" + API + "/app/wall/room.webp' alt='Room'>" +
+      "<div class='pc-wallart" + (f.bare ? " bare" : " pc-wf pc-wf-" + f.code) + "' style='width:" +
+        w.toFixed(1) + "%;height:" + h.toFixed(1) + "%;top:" + (55 - h).toFixed(1) + "%'>" +
+        "<img src='" + r.preview + "?t=" + r.bust + "'></div>" +
+      "<div class='pc-wallcap'>Shown to scale &middot; " + sz.label +
+        (f.bare ? " gallery-wrapped canvas" : " in " + f.label) + "</div></div>";
+  }
+  function renderViewTabs() {
+    var box = $("pc-viewtabs");
+    box.style.display = curRes() ? "flex" : "none";
+    [].forEach.call(box.querySelectorAll("[data-view]"), function (b) {
+      b.className = b.getAttribute("data-view") === view ? "sel" : "";
+    });
+  }
   function renderHero() {
     if (heroPick) $("pc-hero").innerHTML = "<img src='" + heroPick + "'>";
-    else if (curRes()) $("pc-hero").innerHTML = framedHTML("pc-fart");
+    else if (curRes()) $("pc-hero").innerHTML = view === "wall" ? wallHTML() : framedHTML("pc-fart");
     else $("pc-hero").innerHTML = "<img src='" + EXAMPLES[0] + "'>";
   }
   function renderThumbs() {
@@ -414,7 +458,7 @@
     renderVersions(); renderFrames(); renderHero(); renderThumbs();
   }
   function refreshPhase() {
-    renderVersions();
+    renderVersions(); renderViewTabs();
     var fresh = !!curRes();
     $("pc-post").style.display = fresh ? "block" : "none";
     $("pc-cta").style.display = fresh ? "none" : "block";
@@ -469,9 +513,13 @@
 
   // ---- Events -------------------------------------------------------------------------
   $("pc-styles").addEventListener("click", function (e) { var c = e.target.closest("[data-style]"); if (!c) return; sel.style = c.getAttribute("data-style"); heroPick = null; renderStyles(); renderFrames(); renderHero(); renderThumbs(); refreshPhase(); });
-  $("pc-sizes").addEventListener("click", function (e) { var c = e.target.closest("[data-size]"); if (!c) return; sel.size = c.getAttribute("data-size"); renderOptions(); });
+  $("pc-sizes").addEventListener("click", function (e) { var c = e.target.closest("[data-size]"); if (!c) return; sel.size = c.getAttribute("data-size"); renderOptions(); if (view === "wall") renderHero(); });
   $("pc-frames").addEventListener("click", function (e) { var c = e.target.closest("[data-frame]"); if (!c) return; selectFrame(c.getAttribute("data-frame")); });
   $("pc-vstrip").addEventListener("click", function (e) { var b = e.target.closest("[data-ver]"); if (!b) return; selectVersion(+b.getAttribute("data-ver")); });
+  $("pc-viewtabs").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-view]"); if (!b) return;
+    view = b.getAttribute("data-view"); heroPick = null; renderViewTabs(); renderHero();
+  });
   $("pc-thumbs").addEventListener("click", function (e) {
     var b = e.target.closest(".pc-thumb"); if (!b) return;
     if (b.getAttribute("data-frame")) { heroPick = null; selectFrame(b.getAttribute("data-frame")); }
