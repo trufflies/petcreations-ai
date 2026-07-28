@@ -40,11 +40,11 @@
   var FRAMES = [
     { code: "U", key: null,             label: "Unframed",            bare: true },
     { code: "G", key: "antique_gold",   label: "Antique Gold",        l: 7.5, t: 8, w: 85, h: 84,
-      cut: { l: 5.8, t: 6.3, w: 86.9, h: 87.1 }, ar: 587 / 463, mould: 2 },
+      cut: { l: 3.9, t: 4.4, w: 90.6, h: 91.0 }, ar: 563 / 443, mould: 2 },
     { code: "R", key: "antique_silver", label: "Antique Silver",      l: 8,   t: 8, w: 84, h: 84,
-      cut: { l: 6.2, t: 8.1, w: 86.6, h: 85.1 }, ar: 582 / 475, mould: 2 },
+      cut: { l: 4.3, t: 6.3, w: 90.3, h: 88.8 }, ar: 558 / 455, mould: 2 },
     { code: "B", key: "baroque_gold",   label: "Baroque Gold (Wide)", l: 9.5, t: 9, w: 81, h: 82,
-      cut: { l: 5.8, t: 9.2, w: 85.1, h: 83.9 }, ar: 571 / 469, mould: 3 }
+      cut: { l: 3.8, t: 7.4, w: 88.8, h: 87.7 }, ar: 547 / 449, mould: 3 }
   ];
   FRAMES.forEach(function (f) {
     if (!f.key) return;
