@@ -59,9 +59,16 @@
   // ---- State --------------------------------------------------------------------------
   var sel = { style: null, size: "S", frame: "U" };
   var file = null, timer = null, heroPick = null;
-  // Per-style session cache so switching styles (and back) never re-generates: code -> {id, preview, bust}
+  // Per-style session cache so switching styles (and back) never re-generates.
+  // Each style keeps EVERY render it produced — retries add a version rather than replacing one,
+  // so nobody loses a portrait they liked by tweaking it. code -> {list:[{id,preview,full,...}], i}
   var results = {};
-  function curRes() { return results[sel.style] || null; }
+  function curSet() { return results[sel.style] || null; }
+  function curRes() { var s = curSet(); return s ? s.list[s.i] : null; }
+  function addRes(style, res) {
+    var s = results[style] || (results[style] = { list: [], i: 0 });
+    s.list.push(res); s.i = s.list.length - 1;
+  }
 
   // ---- Markup -------------------------------------------------------------------------
   root.innerHTML = "" +
@@ -143,6 +150,16 @@
     "#pcai .pc-label{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--pc-mut);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}" +
     "#pcai .pc-guidelink{font-size:11px;color:var(--pc-acc);cursor:pointer;text-transform:none;letter-spacing:0;text-decoration:underline}" +
     "#pcai .pc-optional{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--pc-mut);border:1px solid var(--pc-line);border-radius:100px;padding:2px 9px;background:var(--pc-card)}" +
+    // version history — every render is kept so a tweak never destroys one they liked
+    "#pcai .pc-versions{border:1px solid var(--pc-line);background:var(--pc-card);border-radius:12px;padding:12px 13px;margin-bottom:12px}" +
+    "#pcai .pc-vhead{font-size:13px;font-weight:600}" +
+    "#pcai .pc-vhead small{font-weight:400;color:var(--pc-mut);font-size:11.5px;margin-left:6px}" +
+    "#pcai .pc-vstrip{display:flex;gap:8px;overflow-x:auto;margin-top:9px;padding-bottom:2px}" +
+    "#pcai .pc-vthumb{flex:none;width:62px;border:2px solid transparent;border-radius:9px;background:none;padding:0;cursor:pointer;line-height:0}" +
+    "#pcai .pc-vthumb.sel{border-color:var(--pc-acc)}" +
+    "#pcai .pc-vthumb img{width:100%;height:52px;object-fit:cover;border-radius:7px;display:block}" +
+    "#pcai .pc-vthumb b{display:block;font-size:10px;line-height:1.7;color:var(--pc-mut);font-weight:600}" +
+    "#pcai .pc-vthumb.sel b{color:var(--pc-acc)}" +
     "#pcai .pc-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}" +
     "#pcai .pc-oc{position:relative;border:1.5px solid var(--pc-line);background:var(--pc-card);border-radius:11px;padding:11px 8px;text-align:center;cursor:pointer;transition:.12s}" +
     "#pcai .pc-oc:hover{border-color:var(--pc-mut)}" +
@@ -241,6 +258,10 @@
         "</div>" +
 
         "<div id='pc-post' style='display:none'>" +
+          "<div class='pc-versions' id='pc-versions' style='display:none'>" +
+            "<div class='pc-vhead'>Your versions <small>every tweak is kept — tap to compare</small></div>" +
+            "<div class='pc-vstrip' id='pc-vstrip'></div>" +
+          "</div>" +
           "<div class='pc-edit'>" +
             "<div class='pc-edit-head'><b>Change colors or fix something</b><span class='pc-tag pc-tag-inst'>Instant · ~30s</span></div>" +
             "<div class='pc-retry'>" +
@@ -378,7 +399,23 @@
     $("pc-go").disabled = !ok;
     $("pc-gohint").style.display = ok ? "none" : "block";
   }
+  // Only worth showing once there's something to compare against.
+  function renderVersions() {
+    var s = curSet(), box = $("pc-versions");
+    if (!s || s.list.length < 2) { box.style.display = "none"; return; }
+    box.style.display = "block";
+    $("pc-vstrip").innerHTML = s.list.map(function (r, i) {
+      return "<button class='pc-vthumb" + (i === s.i ? " sel" : "") + "' data-ver='" + i + "'>" +
+        "<img src='" + r.preview + "?t=" + r.bust + "'><b>" + (i ? "v" + (i + 1) : "First") + "</b></button>";
+    }).join("");
+  }
+  function selectVersion(i) {
+    var s = curSet(); if (!s || !s.list[i]) return;
+    s.i = i; heroPick = null;
+    renderVersions(); renderFrames(); renderHero(); renderThumbs();
+  }
   function refreshPhase() {
+    renderVersions();
     var fresh = !!curRes();
     $("pc-post").style.display = fresh ? "block" : "none";
     $("pc-cta").style.display = fresh ? "none" : "block";
@@ -416,7 +453,8 @@
   }
   function stop() { clearInterval(timer); }
   function show(d, style) {
-    results[style || sel.style] = { id: d.id, preview: API + d.preview_url, full: API + d.full_url, original: d.original_url ? API + d.original_url : "", bust: Date.now() };
+    addRes(style || sel.style, { id: d.id, preview: API + d.preview_url, full: API + d.full_url,
+                                 original: d.original_url ? API + d.original_url : "", bust: Date.now() });
     heroPick = null;
     renderFrames(); renderHero(); renderThumbs();   // renderFrames: swap the unframed swatch to their art
     $("pc-retry").disabled = false; $("pc-instruction").disabled = false;
@@ -434,6 +472,7 @@
   $("pc-styles").addEventListener("click", function (e) { var c = e.target.closest("[data-style]"); if (!c) return; sel.style = c.getAttribute("data-style"); heroPick = null; renderStyles(); renderFrames(); renderHero(); renderThumbs(); refreshPhase(); });
   $("pc-sizes").addEventListener("click", function (e) { var c = e.target.closest("[data-size]"); if (!c) return; sel.size = c.getAttribute("data-size"); renderOptions(); });
   $("pc-frames").addEventListener("click", function (e) { var c = e.target.closest("[data-frame]"); if (!c) return; selectFrame(c.getAttribute("data-frame")); });
+  $("pc-vstrip").addEventListener("click", function (e) { var b = e.target.closest("[data-ver]"); if (!b) return; selectVersion(+b.getAttribute("data-ver")); });
   $("pc-thumbs").addEventListener("click", function (e) {
     var b = e.target.closest(".pc-thumb"); if (!b) return;
     if (b.getAttribute("data-frame")) { heroPick = null; selectFrame(b.getAttribute("data-frame")); }
