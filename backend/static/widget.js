@@ -28,16 +28,29 @@
     { code: "M", label: "32 × 24\"", in: 32 },
     { code: "L", label: "40 × 30\"", in: 40 }
   ];
-  // The room photo's 84" sofa spans ~83.2% of the frame, so one inch ≈ 0.99% of width.
-  var WALL_PPI = 83.2 / 84;
-  // `bare` = the gallery-wrapped canvas (no frame mockup image — drawn in CSS from the art itself)
+  // The room photo's 60" loveseat spans ~60.5% of the frame, so one inch ≈ 1.008% of width.
+  // A loveseat rather than a sofa on purpose: the same canvas reads far grander beside it.
+  var WALL_PPI = 60.5 / 60;
+  var ROOM_HW = 1024 / 1536;      // room photo aspect, for turning a width % into a height %
+  // `bare`  = gallery-wrapped canvas (no mockup image — drawn in CSS from the art itself)
+  // l/t/w/h = art window inside the full wall-mockup, used for the hero
+  // cut     = art window inside the *_cut crop (mockup trimmed to the moulding), used on the wall
+  // mould   = moulding width per side in inches; baroque is 1" wider than the antiques
+  // ar      = aspect (w/h) of the cropped frame image
   var FRAMES = [
     { code: "U", key: null,             label: "Unframed",            bare: true },
-    { code: "G", key: "antique_gold",   label: "Antique Gold",       l: 7.5, t: 8, w: 85, h: 84 },
-    { code: "R", key: "antique_silver", label: "Antique Silver",     l: 8,   t: 8, w: 84, h: 84 },
-    { code: "B", key: "baroque_gold",   label: "Baroque Gold (Wide)", l: 9.5, t: 9, w: 81, h: 82 }
+    { code: "G", key: "antique_gold",   label: "Antique Gold",        l: 7.5, t: 8, w: 85, h: 84,
+      cut: { l: 5.8, t: 6.3, w: 86.9, h: 87.1 }, ar: 587 / 463, mould: 2 },
+    { code: "R", key: "antique_silver", label: "Antique Silver",      l: 8,   t: 8, w: 84, h: 84,
+      cut: { l: 6.2, t: 8.1, w: 86.6, h: 85.1 }, ar: 582 / 475, mould: 2 },
+    { code: "B", key: "baroque_gold",   label: "Baroque Gold (Wide)", l: 9.5, t: 9, w: 81, h: 82,
+      cut: { l: 5.8, t: 9.2, w: 85.1, h: 83.9 }, ar: 571 / 469, mould: 3 }
   ];
-  FRAMES.forEach(function (f) { if (f.key) f.img = API + "/app/frames/" + f.key + ".webp"; });
+  FRAMES.forEach(function (f) {
+    if (!f.key) return;
+    f.img = API + "/app/frames/" + f.key + ".webp";
+    f.cutImg = API + "/app/frames/" + f.key + "_cut.webp";
+  });
 
   var CDN = "https://cdn.shopify.com/s/files/1/0055/0957/8803/files/";
   var EXAMPLES = [
@@ -128,12 +141,10 @@
     "#pcai .pc-wall{position:relative;display:inline-block;line-height:0;max-width:100%}" +
     "#pcai .pc-wallbg{display:block;max-width:100%;max-height:620px;border-radius:10px}" +
     "#pcai .pc-wallart{position:absolute;left:50%;transform:translateX(-50%);box-sizing:border-box;box-shadow:0 12px 24px rgba(0,0,0,.30),0 2px 6px rgba(0,0,0,.22)}" +
-    "#pcai .pc-wallart>img{width:100%;height:100%;object-fit:cover;display:block}" +
-    // frames approximated as a bevelled border at this scale — the real mockups are their own wall scenes
-    "#pcai .pc-wf{padding:1.7%}" +
-    "#pcai .pc-wf-G{background:linear-gradient(145deg,#dcbc7c,#a87e3c 45%,#e8d19d)}" +
-    "#pcai .pc-wf-R{background:linear-gradient(145deg,#dedede,#98989a 45%,#f1f1f1)}" +
-    "#pcai .pc-wf-B{padding:2.9%;background:linear-gradient(145deg,#e2bf79,#976c2c 45%,#f2d9a0)}" +
+    "#pcai .pc-wallart.bare>img{width:100%;height:100%;object-fit:cover;display:block}" +
+    // real ornate frames: the mockup cropped to its moulding, customer art laid into the opening
+    "#pcai .pc-wfimg{width:100%;height:100%;display:block}" +
+    "#pcai .pc-wfart{position:absolute;object-fit:cover}" +
     "#pcai .pc-wallcap{position:absolute;left:0;right:0;bottom:10px;text-align:center;line-height:1.4;pointer-events:none}" +
     "#pcai .pc-wallcap span{display:inline-block;background:rgba(255,253,247,.88);color:#4a4036;font-size:11px;padding:4px 12px;border-radius:100px}" +
     "#pcai .pc-thumbs{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}" +
@@ -397,16 +408,26 @@
     var r = curRes();
     return artIn(frameByCode(sel.frame), r.preview + "?t=" + r.bust, cls, wrapCls);
   }
-  // Room view: the art sized against a real 84" sofa, so 24x18 vs 40x30 is finally tangible.
+  // Room view: the piece sized against the room's 60" loveseat, so 24x18 vs 40x30 — and the
+  // difference a wider moulding makes — is something you can see rather than read.
   function wallHTML() {
-    var r = curRes(), f = frameByCode(sel.frame);
+    var r = curRes(), f = frameByCode(sel.frame), art = r.preview + "?t=" + r.bust;
     var sz = SIZES.filter(function (s) { return s.code === sel.size; })[0] || SIZES[0];
-    var w = sz.in * WALL_PPI;          // canvas width as % of the room's width
-    var h = w * 1.125;                 // 4:3 art inside a 3:2 room photo
+    var w, h, inner;
+    if (f.bare) {
+      w = sz.in * WALL_PPI;                          // canvas only
+      h = w * 1.125;                                 // 4:3 art inside a 3:2 room photo
+      inner = "<img src='" + art + "'>";
+    } else {
+      w = (sz.in + 2 * f.mould) * WALL_PPI;          // canvas + moulding on both sides
+      h = w / (f.ar * ROOM_HW);
+      inner = "<img class='pc-wfimg' src='" + f.cutImg + "'>" +
+        "<img class='pc-wfart' src='" + art + "' style='left:" + f.cut.l + "%;top:" + f.cut.t +
+        "%;width:" + f.cut.w + "%;height:" + f.cut.h + "%'>";
+    }
     return "<div class='pc-wall'><img class='pc-wallbg' src='" + API + "/app/wall/room.webp' alt='Room'>" +
-      "<div class='pc-wallart" + (f.bare ? " bare" : " pc-wf pc-wf-" + f.code) + "' style='width:" +
-        w.toFixed(1) + "%;height:" + h.toFixed(1) + "%;top:" + (55 - h).toFixed(1) + "%'>" +
-        "<img src='" + r.preview + "?t=" + r.bust + "'></div>" +
+      "<div class='pc-wallart" + (f.bare ? " bare" : "") + "' style='width:" + w.toFixed(1) +
+        "%;height:" + h.toFixed(1) + "%;top:" + (55 - h).toFixed(1) + "%'>" + inner + "</div>" +
       "<div class='pc-wallcap'><span>Shown to scale &middot; " + sz.label +
         (f.bare ? " gallery-wrapped canvas" : " in " + f.label) + "</span></div></div>";
   }
