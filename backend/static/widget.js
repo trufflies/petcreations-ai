@@ -51,7 +51,8 @@
     { code: "watercolor", label: "Watercolour", sub: "Soft & delicate" },
     // soloOnly: lives on its own product page only. Its sport picker needs the room a dedicated
     // page gives it, and offering it in the combined grid would silently default people to tennis.
-    { code: "sport",    label: "Game Day",     sub: "Impasto oil", variants: "sports", soloOnly: true }
+    { code: "sport",    label: "Game Day",     sub: "Impasto oil", variants: "sports", soloOnly: true,
+      ex: ["sport_tennis.jpg", "sport_soccer.jpg", "sport_basketball.jpg", "sport_pickleball.jpg"] }
   ];
   // Mirrors SPORT_SCENES in styles.py — keep the codes in step.
   var SPORTS = [
@@ -151,6 +152,13 @@
   function pageStyles() {
     if (!forcedStyles.length) return STYLES.filter(function (s) { return !s.soloOnly; });
     return STYLES.filter(function (s) { return forcedStyles.indexOf(s.code) !== -1; });
+  }
+  // A style page should open on its own work — a Game Day page led by a gilt-framed heritage
+  // portrait promises the wrong product. Falls back to the shared set.
+  function pageExamples() {
+    var s = styleCfg();
+    if (s && s.ex) return s.ex.map(function (f) { return API + "/app/examples/" + f; });
+    return EXAMPLES;
   }
   function styleCfg(c) { return STYLES.filter(function (s) { return s.code === (c || sel.style); })[0] || null; }
   function variantsFor(c) { var s = styleCfg(c); return s && s.variants ? VARIANT_SETS[s.variants] : null; }
@@ -551,7 +559,7 @@
   function renderHero() {
     if (heroPick) $("pc-hero").innerHTML = "<img src='" + heroPick + "'>";
     else if (curRes()) $("pc-hero").innerHTML = view === "wall" ? wallHTML() : framedHTML("pc-fart");
-    else $("pc-hero").innerHTML = "<img src='" + EXAMPLES[0] + "'>";
+    else $("pc-hero").innerHTML = "<img src='" + pageExamples()[0] + "'>";
   }
   function renderThumbs() {
     var r = curRes(), html = "";
@@ -563,8 +571,9 @@
       }).join("");
     }
     // example gallery — kept visible even after a preview (incl. the size-comparison shot)
-    html += EXAMPLES.map(function (src) {
-      var s = (heroPick === src || (!r && !heroPick && src === EXAMPLES[0])) ? " sel" : "";
+    var ex = pageExamples();
+    html += ex.map(function (src) {
+      var s = (heroPick === src || (!r && !heroPick && src === ex[0])) ? " sel" : "";
       return "<button class='pc-thumb" + s + "' data-ex='" + src + "'><img src='" + src + "'></button>";
     }).join("");
     $("pc-thumbs").innerHTML = html;
