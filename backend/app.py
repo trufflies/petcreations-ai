@@ -30,6 +30,7 @@ import generation as gen
 import email_send
 import omnisend_send
 import textart
+import defcopy
 import listing
 import mockups
 from styles import STYLES, FRAMES
@@ -132,6 +133,25 @@ def _text_spec(layout, name, dates, phonetic, body):
                        "phonetic": _clean(phonetic, 32),
                        "part_of_speech": "noun",
                        "body": _clean(body, 220)}}
+
+
+@app.post("/definition-copy")
+def definition_copy(name: str = Form(...), quirk: str = Form(...),
+                    greeting: str = Form(None), obsession: str = Form(None)):
+    """Draft a dictionary entry from the questionnaire. The customer edits it before it prints.
+
+    Never 500s: on any failure the widget shows an empty field for them to write their own,
+    which is a worse experience but still a completed order.
+    """
+    n = _clean(name, 24)
+    q = _clean(quirk, 200)
+    if not n or not q:
+        raise HTTPException(400, "Please give your pet's name and one thing they do.")
+    try:
+        entry = defcopy.write_entry(n, q, _clean(greeting, 200), _clean(obsession, 200))
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:160]}
+    return {"ok": True, "phonetic": entry["phonetic"], "body": entry["body"]}
 
 
 @app.get("/health")

@@ -52,6 +52,12 @@
     // so the combined page offers Monet / Oil / Heritage only.
     { code: "watercolor", label: "Watercolor", sub: "Soft & delicate", soloOnly: true, memorial: true,
       ex: ["watercolor_1.jpg", "watercolor_2.jpg"] },
+    { code: "definition", label: "Definition Print", sub: "Dictionary art", soloOnly: true,
+      definition: true, ex: ["definition_1.jpg", "definition_2.jpg"],
+      vlabel: "Choose your backdrop", variants: [
+        { code: "sage", label: "Sage" }, { code: "blush", label: "Blush" },
+        { code: "sky", label: "Sky" }, { code: "cream", label: "Cream" },
+        { code: "clay", label: "Clay" }, { code: "charcoal", label: "Charcoal" }] },
     // soloOnly: lives on its own product page only. Its sport picker needs the room a dedicated
     // page gives it, and offering it in the combined grid would silently default people to tennis.
     { code: "sport",      label: "Game Day",    sub: "Impasto oil",  variants: "sports",   soloOnly: true,
@@ -423,6 +429,20 @@
           "</div>" +
           "<div class='pc-tiny' style='margin-top:6px'>Printed beneath the artwork in fine type. Leave blank for no text.</div>" +
         "</div>" +
+        "<div class='pc-opt' id='pc-defopt' style='display:none'>" +
+          "<div class='pc-label'>Your pet's definition</div>" +
+          "<div class='pc-tiny' style='margin:-4px 0 10px'>Answer two or three questions and we'll draft it — you can edit every word before it prints.</div>" +
+          "<input class='pc-field' id='pc-def-name' maxlength='24' placeholder=\"Your pet's name\">" +
+          "<input class='pc-field' id='pc-def-quirk' maxlength='200' placeholder='One thing they do that everyone jokes about'>" +
+          "<input class='pc-field' id='pc-def-greet' maxlength='200' placeholder='What are they like when you get home? (optional)'>" +
+          "<input class='pc-field' id='pc-def-obsess' maxlength='200' placeholder='Weirdly obsessed with… (optional)'>" +
+          "<button class='pc-ghost' id='pc-def-go' style='width:100%;margin-top:10px'>Write my definition</button>" +
+          "<div id='pc-def-out' style='display:none;margin-top:12px'>" +
+            "<input class='pc-field' id='pc-def-phonetic' maxlength='32' placeholder='ol-uh-ver'>" +
+            "<textarea class='pc-field' id='pc-def-body' maxlength='220' rows='3' placeholder='Your definition'></textarea>" +
+            "<div class='pc-tiny' style='margin-top:6px'>Edit freely — this is exactly what gets printed.</div>" +
+          "</div>" +
+        "</div>" +
         "<div class='pc-opt' id='pc-sizeopt' style='display:none'><div class='pc-label'>Choose your size <span class='pc-guidelink' id='pc-guidelink'>Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
         "<div class='pc-opt' id='pc-frameopt' style='display:none'><div class='pc-label'>Add a frame <span class='pc-optional'>optional</span></div><div class='pc-grid3 pc-frameopts' id='pc-frames'></div></div>" +
 
@@ -645,6 +665,7 @@
     renderVersions(); renderViewTabs();
     var cfg = styleCfg();
     $("pc-memopt").style.display = (cfg && cfg.memorial) ? "block" : "none";
+    $("pc-defopt").style.display = (cfg && cfg.definition) ? "block" : "none";
     var fresh = !!curRes();
     // Progressive disclosure: before a preview exists the page asks for a photo and a style and
     // nothing else. Size, frame and the example strip only appear once there's art to apply them
@@ -706,6 +727,16 @@
     var fd = new FormData();
     fd.append("file", file); fd.append("style", style); fd.append("email", $("pc-email").value.trim());
     if (sel.variant) fd.append("variant", sel.variant);
+    var dcfg = styleCfg();
+    if (dcfg && dcfg.definition) {
+      var dn = $("pc-def-name").value.trim(), db = $("pc-def-body").value.trim();
+      if (dn && db) {
+        fd.append("text_layout", "definition");
+        fd.append("text_name", dn);
+        fd.append("text_phonetic", $("pc-def-phonetic").value.trim());
+        fd.append("text_body", db);
+      }
+    }
     var mcfg = styleCfg(), mname = mcfg && mcfg.memorial ? $("pc-mem-name").value.trim() : "";
     if (mname) {
       fd.append("text_layout", "memorial");
@@ -735,6 +766,33 @@
   $("pc-viewtabs").addEventListener("click", function (e) {
     var b = e.target.closest("[data-view]"); if (!b) return;
     view = b.getAttribute("data-view"); heroPick = null; renderViewTabs(); renderHero();
+  });
+  $("pc-def-go").addEventListener("click", function () {
+    var btn = this, name = $("pc-def-name").value.trim(), quirk = $("pc-def-quirk").value.trim();
+    if (!name || !quirk) { $("pc-err").textContent = "Add your pet's name and one thing they do."; return; }
+    btn.disabled = true; btn.textContent = "Writing…";
+    var fd = new FormData();
+    fd.append("name", name); fd.append("quirk", quirk);
+    fd.append("greeting", $("pc-def-greet").value.trim());
+    fd.append("obsession", $("pc-def-obsess").value.trim());
+    fetch(API + "/definition-copy", { method: "POST", body: fd })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        btn.disabled = false; btn.textContent = "Write my definition";
+        // A failure still opens the fields — they can write their own rather than lose the sale.
+        $("pc-def-out").style.display = "block";
+        if (d && d.ok) {
+          $("pc-def-phonetic").value = d.phonetic || "";
+          $("pc-def-body").value = d.body || "";
+        } else {
+          $("pc-err").textContent = "Couldn't draft it — write your own below and it'll print exactly as typed.";
+        }
+      })
+      .catch(function () {
+        btn.disabled = false; btn.textContent = "Write my definition";
+        $("pc-def-out").style.display = "block";
+        $("pc-err").textContent = "Couldn't reach us — write your own below.";
+      });
   });
   $("pc-guidelink").addEventListener("click", function () { var d = $("pc-guide"); d.open = true; d.scrollIntoView({ behavior: "smooth", block: "center" }); });
   $("pc-file").addEventListener("change", function (e) {
@@ -776,6 +834,12 @@
       props["Memorial name"] = mn;
       var md = $("pc-mem-dates").value.trim();
       if (md) props["Memorial dates"] = md;
+    }
+    var dc = styleCfg();
+    if (dc && dc.definition && $("pc-def-name").value.trim()) {
+      props["Definition name"] = $("pc-def-name").value.trim();
+      var db2 = $("pc-def-body").value.trim();
+      if (db2) props["Definition text"] = db2;
     }
     if ($("pc-artist-check").checked) {
       props["Artist refinement"] = "Yes — free, after order (unlimited revisions by email)";
