@@ -66,12 +66,26 @@ _IMPASTO = (
     "NOT a smooth digital render, NOT airbrushed, NOT a cartoon, no clean outlines. "
     "Keep the eyes, nose and facial markings clearly readable even though the paint is thick. "
     "{SCENE} "
-    "LIGHT AND MOOD (this describes the daylight and setting only — it must NOT recolour any clothing "
-    "or props described above): high-key, light and preppy, bright airy daylight, cheerful and clean, "
-    "built from soft powder blue, warm cream and chalky white. "
-    "Completely REPLACE the photo's background with a simple uncluttered painted backdrop, itself built "
+    "LIGHT AND MOOD (this describes the light and setting only — it must NOT recolour any clothing "
+    "or props described above): {MOOD} "
+    "Completely REPLACE the photo's background with the painted setting described, itself built "
     "from thick visible knife strokes. Fill the image edge to edge — no border, no frame, no vignette."
 )
+
+_PREPPY = ("high-key, light and preppy, bright airy daylight, cheerful and clean, built from soft "
+           "powder blue, warm cream and chalky white.")
+
+
+def _impasto(mood, scene=None):
+    """Build an impasto prompt. Leave `scene` out for styles whose scene comes from a variant.
+
+    Uses replace() rather than format() so the remaining {SCENE} placeholder survives for
+    generation.style_prompt() to fill later.
+    """
+    p = _IMPASTO.replace("{MOOD}", mood)
+    if scene is not None:
+        p = p.replace("{SCENE}", scene)
+    return _nano(p)
 
 # Prop colours are stated emphatically here, not left to the palette — see note above.
 SPORT_SCENES = {
@@ -156,11 +170,72 @@ STYLES = {
     "sport": {
         "label": "Game Day",
         "provider": "gemini",
-        "prompt": _nano(_IMPASTO),          # contains {SCENE}; filled from the chosen variant
+        "prompt": _impasto(_PREPPY),        # keeps {SCENE}; filled from the chosen sport
         "variants": SPORT_SCENES,
         "default_variant": "tennis",
     },
+    "beach": {
+        "label": "Beach Day",
+        "provider": "gemini",
+        "prompt": _impasto(
+            "sun-bleached coastal daylight, breezy and bright, built from pale sky blue, sea-glass "
+            "green, warm sand and chalky white, with the light coming low and golden off the water.",
+            "Place the pet on a wide sandy beach at the water's edge, sitting or standing happily in "
+            "the open, with gentle turquoise surf breaking behind them, damp sand catching the light, "
+            "and a soft band of dune grass and open sky beyond. No people, no umbrellas, no clutter.",
+        ),
+    },
+    "wildflower": {
+        "label": "Wildflower",
+        "provider": "gemini",
+        "prompt": _impasto(
+            "soft faded vintage light, gently sun-washed as though the paint has aged a little — "
+            "dusty sage, muted ochre, faded rose and warm cream, low afternoon sun, nostalgic and quiet.",
+            "Place the pet in a summer meadow of tall wildflowers up around them — loose dabbed heads "
+            "of poppy, cornflower, daisy and grass seed suggested with quick knife strokes rather than "
+            "drawn in detail — with a hazy treeline far behind and long grass catching the light.",
+        ),
+    },
+    "fancy": {
+        "label": "Fine Dining",
+        "provider": "gemini",
+        "prompt": _impasto(
+            "warm candlelit restaurant glow against a soft dusky-rose wall, intimate and elegant, "
+            "built from blush, warm cream, soft gold and deep wine red.",
+            "Seat the pet upright at a small white-linen restaurant table as though dining, with a "
+            "beautifully plated STEAK on a white plate before them and a glass of DEEP RED WINE beside "
+            "it — the wine must be deep red and the steak rich brown. Add a small folded napkin and "
+            "polished cutlery. The pet looks pleased with itself, entirely at home.",
+        ),
+    },
+    "bright": {
+        "label": "Bold Colour",
+        "provider": "gemini",
+        "prompt": _impasto(
+            "bold, saturated and contemporary — strong colour against a dark ground, gallery lighting, "
+            "confident and modern rather than soft or pretty.",
+        ),                                   # keeps {SCENE}; filled from the chosen palette
+        "variants": None,                    # set below (needs BRIGHT_PALETTES defined first)
+        "default_variant": "sunset",
+    },
 }
+
+# Bold Colour: the variant chooses the palette. Each scene repeats the treatment so a palette can be
+# swapped without the abstract description drifting.
+_BOLD_TREATMENT = (
+    "Render the pet as a striking modern portrait: the face and eyes painted richly and accurately so "
+    "the pet is unmistakable, while the coat, edges and background dissolve into sweeping knife strokes, "
+    "drips, runs and splatters of intense colour that break away from the silhouette. "
+)
+BRIGHT_PALETTES = {
+    "sunset":  {"label": "Sunset",  "scene": _BOLD_TREATMENT + "PALETTE: blazing tangerine, hot pink and deep plum against near-black."},
+    "electric": {"label": "Electric", "scene": _BOLD_TREATMENT + "PALETTE: electric teal, cobalt blue and acid lime against near-black."},
+    "magenta": {"label": "Magenta", "scene": _BOLD_TREATMENT + "PALETTE: vivid magenta, coral and warm gold against deep charcoal."},
+    "citrus":  {"label": "Citrus",  "scene": _BOLD_TREATMENT + "PALETTE: bright lemon yellow, orange and turquoise against deep ink blue."},
+    "jewel":   {"label": "Jewel",   "scene": _BOLD_TREATMENT + "PALETTE: emerald green, sapphire blue and rich amethyst against near-black."},
+    "flame":   {"label": "Flame",   "scene": _BOLD_TREATMENT + "PALETTE: scarlet red, molten orange and gold against deep charcoal."},
+}
+STYLES["bright"]["variants"] = BRIGHT_PALETTES
 
 # Physical frame options (the differentiator). The finished portrait is AI-mounted into the
 # chosen frame as a wall mockup — matching how the storefront's product photos already look.

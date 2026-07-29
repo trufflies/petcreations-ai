@@ -51,8 +51,16 @@
     { code: "watercolor", label: "Watercolour", sub: "Soft & delicate" },
     // soloOnly: lives on its own product page only. Its sport picker needs the room a dedicated
     // page gives it, and offering it in the combined grid would silently default people to tennis.
-    { code: "sport",    label: "Game Day",     sub: "Impasto oil", variants: "sports", soloOnly: true,
-      ex: ["sport_tennis.jpg", "sport_soccer.jpg", "sport_basketball.jpg", "sport_pickleball.jpg"] }
+    { code: "sport",      label: "Game Day",    sub: "Impasto oil",  variants: "sports",   soloOnly: true,
+      ex: ["sport_tennis.jpg", "sport_soccer.jpg", "sport_basketball.jpg", "sport_pickleball.jpg"] },
+    { code: "beach",      label: "Beach Day",   sub: "Coastal impasto", soloOnly: true,
+      ex: ["beach_1.jpg", "beach_2.jpg"] },
+    { code: "wildflower", label: "Wildflower",  sub: "Vintage meadow",  soloOnly: true,
+      ex: ["wildflower_1.jpg", "wildflower_2.jpg"] },
+    { code: "fancy",      label: "Fine Dining", sub: "Steak & wine",    soloOnly: true,
+      ex: ["fancy_1.jpg", "fancy_2.jpg"] },
+    { code: "bright",     label: "Bold Colour", sub: "Modern & vivid",  variants: "palettes", soloOnly: true,
+      ex: ["bright_1.jpg", "bright_2.jpg"] }
   ];
   // Mirrors SPORT_SCENES in styles.py — keep the codes in step.
   var SPORTS = [
@@ -64,7 +72,16 @@
     { code: "football",   label: "Football" }
   ];
   SPORTS.forEach(function (v) { v.img = API + "/app/examples/sportopt_" + v.code + ".jpg"; });
-  var VARIANT_SETS = { sports: SPORTS };
+  // Mirrors BRIGHT_PALETTES in styles.py.
+  var PALETTES = [
+    { code: "sunset",   label: "Sunset",   sw: ["#ff7a2f", "#ff2e88", "#5b1a55"] },
+    { code: "electric", label: "Electric", sw: ["#12d6c8", "#1f5fe0", "#c6ff2e"] },
+    { code: "magenta",  label: "Magenta",  sw: ["#e6188c", "#ff6f5e", "#f0b429"] },
+    { code: "citrus",   label: "Citrus",   sw: ["#ffd51e", "#ff8a1e", "#1fc6d6"] },
+    { code: "jewel",    label: "Jewel",    sw: ["#0e8f5c", "#1a49c4", "#7a2bb8"] },
+    { code: "flame",    label: "Flame",    sw: ["#e01f1f", "#ff7a12", "#f2c14a"] }
+  ];
+  var VARIANT_SETS = { sports: SPORTS, palettes: PALETTES };
   // `in` = canvas width in inches, used to size the art to scale in the room view
   var SIZES = [
     { code: "S", label: "24 × 18\"", in: 24 },
@@ -193,7 +210,9 @@
       "#pcai .pc-hero>img,#pcai .pc-framed>.pc-fimg,#pcai .pc-canvas>img,#pcai .pc-wallbg{max-height:420px}" +
       "#pcai .pc-viewtabs button{padding:6px 13px;font-size:12px}" +
       "#pcai .pc-title{font-size:24px}" +
-      "#pcai .pc-varimg{width:100%;height:96px;object-fit:cover;object-position:center 22%;border-radius:8px;display:block;margin-bottom:6px}" +
+      "#pcai .pc-sw{display:flex;gap:4px;justify-content:center;margin-bottom:7px}" +
+    "#pcai .pc-sw i{width:20px;height:20px;border-radius:50%;display:block}" +
+    "#pcai .pc-varimg{width:100%;height:96px;object-fit:cover;object-position:center 22%;border-radius:8px;display:block;margin-bottom:6px}" +
     "@media(max-width:640px){#pcai .pc-varimg{height:78px}}" +
     "#pcai .pc-styleimg{height:100px}" +
       "#pcai .pc-oc{padding:8px 5px}" +
@@ -289,6 +308,8 @@
     "#pcai .pc-oc small{display:block;font-size:12px;color:var(--pc-mut);margin-top:2px;min-height:14px}" +
     "#pcai .pc-oc small.pc-up{color:var(--pc-acc);font-weight:600}" +
     "#pcai #pc-styles .pc-oc{padding:7px 7px 10px}" +
+    "#pcai .pc-sw{display:flex;gap:4px;justify-content:center;margin-bottom:7px}" +
+    "#pcai .pc-sw i{width:20px;height:20px;border-radius:50%;display:block}" +
     "#pcai .pc-varimg{width:100%;height:96px;object-fit:cover;object-position:center 22%;border-radius:8px;display:block;margin-bottom:6px}" +
     "@media(max-width:640px){#pcai .pc-varimg{height:78px}}" +
     "#pcai .pc-styleimg{width:100%;height:126px;object-fit:cover;object-position:center 22%;border-radius:8px;display:block;margin-bottom:7px}" +
@@ -482,6 +503,8 @@
       grid.innerHTML = vs.map(function (v) {
         return "<div class='pc-oc" + (sel.variant === v.code ? " sel" : "") + "' data-variant='" + v.code + "'>" +
           (v.img ? "<img class='pc-varimg' src='" + v.img + "' alt='" + v.label + "'>" : "") +
+          (v.sw ? "<div class='pc-sw'>" + v.sw.map(function (c) {
+            return "<i style='background:" + c + "'></i>"; }).join("") + "</div>" : "") +
           "<b class='pc-serifname'>" + v.label + "</b></div>";
       }).join("");
       return;
