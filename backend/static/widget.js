@@ -241,7 +241,7 @@
     "<style>" +
     "#pcai-root{--pc-bg:#f3ecde;--pc-ink:#343434;--pc-mut:#6f6552;--pc-line:#dfd2b8;--pc-card:#ffffff;--pc-acc:#5e1622;--pc-gold:#b08d57;--pc-serif:'Playfair Display',Georgia,serif;background:var(--pc-bg);color:var(--pc-ink);font-family:inherit;width:100%;overflow-x:hidden}" +
     "#pcai-root *{box-sizing:border-box}" +
-    "#pcai{width:94%;max-width:1280px;margin:0 auto;padding:34px 0 6px;text-align:left}" +
+    "#pcai{max-width:100%;overflow-x:clip;width:94%;max-width:1280px;margin:0 auto;padding:34px 0 6px;text-align:left}" +
     "#pcai .pc-wrap{display:grid;grid-template-columns:1fr;gap:28px}" +
     "@media(min-width:880px){#pcai .pc-wrap{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;align-items:start}#pcai .pc-media{position:sticky;top:20px}}" +
     // top CTA (mainly to jump mobile users straight to the upload)
@@ -314,7 +314,6 @@
     "@media(max-width:640px){#pcai .pc-memfields{grid-template-columns:1fr}}" +
     "#pcai .pc-memfields .pc-field{margin-top:0}" +
     "#pcai .pc-digital{display:flex;gap:9px;align-items:flex-start;font-size:13px;margin:14px 0 2px;cursor:pointer;line-height:1.5}" +
-    "#pcai .pc-digital input{flex:0 0 auto;margin-top:3px}" +
     "#pcai .pc-digital>span{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}" +
     "#pcai .pc-also{margin:34px 0 0}" +
     "#pcai .pc-also-h{font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:var(--pc-mut);margin-bottom:12px}" +
@@ -388,7 +387,11 @@
     "#pcai .pc-retry{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}" +
     "#pcai .pc-retry .pc-field{flex:1;min-width:180px;margin-top:0}" +
     "#pcai .pc-artist{display:flex;gap:9px;align-items:flex-start;font-size:13px;margin:14px 0 2px;cursor:pointer;line-height:1.5}" +
-    "#pcai .pc-artist input{flex:0 0 auto;margin-top:3px}" +
+    // The theme sets input[type=checkbox]{width:100%}. flex:0 0 auto resolves its basis from
+    // that width, so the box ate the whole row and left the text 0px wide — it then ran off
+    // the right edge, which is what was scrolling the whole page sideways on mobile. Pin the
+    // box size explicitly; flex alone cannot win against a width it inherits.
+    "#pcai .pc-artist input,#pcai .pc-digital input{flex:0 0 auto;width:16px;min-width:16px;height:16px;margin-top:3px}" +
     "#pcai .pc-artist>span{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}" +
     "#pcai .pc-tiny{font-size:13px;line-height:1.5;color:var(--pc-mut)}" +
     "#pcai .pc-center{text-align:center}" +
