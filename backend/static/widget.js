@@ -75,7 +75,10 @@
     { code: "basketball", label: "Basketball" },
     { code: "football",   label: "Football" }
   ];
-  SPORTS.forEach(function (v) { v.img = API + "/app/examples/sportopt_" + v.code + ".jpg"; });
+  SPORTS.forEach(function (v) {
+    v.img = API + "/app/examples/sportopt_" + v.code + ".jpg";   // square, for the option card
+    v.ex  = "sport_" + v.code + ".jpg";                          // full size, for the hero
+  });
   // Mirrors BRIGHT_PALETTES in styles.py.
   var PALETTES = [
     { code: "sunset",   label: "Sunset",   sw: ["#ff7a2f", "#ff2e88", "#5b1a55"] },
@@ -186,8 +189,15 @@
   // portrait promises the wrong product. Falls back to the shared set.
   function pageExamples() {
     var s = styleCfg();
-    if (s && s.ex) return s.ex.map(function (f) { return API + "/app/examples/" + f; });
-    return EXAMPLES;
+    if (!s || !s.ex) return EXAMPLES;
+    var files = s.ex.slice();
+    // Lead with the chosen variant's own artwork. Without this, picking Basketball still showed
+    // the tennis example as the hero, which reads as "it ignored my choice".
+    var vs = variantsFor(), cur = vs && vs.filter(function (v) { return v.code === sel.variant; })[0];
+    if (cur && cur.ex) {
+      files = [cur.ex].concat(files.filter(function (f) { return f !== cur.ex; }));
+    }
+    return files.map(function (f) { return API + "/app/examples/" + f; });
   }
   function styleCfg(c) { return STYLES.filter(function (s) { return s.code === (c || sel.style); })[0] || null; }
   function variantsFor(c) { var s = styleCfg(c); return s && s.variants ? VARIANT_SETS[s.variants] : null; }
