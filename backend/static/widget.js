@@ -318,6 +318,21 @@
     "#pcai .pc-memfields{display:grid;grid-template-columns:1fr 1fr;gap:9px}" +
     "@media(max-width:640px){#pcai .pc-memfields{grid-template-columns:1fr}}" +
     "#pcai .pc-memfields .pc-field{margin-top:0}" +
+    // On a phone the hero scrolls far above the size and frame pickers, so choosing a frame meant
+    // scrolling back up past the style grid, email and upload to see what it did. This pins a small
+    // live copy to the top of the buy column while those options are on screen. Desktop already has
+    // a sticky media column, so it stays hidden there.
+    "#pcai .pc-mini{position:sticky;top:6px;z-index:6;display:none;align-items:center;gap:11px;"
+      + "padding:8px 11px;margin:0 0 14px;background:rgba(255,255,255,.93);"
+      + "-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);"
+      + "border:1px solid var(--pc-line);border-radius:13px;box-shadow:0 2px 10px rgba(0,0,0,.05)}" +
+    "#pcai .pc-mini.on{display:flex}" +
+    "#pcai .pc-mini .pc-framed,#pcai .pc-mini .pc-canvas{width:66px;height:50px;flex:0 0 auto}" +
+    "#pcai .pc-mini .pc-canvas>img{width:100%;height:100%;object-fit:cover}" +
+    "#pcai .pc-mini .pc-canvas:after{height:2px}" +
+    "#pcai .pc-mini b{display:block;font-size:12.5px;line-height:1.3}" +
+    "#pcai .pc-mini span{display:block;font-size:11.5px;color:var(--pc-mut);margin-top:2px}" +
+    "@media(min-width:880px){#pcai .pc-mini.on{display:none}}" +
     "#pcai .pc-digital{display:flex;gap:9px;align-items:flex-start;font-size:13px;margin:14px 0 2px;cursor:pointer;line-height:1.5}" +
     "#pcai .pc-digital>span{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}" +
     "#pcai .pc-also{margin:34px 0 0;min-width:0}" +
@@ -676,6 +691,25 @@
     $("pc-gohint").style.display = ok ? "none" : "block";
   }
   // Only worth showing once there's something to compare against.
+  function renderMini() {
+    var box = $("pc-mini"), r = curRes();
+    if (!r) { box.setAttribute("data-ready", "0"); box.classList.remove("on"); return; }
+    var f = frameByCode(sel.frame), sz = SIZES.filter(function (x) { return x.code === sel.size; })[0];
+    box.innerHTML = artIn(f, r.preview + "?t=" + r.bust, "pc-fart") +
+      "<div><b>" + esc(sz ? sz.label : "") + "</b><span>" + esc(f.label) + "</span></div>";
+    box.setAttribute("data-ready", "1");
+  }
+  // Pin the mini copy only once the real hero has scrolled away, so they are never both on screen.
+  var heroWatch = null;
+  function watchHero() {
+    if (heroWatch || !window.IntersectionObserver) return;
+    heroWatch = new IntersectionObserver(function (es) {
+      var box = $("pc-mini");
+      box.classList.toggle("on", !es[0].isIntersecting && box.getAttribute("data-ready") === "1");
+    }, { threshold: 0.12 });
+    heroWatch.observe($("pc-hero"));
+  }
+
   function renderVersions() {
     var s = curSet(), box = $("pc-versions");
     if (!s || s.list.length < 2) { box.style.display = "none"; return; }
@@ -691,7 +725,7 @@
     renderVersions(); renderFrames(); renderHero();
   }
   function refreshPhase() {
-    renderVersions(); renderViewTabs();
+    renderVersions(); renderViewTabs(); renderMini(); watchHero();
     var cfg = styleCfg();
     $("pc-memopt").style.display = (cfg && cfg.memorial) ? "block" : "none";
     $("pc-defopt").style.display = (cfg && cfg.definition) ? "block" : "none";
@@ -712,7 +746,7 @@
       : "Upload your pet’s photo — your live preview appears here in ~60 seconds.";
     updateGo();
   }
-  function selectFrame(code) { sel.frame = code; renderOptions(); renderHero(); }
+  function selectFrame(code) { sel.frame = code; renderOptions(); renderHero(); renderMini(); }
 
   // ---- Network ------------------------------------------------------------------------
   function post(path, form) {
@@ -791,7 +825,7 @@
     normalizeSel(); heroPick = null;
     renderStyles(); renderFrames(); renderHero(); refreshPhase();
   });
-  $("pc-sizes").addEventListener("click", function (e) { var c = e.target.closest("[data-size]"); if (!c) return; sel.size = c.getAttribute("data-size"); renderOptions(); if (view === "wall") renderHero(); });
+  $("pc-sizes").addEventListener("click", function (e) { var c = e.target.closest("[data-size]"); if (!c) return; sel.size = c.getAttribute("data-size"); renderOptions(); renderMini(); if (view === "wall") renderHero(); });
   $("pc-frames").addEventListener("click", function (e) { var c = e.target.closest("[data-frame]"); if (!c) return; selectFrame(c.getAttribute("data-frame")); });
   $("pc-vstrip").addEventListener("click", function (e) { var b = e.target.closest("[data-ver]"); if (!b) return; selectVersion(+b.getAttribute("data-ver")); });
   $("pc-viewtabs").addEventListener("click", function (e) {
