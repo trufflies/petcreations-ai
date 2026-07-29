@@ -179,7 +179,7 @@
   // ---- Markup -------------------------------------------------------------------------
   root.innerHTML = "" +
     "<style>" +
-    "#pcai-root{--pc-bg:#f3ecde;--pc-ink:#343434;--pc-mut:#8a7d68;--pc-line:#dfd2b8;--pc-card:#fffdf7;--pc-acc:#5e1622;--pc-gold:#b08d57;--pc-serif:'Playfair Display',Georgia,serif;background:var(--pc-bg);color:var(--pc-ink);font-family:inherit;width:100%;overflow-x:hidden}" +
+    "#pcai-root{--pc-bg:#f3ecde;--pc-ink:#343434;--pc-mut:#6f6552;--pc-line:#dfd2b8;--pc-card:#ffffff;--pc-acc:#5e1622;--pc-gold:#b08d57;--pc-serif:'Playfair Display',Georgia,serif;background:var(--pc-bg);color:var(--pc-ink);font-family:inherit;width:100%;overflow-x:hidden}" +
     "#pcai-root *{box-sizing:border-box}" +
     "#pcai{width:94%;max-width:1700px;margin:0 auto;padding:34px 0 6px;text-align:left}" +
     "#pcai .pc-wrap{display:grid;grid-template-columns:1fr;gap:28px}" +
@@ -233,7 +233,7 @@
     "#pcai .pc-thumb img{width:100%;height:100%;object-fit:cover}" +
     "#pcai .pc-thumb .pc-framed,#pcai .pc-thumb .pc-fimg{width:100%;height:100%}" +
     "#pcai .pc-thumb .pc-fimg{object-fit:cover}" +
-    "#pcai .pc-heronote{font-size:12px;color:var(--pc-mut);text-align:center;margin-top:11px}" +
+    "#pcai .pc-heronote{font-size:12.5px;color:var(--pc-mut);text-align:center;margin-top:11px}" +
     "#pcai .pc-spin{width:40px;height:40px;border:4px solid var(--pc-line);border-top-color:var(--pc-acc);border-radius:50%;animation:pcspin 1s linear infinite;margin:0 auto 12px}" +
     "@keyframes pcspin{to{transform:rotate(360deg)}}" +
     "#pcai .pc-loading{max-width:360px;margin:0 auto}" +
@@ -243,20 +243,25 @@
     "#pcai .pc-lr-n{font-size:11px;color:var(--pc-mut);font-weight:600}" +
     "@keyframes pcfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}" +
     // buy column
-    "#pcai .pc-eyebrow{font-size:11px;letter-spacing:.18em;color:var(--pc-mut);text-transform:uppercase;font-weight:600}" +
+    "#pcai .pc-eyebrow{font-size:11.5px;letter-spacing:.18em;color:var(--pc-mut);text-transform:uppercase;font-weight:600}" +
     "#pcai .pc-title{font-family:var(--pc-serif);font-size:30px;line-height:1.12;font-weight:700;margin:6px 0 8px;color:var(--pc-ink)}" +
-    "#pcai .pc-reviews{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--pc-ink);margin:0 0 10px;flex-wrap:wrap}" +
+    "#pcai .pc-reviews{display:flex;align-items:center;gap:7px;font-size:13.5px;color:var(--pc-ink);margin:0 0 10px;flex-wrap:wrap}" +
     "#pcai .pc-reviews .pc-stars{color:#e8a91d;letter-spacing:1px;font-size:15px}" +
     "#pcai .pc-reviews b{font-weight:700}" +
     "#pcai .pc-pricerow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}" +
     "#pcai .pc-pricerow ins{font-size:26px;font-weight:700;text-decoration:none;font-family:var(--pc-serif)}" +
     "#pcai .pc-pricerow del{color:var(--pc-mut);font-size:16px}" +
     "#pcai .pc-save{background:var(--pc-gold);color:#181311;font-size:11px;font-weight:700;letter-spacing:.03em;padding:3px 9px;border-radius:100px}" +
-    "#pcai .pc-trust{display:flex;flex-wrap:wrap;gap:6px 18px;margin:14px 0 2px;font-size:12.5px;color:var(--pc-mut)}" +
+    "#pcai .pc-trust{display:flex;flex-wrap:wrap;gap:7px 20px;margin:16px 0 2px;font-size:13.5px;color:var(--pc-mut)}" +
     "#pcai .pc-trust span{position:relative;padding-left:15px}" +
     "#pcai .pc-trust span:before{content:'';position:absolute;left:0;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;border:1.5px solid var(--pc-gold)}" +
+    "#pcai .pc-story{margin:26px 0 0;padding:18px 20px;background:var(--pc-card);border:1px solid var(--pc-line);border-radius:14px}" +
+    "#pcai .pc-story h3{font-family:var(--pc-serif);font-size:17px;font-weight:600;margin:0 0 10px;color:var(--pc-ink)}" +
+    "#pcai .pc-story ul{margin:0;padding-left:17px}" +
+    "#pcai .pc-story li{font-size:13.5px;line-height:1.55;color:#4a4038;margin:0 0 7px}" +
+    "#pcai .pc-story li:last-child{margin-bottom:0}" +
     "#pcai .pc-opt{margin:22px 0 0}" +
-    "#pcai .pc-label{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--pc-mut);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}" +
+    "#pcai .pc-label{font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--pc-mut);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}" +
     "#pcai .pc-guidelink{font-size:11px;color:var(--pc-acc);cursor:pointer;text-transform:none;letter-spacing:0;text-decoration:underline}" +
     "#pcai .pc-optional{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--pc-mut);border:1px solid var(--pc-line);border-radius:100px;padding:2px 9px;background:var(--pc-card)}" +
     // version history — every render is kept so a tweak never destroys one they liked
@@ -276,9 +281,9 @@
     "#pcai .pc-oc{position:relative;border:1.5px solid var(--pc-line);background:var(--pc-card);border-radius:11px;padding:11px 8px;text-align:center;cursor:pointer;transition:.12s}" +
     "#pcai .pc-oc:hover{border-color:var(--pc-mut)}" +
     "#pcai .pc-oc.sel{border-color:var(--pc-acc);box-shadow:0 0 0 3px rgba(94,22,34,.13)}" +
-    "#pcai .pc-oc b{display:block;font-size:14px}" +
+    "#pcai .pc-oc b{display:block;font-size:15px}" +
     "#pcai .pc-oc b.pc-serifname{font-family:var(--pc-serif);font-size:16px}" +
-    "#pcai .pc-oc small{display:block;font-size:11px;color:var(--pc-mut);margin-top:2px;min-height:14px}" +
+    "#pcai .pc-oc small{display:block;font-size:12px;color:var(--pc-mut);margin-top:2px;min-height:14px}" +
     "#pcai .pc-oc small.pc-up{color:var(--pc-acc);font-weight:600}" +
     "#pcai #pc-styles .pc-oc{padding:7px 7px 10px}" +
     "#pcai .pc-styleimg{width:100%;height:126px;object-fit:cover;object-position:center 22%;border-radius:8px;display:block;margin-bottom:7px}" +
@@ -312,7 +317,7 @@
     "#pcai .pc-retry .pc-field{flex:1;min-width:180px;margin-top:0}" +
     "#pcai .pc-artist{display:flex;gap:9px;align-items:flex-start;font-size:13px;margin:14px 0 2px;cursor:pointer;line-height:1.5}" +
     "#pcai .pc-artist input{margin-top:3px}" +
-    "#pcai .pc-tiny{font-size:12px;color:var(--pc-mut)}" +
+    "#pcai .pc-tiny{font-size:13px;line-height:1.5;color:var(--pc-mut)}" +
     "#pcai .pc-center{text-align:center}" +
     "#pcai .pc-err{color:#a33;font-size:14px;text-align:center;margin-top:8px}" +
     // info accordion
@@ -322,7 +327,7 @@
     "#pcai-root .pc-info summary::-webkit-details-marker{display:none}" +
     "#pcai-root .pc-info summary::after{content:'+';float:right;color:var(--pc-mut);font-size:20px;line-height:1}" +
     "#pcai-root .pc-info details[open] summary::after{content:'–'}" +
-    "#pcai-root .pc-info p,#pcai-root .pc-info ul{font-size:14px;line-height:1.62;margin:0 0 12px;color:#4a4038;max-width:860px}" +
+    "#pcai-root .pc-info p,#pcai-root .pc-info ul{font-size:15px;line-height:1.68;margin:0 0 12px;color:#4a4038;max-width:860px}" +
     "#pcai-root .pc-info .pc-lead{font-family:var(--pc-serif);font-size:18px;color:var(--pc-ink);margin-bottom:8px}" +
     "#pcai-root .pc-info ul{padding-left:18px}#pcai-root .pc-info li{margin:4px 0}" +
     "#pcai-root .pc-sizeviz{display:flex;align-items:flex-end;gap:18px;margin:10px 0 8px;flex-wrap:wrap}" +
@@ -365,6 +370,17 @@
         "<div id='pc-cta'>" +
           "<button class='pc-btn pc-big' id='pc-go' disabled>Create my portrait</button>" +
           "<div class='pc-tiny pc-center' id='pc-gohint' style='margin-top:8px'>Add a photo, your email &amp; a style to preview</div>" +
+        "</div>" +
+        // Fills the space that hiding size and frame leaves behind, and puts the reassurance where
+        // people are deciding. Disappears once there's a preview and the real options take over.
+        "<div id='pc-story' class='pc-story'>" +
+          "<h3>How it works</h3>" +
+          "<ul>" +
+            "<li>Upload one clear photo &mdash; your painted preview appears in about a minute</li>" +
+            "<li>Tweak it as many times as you like; nothing prints until you approve it</li>" +
+            "<li>Printed on gallery-grade cotton canvas, hand-stretched over solid wood in Florida</li>" +
+            "<li>Arrives ready to hang, with 1.5&quot; gallery-wrapped edges and hardware included</li>" +
+          "</ul>" +
         "</div>" +
 
         "<div id='pc-post' style='display:none'>" +
@@ -591,6 +607,7 @@
     $("pc-thumbs").style.display = fresh ? "flex" : "none";
     $("pc-post").style.display = fresh ? "block" : "none";
     $("pc-cta").style.display = fresh ? "none" : "block";
+    $("pc-story").style.display = fresh ? "none" : "block";
     $("pc-go").textContent = "Create my portrait";
     $("pc-heronote").textContent = fresh
       ? "Preview is watermarked — your final artwork is clean, full-resolution & hand-checked before printing."
