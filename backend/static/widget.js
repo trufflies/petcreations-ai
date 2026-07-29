@@ -50,7 +50,7 @@
     { code: "heritage", label: "Heritage",     sub: "Regal heirloom" },
     // soloOnly: Watercolor has its own product page (it carries the memorial text option),
     // so the combined page offers Monet / Oil / Heritage only.
-    { code: "watercolor", label: "Watercolor", sub: "Soft & delicate", soloOnly: true,
+    { code: "watercolor", label: "Watercolor", sub: "Soft & delicate", soloOnly: true, memorial: true,
       ex: ["watercolor_1.jpg", "watercolor_2.jpg"] },
     // soloOnly: lives on its own product page only. Its sport picker needs the room a dedicated
     // page gives it, and offering it in the combined grid would silently default people to tennis.
@@ -292,6 +292,9 @@
     "#pcai .pc-trust{display:flex;flex-wrap:wrap;gap:7px 20px;margin:16px 0 2px;font-size:13.5px;color:var(--pc-mut)}" +
     "#pcai .pc-trust span{position:relative;padding-left:15px}" +
     "#pcai .pc-trust span:before{content:'';position:absolute;left:0;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;border:1.5px solid var(--pc-gold)}" +
+    "#pcai .pc-memfields{display:grid;grid-template-columns:1fr 1fr;gap:9px}" +
+    "@media(max-width:640px){#pcai .pc-memfields{grid-template-columns:1fr}}" +
+    "#pcai .pc-memfields .pc-field{margin-top:0}" +
     "#pcai .pc-story{margin:26px 0 0;padding:18px 20px;background:var(--pc-card);border:1px solid var(--pc-line);border-radius:14px}" +
     "#pcai .pc-story h3{font-family:var(--pc-serif);font-size:17px;font-weight:600;margin:0 0 10px;color:var(--pc-ink)}" +
     "#pcai .pc-story ul{margin:0;padding-left:17px}" +
@@ -405,6 +408,14 @@
         "<div class='pc-opt' id='pc-styleopt'><div class='pc-label' id='pc-stylelabel'>Choose your style</div><div class='pc-gridN' id='pc-styles'></div></div>" +
         // Size and frame stay hidden until there's a portrait to apply them to — nobody should be
         // asked to pick a canvas size before they've seen anything.
+        "<div class='pc-opt' id='pc-memopt' style='display:none'>" +
+          "<div class='pc-label'>Add a memorial line <span class='pc-optional'>optional</span></div>" +
+          "<div class='pc-memfields'>" +
+            "<input class='pc-field' id='pc-mem-name' maxlength='24' placeholder=\"Your pet's name\">" +
+            "<input class='pc-field' id='pc-mem-dates' maxlength='28' placeholder='2011 — 2024 (optional)'>" +
+          "</div>" +
+          "<div class='pc-tiny' style='margin-top:6px'>Printed beneath the artwork in fine type. Leave blank for no text.</div>" +
+        "</div>" +
         "<div class='pc-opt' id='pc-sizeopt' style='display:none'><div class='pc-label'>Choose your size <span class='pc-guidelink' id='pc-guidelink'>Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
         "<div class='pc-opt' id='pc-frameopt' style='display:none'><div class='pc-label'>Add a frame <span class='pc-optional'>optional</span></div><div class='pc-grid3 pc-frameopts' id='pc-frames'></div></div>" +
 
@@ -625,6 +636,8 @@
   }
   function refreshPhase() {
     renderVersions(); renderViewTabs();
+    var cfg = styleCfg();
+    $("pc-memopt").style.display = (cfg && cfg.memorial) ? "block" : "none";
     var fresh = !!curRes();
     // Progressive disclosure: before a preview exists the page asks for a photo and a style and
     // nothing else. Size, frame and the example strip only appear once there's art to apply them
@@ -686,6 +699,12 @@
     var fd = new FormData();
     fd.append("file", file); fd.append("style", style); fd.append("email", $("pc-email").value.trim());
     if (sel.variant) fd.append("variant", sel.variant);
+    var mcfg = styleCfg(), mname = mcfg && mcfg.memorial ? $("pc-mem-name").value.trim() : "";
+    if (mname) {
+      fd.append("text_layout", "memorial");
+      fd.append("text_name", mname);
+      fd.append("text_dates", $("pc-mem-dates").value.trim());
+    }
     post("/generate", fd).then(function (d) { show(d, key); })
       .catch(function (e) { renderHero(); $("pc-err").textContent = e.message; }).then(stop, stop);
   }
@@ -745,6 +764,12 @@
       "_job_id": r ? r.id : "",
       "_preview": r ? r.preview : "", "_fullres": r ? r.full : "", "_original": r ? r.original : ""
     };
+    var mc = styleCfg(), mn = mc && mc.memorial ? $("pc-mem-name").value.trim() : "";
+    if (mn) {
+      props["Memorial name"] = mn;
+      var md = $("pc-mem-dates").value.trim();
+      if (md) props["Memorial dates"] = md;
+    }
     if ($("pc-artist-check").checked) {
       props["Artist refinement"] = "Yes — free, after order (unlimited revisions by email)";
       var n = $("pc-artist-notes").value.trim(); if (n) props["Artist notes"] = n;

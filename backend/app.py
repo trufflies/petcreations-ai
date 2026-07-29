@@ -29,6 +29,7 @@ from pydantic import BaseModel
 import generation as gen
 import email_send
 import omnisend_send
+import textart
 import listing
 import mockups
 from styles import STYLES, FRAMES
@@ -66,10 +67,22 @@ MAX_FREE_RETRIES = 9999  # effectively unlimited for now (soft cap only to stop 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
-def _save(art_bytes, style, email, retries, original=None, orig_ext=".jpg", original_url=None):
+def _save(art_bytes, style, email, retries, original=None, orig_ext=".jpg", original_url=None,
+          text=None):
     jid = uuid.uuid4().hex[:12]
     full_path = os.path.join(GEN_DIR, f"{jid}_full.png")
     prev_path = os.path.join(GEN_DIR, f"{jid}_preview.png")
+    raw_path = full_path
+    if text:
+        # Keep the untyped art: a retry re-runs the model, and recolouring a composed image would
+        # smear the lettering. Compose fresh each time from the raw render instead.
+        raw_path = os.path.join(GEN_DIR, f"{jid}_raw.png")
+        with open(raw_path, "wb") as f:
+            f.write(art_bytes)
+        try:
+            art_bytes = textart.compose(art_bytes, text["layout"], **text["fields"])
+        except Exception:
+            raw_path = full_path          # never lose the order over a typography failure
     with open(full_path, "wb") as f:
         f.write(art_bytes)                       # clean full-res (delivered only after purchase)
     with open(prev_path, "wb") as f:
@@ -80,7 +93,8 @@ def _save(art_bytes, style, email, retries, original=None, orig_ext=".jpg", orig
         with open(os.path.join(GEN_DIR, oname), "wb") as f:
             f.write(original)
         orig_url = f"/generated/{oname}"
-    JOBS[jid] = {"style": style, "full": full_path, "email": email, "retries": retries, "original_url": orig_url}
+    JOBS[jid] = {"style": style, "full": full_path, "raw": raw_path, "email": email,
+                 "retries": retries, "original_url": orig_url, "text": text}
     return {"id": jid, "style": style,
             "preview_url": f"/generated/{jid}_preview.png",
             "full_url": f"/generated/{jid}_full.png",
@@ -97,6 +111,27 @@ def _style_label(style, variant=None):
     if key and key in variants:
         label += " — " + variants[key]["label"]
     return label
+
+
+def _clean(v, limit):
+    """One line, trimmed, length-capped. Customer text goes straight onto a printed canvas."""
+    return " ".join((v or "").split())[:limit].strip()
+
+
+def _text_spec(layout, name, dates, phonetic, body):
+    """Validated text spec for textart, or None. Unknown layouts and empty names are ignored."""
+    layout = (layout or "").strip().lower()
+    name = _clean(name, 24)
+    if layout not in ("memorial", "definition") or not name:
+        return None
+    if layout == "memorial":
+        return {"layout": "memorial",
+                "fields": {"name": name, "dates": _clean(dates, 28)}}
+    return {"layout": "definition",
+            "fields": {"name": name,
+                       "phonetic": _clean(phonetic, 32),
+                       "part_of_speech": "noun",
+                       "body": _clean(body, 220)}}
 
 
 @app.get("/health")
@@ -291,7 +326,10 @@ def gallery():
 @app.post("/generate")
 def generate(file: UploadFile, background: BackgroundTasks,
              style: str = Form(...), email: str = Form(...),
-             variant: str = Form(None)):
+             variant: str = Form(None),
+             text_layout: str = Form(None), text_name: str = Form(None),
+             text_dates: str = Form(None), text_phonetic: str = Form(None),
+             text_body: str = Form(None)):
     if style not in STYLES:
         raise HTTPException(400, f"unknown style '{style}'")
     if not EMAIL_RE.match((email or "").strip()):
@@ -306,7 +344,8 @@ def generate(file: UploadFile, background: BackgroundTasks,
         raise HTTPException(502, str(e))
     ct = (file.content_type or "").lower()
     ext = ".png" if "png" in ct else (".webp" if "webp" in ct else ".jpg")
-    saved = _save(art, style, email.strip(), 0, original=data, orig_ext=ext)
+    text = _text_spec(text_layout, text_name, text_dates, text_phonetic, text_body)
+    saved = _save(art, style, email.strip(), 0, original=data, orig_ext=ext, text=text)
     label = _style_label(style, variant)
     # Email the customer their preview once the response is on its way out.
     # Runs after the response, is a no-op until RESEND_API_KEY is set, and can
@@ -327,13 +366,14 @@ def retry(id: str = Form(...), instruction: str = Form(...)):
     if job["retries"] >= MAX_FREE_RETRIES:
         raise HTTPException(429, f"You've used all {MAX_FREE_RETRIES} free tweaks — "
                                  "place your order and our artist will perfect it for you.")
-    with open(job["full"], "rb") as f:
-        art = f.read()
+    with open(job.get("raw") or job["full"], "rb") as f:
+        art = f.read()          # untyped render — recolouring composed type would smear it
     try:
         new = gen.recolor(job["style"], art, instruction, "image/png")
     except gen.GenerationError as e:
         raise HTTPException(502, str(e))
-    return _save(new, job["style"], job["email"], job["retries"] + 1, original_url=job.get("original_url"))
+    return _save(new, job["style"], job["email"], job["retries"] + 1,
+                 original_url=job.get("original_url"), text=job.get("text"))
 
 
 @app.post("/frame")
@@ -343,8 +383,8 @@ def apply_frame(id: str = Form(...), frame: str = Form(...)):
         raise HTTPException(404, "unknown id")
     if frame not in FRAMES:
         raise HTTPException(400, f"unknown frame '{frame}'")
-    with open(job["full"], "rb") as f:
-        art = f.read()
+    with open(job.get("raw") or job["full"], "rb") as f:
+        art = f.read()          # untyped render — recolouring composed type would smear it
     try:
         framed = gen.frame(art, frame, "image/png")
     except gen.GenerationError as e:
