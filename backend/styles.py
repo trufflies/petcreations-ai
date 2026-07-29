@@ -152,7 +152,7 @@ STYLES = {
         "size": "1536x1024",
     },
     "watercolor": {
-        "label": "Watercolour",
+        "label": "Watercolor",
         "provider": "gemini",
         "prompt": _nano(
             "Render as a delicate fine-art WATERCOLOUR portrait on bright white paper. Soft translucent "
@@ -209,7 +209,7 @@ STYLES = {
         ),
     },
     "bright": {
-        "label": "Bold Colour",
+        "label": "Bold Color",
         "provider": "gemini",
         "prompt": _impasto(
             "bold, saturated and contemporary — strong colour against a dark ground, gallery lighting, "

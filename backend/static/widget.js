@@ -48,7 +48,7 @@
     { code: "monet",    label: "Monet",        sub: "Impressionist" },
     { code: "oil",      label: "Oil Painting", sub: "Museum oil" },
     { code: "heritage", label: "Heritage",     sub: "Regal heirloom" },
-    { code: "watercolor", label: "Watercolour", sub: "Soft & delicate" },
+    { code: "watercolor", label: "Watercolor", sub: "Soft & delicate" },
     // soloOnly: lives on its own product page only. Its sport picker needs the room a dedicated
     // page gives it, and offering it in the combined grid would silently default people to tennis.
     { code: "sport",      label: "Game Day",    sub: "Impasto oil",  variants: "sports",   soloOnly: true,
@@ -59,7 +59,7 @@
       ex: ["wildflower_1.jpg", "wildflower_2.jpg"] },
     { code: "fancy",      label: "Fine Dining", sub: "Steak & wine",    soloOnly: true,
       ex: ["fancy_1.jpg", "fancy_2.jpg"] },
-    { code: "bright",     label: "Bold Colour", sub: "Modern & vivid",  variants: "palettes", soloOnly: true,
+    { code: "bright",     label: "Bold Color", sub: "Modern & vivid",  variants: "palettes", soloOnly: true,
       ex: ["bright_1.jpg", "bright_2.jpg"] }
   ];
   // Mirrors SPORT_SCENES in styles.py — keep the codes in step.
