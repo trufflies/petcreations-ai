@@ -252,14 +252,11 @@
     "#pcai .pc-hero>img{max-width:100%;max-height:620px;border-radius:8px;box-shadow:0 8px 26px rgba(0,0,0,.14);display:block}" +
     "#pcai .pc-framed{position:relative;display:inline-block;line-height:0;max-width:100%}" +
     "#pcai .pc-framed>.pc-fimg{display:block;max-width:100%;max-height:620px}" +
-    "#pcai .pc-framed>.pc-fart{position:absolute;object-fit:cover}" +
+    "#pcai .pc-framed>.pc-fart{position:absolute;object-fit:cover;object-position:center 22%}" +
     // unframed = gallery wrap: bare art, lifted off the wall, with the shaded 1.5" bottom edge
     "#pcai .pc-canvas{position:relative;display:inline-block;line-height:0;max-width:100%}" +
     "#pcai .pc-canvas>img{display:block;max-width:100%;max-height:620px;box-shadow:0 14px 32px rgba(0,0,0,.28),0 3px 8px rgba(0,0,0,.16)}" +
     "#pcai .pc-canvas:after{content:'';position:absolute;left:0;right:0;bottom:0;height:6px;background:linear-gradient(rgba(0,0,0,.32),rgba(0,0,0,.05));pointer-events:none}" +
-    "#pcai .pc-thumb .pc-canvas{width:100%;height:100%}" +
-    "#pcai .pc-thumb .pc-canvas>img{width:100%;height:100%;object-fit:cover;box-shadow:none}" +
-    "#pcai .pc-thumb .pc-canvas:after{height:3px}" +
     // room view — art composited onto a bare wall, scaled against the sofa
     "#pcai .pc-viewtabs{display:flex;gap:6px;margin-bottom:11px;justify-content:center}" +
     "#pcai .pc-viewtabs button{border:1px solid var(--pc-line);background:var(--pc-card);color:var(--pc-mut);font-family:inherit;font-size:12.5px;padding:7px 16px;border-radius:100px;cursor:pointer}" +
@@ -267,18 +264,12 @@
     "#pcai .pc-wall{position:relative;display:inline-block;line-height:0;max-width:100%}" +
     "#pcai .pc-wallbg{display:block;max-width:100%;max-height:620px;border-radius:10px}" +
     "#pcai .pc-wallart{position:absolute;left:50%;transform:translateX(-50%);box-sizing:border-box;box-shadow:0 12px 24px rgba(0,0,0,.30),0 2px 6px rgba(0,0,0,.22)}" +
-    "#pcai .pc-wallart.bare>img{width:100%;height:100%;object-fit:cover;display:block}" +
+    "#pcai .pc-wallart.bare>img{width:100%;height:100%;object-fit:cover;object-position:center 22%;display:block}" +
     // real ornate frames: the mockup cropped to its moulding, customer art laid into the opening
     "#pcai .pc-wfimg{width:100%;height:100%;display:block}" +
-    "#pcai .pc-wfart{position:absolute;object-fit:cover}" +
+    "#pcai .pc-wfart{position:absolute;object-fit:cover;object-position:center 22%}" +
     "#pcai .pc-wallcap{position:absolute;left:0;right:0;bottom:10px;text-align:center;line-height:1.4;pointer-events:none}" +
     "#pcai .pc-wallcap span{display:inline-block;background:rgba(255,253,247,.88);color:#4a4036;font-size:11px;padding:4px 12px;border-radius:100px}" +
-    "#pcai .pc-thumbs{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}" +
-    "#pcai .pc-thumb{width:70px;height:70px;border-radius:10px;overflow:hidden;border:2px solid transparent;cursor:pointer;background:var(--pc-card);padding:0;line-height:0}" +
-    "#pcai .pc-thumb.sel{border-color:var(--pc-acc)}" +
-    "#pcai .pc-thumb img{width:100%;height:100%;object-fit:cover}" +
-    "#pcai .pc-thumb .pc-framed,#pcai .pc-thumb .pc-fimg{width:100%;height:100%}" +
-    "#pcai .pc-thumb .pc-fimg{object-fit:cover}" +
     "#pcai .pc-heronote{font-size:12.5px;color:var(--pc-mut);text-align:center;margin-top:11px}" +
     "#pcai .pc-spin{width:40px;height:40px;border:4px solid var(--pc-line);border-top-color:var(--pc-acc);border-radius:50%;animation:pcspin 1s linear infinite;margin:0 auto 12px}" +
     "@keyframes pcspin{to{transform:rotate(360deg)}}" +
@@ -366,7 +357,8 @@
     "#pcai .pc-retry{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}" +
     "#pcai .pc-retry .pc-field{flex:1;min-width:180px;margin-top:0}" +
     "#pcai .pc-artist{display:flex;gap:9px;align-items:flex-start;font-size:13px;margin:14px 0 2px;cursor:pointer;line-height:1.5}" +
-    "#pcai .pc-artist input{margin-top:3px}" +
+    "#pcai .pc-artist input{flex:0 0 auto;margin-top:3px}" +
+    "#pcai .pc-artist>span{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}" +
     "#pcai .pc-tiny{font-size:13px;line-height:1.5;color:var(--pc-mut)}" +
     "#pcai .pc-center{text-align:center}" +
     "#pcai .pc-err{color:#a33;font-size:14px;text-align:center;margin-top:8px}" +
@@ -393,7 +385,6 @@
           "<button data-view='wall'>See it on the wall</button>" +
         "</div>" +
         "<div class='pc-hero' id='pc-hero'></div>" +
-        "<div class='pc-thumbs' id='pc-thumbs'></div>" +
         "<div class='pc-heronote' id='pc-heronote'>Upload your pet’s photo — your live preview appears here in ~60 seconds.</div>" +
       "</div>" +
       // ---- RIGHT: buy box ----
@@ -612,23 +603,6 @@
     else if (curRes()) $("pc-hero").innerHTML = view === "wall" ? wallHTML() : framedHTML("pc-fart");
     else $("pc-hero").innerHTML = "<img src='" + pageExamples()[0] + "'>";
   }
-  function renderThumbs() {
-    var r = curRes(), html = "";
-    if (r) {  // customer's portrait in each frame
-      html += liveFrames().map(function (f) {
-        var s = (!heroPick && sel.frame === f.code) ? " sel" : "";
-        return "<button class='pc-thumb" + s + "' data-frame='" + f.code + "' title='" + f.label + "'>" +
-          artIn(f, r.preview + "?t=" + r.bust, "pc-fart") + "</button>";
-      }).join("");
-    }
-    // example gallery — kept visible even after a preview (incl. the size-comparison shot)
-    var ex = pageExamples();
-    html += ex.map(function (src) {
-      var s = (heroPick === src || (!r && !heroPick && src === ex[0])) ? " sel" : "";
-      return "<button class='pc-thumb" + s + "' data-ex='" + src + "'><img src='" + src + "'></button>";
-    }).join("");
-    $("pc-thumbs").innerHTML = html;
-  }
   function updateGo() {
     var ok = file && sel.style && validEmail($("pc-email").value);
     $("pc-go").disabled = !ok;
@@ -647,7 +621,7 @@
   function selectVersion(i) {
     var s = curSet(); if (!s || !s.list[i]) return;
     s.i = i; heroPick = null;
-    renderVersions(); renderFrames(); renderHero(); renderThumbs();
+    renderVersions(); renderFrames(); renderHero();
   }
   function refreshPhase() {
     renderVersions(); renderViewTabs();
@@ -657,7 +631,6 @@
     // to — the fewer decisions there are before someone sees their pet, the further they get.
     $("pc-sizeopt").style.display = fresh ? "block" : "none";
     $("pc-frameopt").style.display = fresh ? "block" : "none";
-    $("pc-thumbs").style.display = fresh ? "flex" : "none";
     $("pc-post").style.display = fresh ? "block" : "none";
     $("pc-cta").style.display = fresh ? "none" : "block";
     $("pc-story").style.display = fresh ? "none" : "block";
@@ -667,7 +640,7 @@
       : "Upload your pet’s photo — your live preview appears here in ~60 seconds.";
     updateGo();
   }
-  function selectFrame(code) { sel.frame = code; renderOptions(); renderHero(); renderThumbs(); }
+  function selectFrame(code) { sel.frame = code; renderOptions(); renderHero(); }
 
   // ---- Network ------------------------------------------------------------------------
   function post(path, form) {
@@ -698,7 +671,7 @@
     addRes(key || resKey(), { id: d.id, preview: API + d.preview_url, full: API + d.full_url,
                               original: d.original_url ? API + d.original_url : "", bust: Date.now() });
     heroPick = null;
-    renderFrames(); renderHero(); renderThumbs();   // renderFrames: swap the unframed swatch to their art
+    renderFrames(); renderHero();   // renderFrames: swap the unframed swatch to their art
     $("pc-retry").disabled = false; $("pc-instruction").disabled = false;
     refreshPhase();
     $("pc-post").scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -725,7 +698,7 @@
     else if (v) sel.variant = v.getAttribute("data-variant");
     else return;
     normalizeSel(); heroPick = null;
-    renderStyles(); renderFrames(); renderHero(); renderThumbs(); refreshPhase();
+    renderStyles(); renderFrames(); renderHero(); refreshPhase();
   });
   $("pc-sizes").addEventListener("click", function (e) { var c = e.target.closest("[data-size]"); if (!c) return; sel.size = c.getAttribute("data-size"); renderOptions(); if (view === "wall") renderHero(); });
   $("pc-frames").addEventListener("click", function (e) { var c = e.target.closest("[data-frame]"); if (!c) return; selectFrame(c.getAttribute("data-frame")); });
@@ -733,11 +706,6 @@
   $("pc-viewtabs").addEventListener("click", function (e) {
     var b = e.target.closest("[data-view]"); if (!b) return;
     view = b.getAttribute("data-view"); heroPick = null; renderViewTabs(); renderHero();
-  });
-  $("pc-thumbs").addEventListener("click", function (e) {
-    var b = e.target.closest(".pc-thumb"); if (!b) return;
-    if (b.getAttribute("data-frame")) { heroPick = null; selectFrame(b.getAttribute("data-frame")); }
-    else if (b.getAttribute("data-ex")) { heroPick = b.getAttribute("data-ex"); renderHero(); renderThumbs(); }
   });
   $("pc-guidelink").addEventListener("click", function () { var d = $("pc-guide"); d.open = true; d.scrollIntoView({ behavior: "smooth", block: "center" }); });
   $("pc-file").addEventListener("change", function (e) {
@@ -809,7 +777,7 @@
   var booted = false;
   function boot() {
     if (!booted) { sel.frame = baseFrame(); normalizeSel(); booted = true; }
-    renderStyles(); renderOptions(); renderHero(); renderThumbs(); refreshPhase();
+    renderStyles(); renderOptions(); renderHero(); refreshPhase();
   }
   boot();
   loadLiveVariants().then(boot);
