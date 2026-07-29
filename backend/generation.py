@@ -130,14 +130,26 @@ def _openai(prompt, image_bytes, mime, use_reference, size, quality="high", extr
 
 
 # ---------------------------------------------------------------- Public API
-def generate(style, image_bytes, mime="image/jpeg"):
-    """Generate a portrait of the pet in the given style."""
+def style_prompt(style, variant=None):
+    """Prompt for a style, with the chosen variant's scene filled in if the style has variants."""
+    cfg = STYLES[style]
+    prompt = cfg["prompt"]
+    variants = cfg.get("variants")
+    if variants:
+        key = variant if variant in variants else cfg.get("default_variant")
+        prompt = prompt.format(SCENE=variants[key]["scene"])
+    return prompt
+
+
+def generate(style, image_bytes, mime="image/jpeg", variant=None):
+    """Generate a portrait of the pet in the given style (and variant, where the style has them)."""
     if style not in STYLES:
         raise GenerationError(f"Unknown style '{style}'. Options: {list(STYLES)}")
     cfg = STYLES[style]
+    prompt = style_prompt(style, variant)
     if cfg["provider"] == "gemini":
-        return _gemini(cfg["prompt"], image_bytes, mime)
-    return _openai(cfg["prompt"], image_bytes, mime, cfg.get("use_reference", False), cfg.get("size"))
+        return _gemini(prompt, image_bytes, mime)
+    return _openai(prompt, image_bytes, mime, cfg.get("use_reference", False), cfg.get("size"))
 
 
 def frame(image_bytes, frame_key, mime="image/png"):

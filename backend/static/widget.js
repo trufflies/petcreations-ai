@@ -12,7 +12,16 @@
   var root = document.getElementById("pcai-root");
   if (!root) { console.error("[pcai] #pcai-root not found"); return; }
 
-  // ---- Product data (pulled from the live product feed) -------------------------------
+  // Lock the widget to one style when the embed says so:  <div id="pcai-root" data-style="sport">
+  // That's what lets each style live on its own Shopify product page (its own URL, ads, reviews)
+  // while every page runs this same widget. No attribute = show the full style picker, which is
+  // what the original combined product page does.
+  var forcedStyle = (root.getAttribute("data-style") || "").trim() || null;
+
+  // ---- Product data --------------------------------------------------------------------
+  // Baked-in FALLBACK only. At load we re-read the real variants from the Shopify product this
+  // widget is embedded on (/products/<handle>.js), so a new style product needs no code change
+  // and a price edit in Shopify doesn't need a redeploy.
   // key = size(S/M/L) + frame(U=Unframed, G=Antique Gold, R=Antique Silver, B=Baroque Gold Wide)
   // value = [variantId, priceCents, compareAtCents]
   var VAR = {"SU":[48277732983002,7999,9999],"SG":[48111346254042,15999,19999],"SR":[48111363915994,15999,19999],"SB":[48111363948762,20999,26299],"MU":[48277733015770,10999,13799],"MG":[48111346286810,19999,24999],"MR":[48111363981530,19999,24999],"MB":[48111364014298,25999,32499],"LU":[48277733048538,16999,21299],"LG":[48111346319578,26999,33799],"LR":[48111364047066,26999,33799],"LB":[48111364079834,33999,42499]};
@@ -20,8 +29,21 @@
   var STYLES = [
     { code: "monet",    label: "Monet",        sub: "Impressionist" },
     { code: "oil",      label: "Oil Painting", sub: "Museum oil" },
-    { code: "heritage", label: "Heritage",     sub: "Regal heirloom" }
+    { code: "heritage", label: "Heritage",     sub: "Regal heirloom" },
+    // soloOnly: lives on its own product page only. Its sport picker needs the room a dedicated
+    // page gives it, and offering it in the combined grid would silently default people to tennis.
+    { code: "sport",    label: "Game Day",     sub: "Impasto oil", variants: "sports", soloOnly: true }
   ];
+  // Mirrors SPORT_SCENES in styles.py — keep the codes in step.
+  var SPORTS = [
+    { code: "tennis",     label: "Tennis" },
+    { code: "pickleball", label: "Pickleball" },
+    { code: "soccer",     label: "Soccer" },
+    { code: "baseball",   label: "Baseball" },
+    { code: "basketball", label: "Basketball" },
+    { code: "football",   label: "Football" }
+  ];
+  var VARIANT_SETS = { sports: SPORTS };
   // `in` = canvas width in inches, used to size the art to scale in the room view
   var SIZES = [
     { code: "S", label: "24 × 18\"", in: 24 },
@@ -55,6 +77,33 @@
     f.cutImg = API + "/app/frames/" + f.key + "_cut.webp";
   });
 
+  // Read the real variants off whichever Shopify product this widget is embedded on. Matching on
+  // option VALUES (not option names or positions) keeps it working if a duplicated product has its
+  // options named differently. Any failure leaves the baked-in map in place.
+  var SIZE_BY_OPT = { "24x18 inches": "S", "32x24 inches": "M", "40x30 inches": "L" };
+  var FRAME_BY_OPT = { "Unframed": "U", "Antique Gold": "G", "Antique Silver": "R",
+                       "Baroque Gold (Wide)": "B" };
+  function loadLiveVariants() {
+    var path = location.pathname.replace(/\/+$/, "");
+    if (path.indexOf("/products/") === -1 || typeof fetch !== "function") return Promise.resolve();
+    return fetch(path + ".js", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.variants) return;
+        var m = {};
+        d.variants.forEach(function (v) {
+          var s = null, f = null;
+          (v.options || []).forEach(function (o) {
+            if (SIZE_BY_OPT[o]) s = SIZE_BY_OPT[o];
+            if (FRAME_BY_OPT[o]) f = FRAME_BY_OPT[o];
+          });
+          if (s && f) m[s + f] = [v.id, v.price, v.compare_at_price || v.price];
+        });
+        if (Object.keys(m).length >= 3) VAR = m;   // only trust a map that actually parsed
+      })
+      .catch(function () { /* keep the baked-in map */ });
+  }
+
   var CDN = "https://cdn.shopify.com/s/files/1/0055/0957/8803/files/";
   var EXAMPLES = [
     CDN + "ChatGPTImageJun23_2026_09_21_46PM.png",
@@ -78,16 +127,20 @@
   ];
 
   // ---- State --------------------------------------------------------------------------
-  var sel = { style: null, size: "S", frame: "U" };
+  var sel = { style: forcedStyle || null, variant: null, size: "S", frame: "U" };
+  function styleCfg(c) { return STYLES.filter(function (s) { return s.code === (c || sel.style); })[0] || null; }
+  function variantsFor(c) { var s = styleCfg(c); return s && s.variants ? VARIANT_SETS[s.variants] : null; }
+  // Cache/versions are keyed per style AND variant — tennis and soccer are different portraits.
+  function resKey() { return sel.style + (sel.variant ? ":" + sel.variant : ""); }
   var file = null, timer = null, heroPick = null, view = "art";   // view: "art" | "wall"
   // Per-style session cache so switching styles (and back) never re-generates.
   // Each style keeps EVERY render it produced — retries add a version rather than replacing one,
   // so nobody loses a portrait they liked by tweaking it. code -> {list:[{id,preview,full,...}], i}
   var results = {};
-  function curSet() { return results[sel.style] || null; }
+  function curSet() { return results[resKey()] || null; }
   function curRes() { var s = curSet(); return s ? s.list[s.i] : null; }
-  function addRes(style, res) {
-    var s = results[style] || (results[style] = { list: [], i: 0 });
+  function addRes(key, res) {
+    var s = results[key] || (results[key] = { list: [], i: 0 });
     s.list.push(res); s.i = s.list.length - 1;
   }
 
@@ -196,6 +249,9 @@
     "#pcai .pc-vthumb b{display:block;font-size:10px;line-height:1.7;color:var(--pc-mut);font-weight:600}" +
     "#pcai .pc-vthumb.sel b{color:var(--pc-acc)}" +
     "#pcai .pc-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}" +
+    // auto-fit so the same grid holds 3 styles, 4 styles or 6 sports without hand-tuning columns
+    "#pcai .pc-gridN{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:9px}" +
+    "@media(max-width:640px){#pcai .pc-gridN{grid-template-columns:repeat(2,1fr)}}" +
     "#pcai .pc-oc{position:relative;border:1.5px solid var(--pc-line);background:var(--pc-card);border-radius:11px;padding:11px 8px;text-align:center;cursor:pointer;transition:.12s}" +
     "#pcai .pc-oc:hover{border-color:var(--pc-mut)}" +
     "#pcai .pc-oc.sel{border-color:var(--pc-acc);box-shadow:0 0 0 3px rgba(94,22,34,.13)}" +
@@ -286,7 +342,7 @@
           "<div id='pc-dropin'><div class='pc-dropicon'>🐾</div><div class='pc-tiny'>Click to upload a clear, well-lit photo</div></div></label>" +
           "<input class='pc-field' id='pc-email' type='email' placeholder='Your email (so we can send your preview)'>" +
         "</div>" +
-        "<div class='pc-opt'><div class='pc-label'>2 &middot; Choose your style</div><div class='pc-grid3' id='pc-styles'></div></div>" +
+        "<div class='pc-opt' id='pc-styleopt'><div class='pc-label' id='pc-stylelabel'>2 &middot; Choose your style</div><div class='pc-gridN' id='pc-styles'></div></div>" +
         "<div class='pc-opt'><div class='pc-label'>3 &middot; Choose your size <span class='pc-guidelink' id='pc-guidelink'>📐 Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
         "<div class='pc-opt'><div class='pc-label'>4 &middot; Add a frame <span class='pc-optional'>optional</span></div><div class='pc-grid3 pc-frameopts' id='pc-frames'></div></div>" +
 
@@ -373,12 +429,34 @@
     $("pc-pricerow").innerHTML = "<ins>" + money(v[1]) + "</ins>" +
       (v[2] > v[1] ? "<del>" + money(v[2]) + "</del><span class='pc-save'>SAVE " + save + "%</span>" : "");
   }
+  // Step 2 is whatever the page still needs choosing:
+  //   combined page      -> the style grid
+  //   locked page w/ opts -> that style's options (e.g. which sport)
+  //   locked page, no opts -> nothing to choose, so the step disappears
   function renderStyles() {
-    $("pc-styles").innerHTML = STYLES.map(function (s) {
+    var box = $("pc-styleopt"), grid = $("pc-styles"), lab = $("pc-stylelabel"), vs = variantsFor();
+    if (forcedStyle && !vs) { box.style.display = "none"; return; }
+    box.style.display = "block";
+    if (forcedStyle && vs) {
+      lab.innerHTML = "2 &middot; Choose your sport";
+      grid.innerHTML = vs.map(function (v) {
+        return "<div class='pc-oc" + (sel.variant === v.code ? " sel" : "") + "' data-variant='" + v.code + "'>" +
+          "<b class='pc-serifname'>" + v.label + "</b></div>";
+      }).join("");
+      return;
+    }
+    lab.innerHTML = "2 &middot; Choose your style";
+    grid.innerHTML = STYLES.filter(function (s) { return !s.soloOnly; }).map(function (s) {
       return "<div class='pc-oc" + (sel.style === s.code ? " sel" : "") + "' data-style='" + s.code + "'>" +
         "<img class='pc-styleimg' src='" + API + "/app/examples/" + s.code + ".jpg' alt='" + s.label + "'>" +
         "<b class='pc-serifname'>" + s.label + "</b><small>" + s.sub + "</small></div>";
     }).join("");
+  }
+  // A style with options needs one chosen before it can generate.
+  function normalizeSel() {
+    var vs = variantsFor();
+    if (!vs) { sel.variant = null; return; }
+    if (!vs.filter(function (v) { return v.code === sel.variant; }).length) sel.variant = vs[0].code;
   }
   function renderSizes() {
     $("pc-sizes").innerHTML = SIZES.map(function (s) {
@@ -520,9 +598,9 @@
     $("pc-hero").scrollIntoView({ behavior: "smooth", block: "center" });
   }
   function stop() { clearInterval(timer); }
-  function show(d, style) {
-    addRes(style || sel.style, { id: d.id, preview: API + d.preview_url, full: API + d.full_url,
-                                 original: d.original_url ? API + d.original_url : "", bust: Date.now() });
+  function show(d, key) {
+    addRes(key || resKey(), { id: d.id, preview: API + d.preview_url, full: API + d.full_url,
+                              original: d.original_url ? API + d.original_url : "", bust: Date.now() });
     heroPick = null;
     renderFrames(); renderHero(); renderThumbs();   // renderFrames: swap the unframed swatch to their art
     $("pc-retry").disabled = false; $("pc-instruction").disabled = false;
@@ -531,13 +609,24 @@
   }
   function doGenerate(style) {
     if (!file || !style) return;
+    var key = resKey();                      // capture now — they may switch while it renders
     loading();
-    var fd = new FormData(); fd.append("file", file); fd.append("style", style); fd.append("email", $("pc-email").value.trim());
-    post("/generate", fd).then(function (d) { show(d, style); }).catch(function (e) { renderHero(); $("pc-err").textContent = e.message; }).then(stop, stop);
+    var fd = new FormData();
+    fd.append("file", file); fd.append("style", style); fd.append("email", $("pc-email").value.trim());
+    if (sel.variant) fd.append("variant", sel.variant);
+    post("/generate", fd).then(function (d) { show(d, key); })
+      .catch(function (e) { renderHero(); $("pc-err").textContent = e.message; }).then(stop, stop);
   }
 
   // ---- Events -------------------------------------------------------------------------
-  $("pc-styles").addEventListener("click", function (e) { var c = e.target.closest("[data-style]"); if (!c) return; sel.style = c.getAttribute("data-style"); heroPick = null; renderStyles(); renderFrames(); renderHero(); renderThumbs(); refreshPhase(); });
+  $("pc-styles").addEventListener("click", function (e) {
+    var s = e.target.closest("[data-style]"), v = e.target.closest("[data-variant]");
+    if (s) sel.style = s.getAttribute("data-style");
+    else if (v) sel.variant = v.getAttribute("data-variant");
+    else return;
+    normalizeSel(); heroPick = null;
+    renderStyles(); renderFrames(); renderHero(); renderThumbs(); refreshPhase();
+  });
   $("pc-sizes").addEventListener("click", function (e) { var c = e.target.closest("[data-size]"); if (!c) return; sel.size = c.getAttribute("data-size"); renderOptions(); if (view === "wall") renderHero(); });
   $("pc-frames").addEventListener("click", function (e) { var c = e.target.closest("[data-frame]"); if (!c) return; selectFrame(c.getAttribute("data-frame")); });
   $("pc-vstrip").addEventListener("click", function (e) { var b = e.target.closest("[data-ver]"); if (!b) return; selectVersion(+b.getAttribute("data-ver")); });
@@ -582,7 +671,8 @@
   $("pc-add").addEventListener("click", function () {
     var v = curVar(), r = curRes();
     var props = {
-      "Style": labelOf(STYLES, sel.style), "_job_id": r ? r.id : "",
+      "Style": labelOf(STYLES, sel.style) + (sel.variant ? " — " + labelOf(variantsFor() || [], sel.variant) : ""),
+      "_job_id": r ? r.id : "",
       "_preview": r ? r.preview : "", "_fullres": r ? r.full : "", "_original": r ? r.original : ""
     };
     if ($("pc-artist-check").checked) {
@@ -615,6 +705,13 @@
   unclip();
   window.addEventListener("resize", unclip);
 
-  sel.frame = baseFrame();   // Unframed if its variants are live, else fall back to Antique Gold
-  renderStyles(); renderOptions(); renderHero(); renderThumbs(); refreshPhase();
+  // Render immediately from the baked-in map, then silently re-render once the page's real
+  // Shopify variants land — so prices are never stale but the widget never waits on a fetch.
+  var booted = false;
+  function boot() {
+    if (!booted) { sel.frame = baseFrame(); normalizeSel(); booted = true; }
+    renderStyles(); renderOptions(); renderHero(); renderThumbs(); refreshPhase();
+  }
+  boot();
+  loadLiveVariants().then(boot);
 })();

@@ -46,6 +46,62 @@ _HERITAGE = (
     "reference image."
 )
 
+# --- Impasto oil (Game Day) -----------------------------------------------------------
+# Reverse-engineered from frameandtail.com. Two things make it work and are easy to lose:
+#   1. Describe the PHYSICS of thick paint (ridges standing proud, raking light, shadows in the
+#      troughs) — saying "very thick impasto" only ever yields a flat painterly filter.
+#   2. Scope the palette line to light/setting ONLY. Unscoped, it recolours props — an earlier
+#      "fresh spring green" palette turned a soccer ball green.
+# Deliberately calibrated: heavier strokes than this start smoothing flat-faced breeds, because
+# big knife work fights the keep-the-face-readable instruction.
+_IMPASTO = (
+    "Render as a HEAVY IMPASTO OIL PAINTING — the defining feature is THICK, SCULPTURAL PAINT. "
+    "Buttery oil colour is laid on in slabs with a palette knife and loaded brush, standing PROUD "
+    "of the canvas surface in pronounced ridges, peaks and swirls. A raking side-light catches the "
+    "top of every ridge and casts tiny real shadows in the troughs between strokes, so the surface "
+    "is visibly THREE-DIMENSIONAL and you could feel it with your fingertips. Every stroke reads as "
+    "a distinct, separate slab of pigment with crisp knife edges and trailing peaks where the knife "
+    "lifted away. Thick textured paint everywhere — the coat, the clothing, the background, all of it. "
+    "It must look like a REAL physical oil painting photographed in raking light: NOT photorealistic, "
+    "NOT a smooth digital render, NOT airbrushed, NOT a cartoon, no clean outlines. "
+    "Keep the eyes, nose and facial markings clearly readable even though the paint is thick. "
+    "{SCENE} "
+    "LIGHT AND MOOD (this describes the daylight and setting only — it must NOT recolour any clothing "
+    "or props described above): high-key, light and preppy, bright airy daylight, cheerful and clean, "
+    "built from soft powder blue, warm cream and chalky white. "
+    "Completely REPLACE the photo's background with a simple uncluttered painted backdrop, itself built "
+    "from thick visible knife strokes. Fill the image edge to edge — no border, no frame, no vignette."
+)
+
+# Prop colours are stated emphatically here, not left to the palette — see note above.
+SPORT_SCENES = {
+    "tennis": {"label": "Tennis", "scene": (
+        "Dress the pet in a crisp CREAM cable-knit tennis sweater with NAVY-and-RED striped V-neck trim "
+        "over a WHITE collar, and give them a classic WARM-BROWN WOODEN tennis racket with natural cream "
+        "strings. Behind them, a pale blue-grey court and a soft grey-green net.")},
+    "pickleball": {"label": "Pickleball", "scene": (
+        "Dress the pet in a soft SAGE-GREEN polo shirt with a WHITE collar, and give them a pickleball "
+        "paddle with a NATURAL WOOD handle and a CREAM face, with a YELLOW pickleball beside them. "
+        "Behind them, a pale sandy-blue court with soft white lines.")},
+    "soccer": {"label": "Soccer", "scene": (
+        "Dress the pet in a soft POWDER-BLUE soccer jersey with CREAM collar and trim, and place beside "
+        "them a classic soccer ball that is WHITE with BLACK pentagon panels — the ball must be WHITE "
+        "AND BLACK ONLY, never green or coloured. Behind them, a softly painted green grass pitch with "
+        "a suggestion of white line markings.")},
+    "baseball": {"label": "Baseball", "scene": (
+        "Dress the pet in a CREAM baseball tee with soft NAVY raglan sleeves and a matching NAVY cap, "
+        "with a WHITE baseball with RED stitching and a TAN leather glove beside them. Behind them, a "
+        "softly painted sandy infield and pale green grass.")},
+    "basketball": {"label": "Basketball", "scene": (
+        "Dress the pet in a soft CORAL mesh basketball jersey with WHITE trim, and place beside them a "
+        "classic ORANGE basketball with black seams. Behind them, a pale honey-toned wooden court with "
+        "a hoop softly suggested in the distance.")},
+    "football": {"label": "Football", "scene": (
+        "Dress the pet in a soft BUTTER-CREAM football jersey with NAVY numerals and shoulder stripes, "
+        "and place beside them a BROWN LEATHER football with WHITE laces. Behind them, a softly painted "
+        "green field with pale white yard lines.")},
+}
+
 STYLES = {
     "monet": {
         "label": "Monet",
@@ -80,6 +136,13 @@ STYLES = {
         "prompt": _HERITAGE,
         "use_reference": True,
         "size": "1536x1024",
+    },
+    "sport": {
+        "label": "Game Day",
+        "provider": "gemini",
+        "prompt": _nano(_IMPASTO),          # contains {SCENE}; filled from the chosen variant
+        "variants": SPORT_SCENES,
+        "default_variant": "tennis",
     },
 }
 

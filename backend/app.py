@@ -88,6 +88,17 @@ def _save(art_bytes, style, email, retries, original=None, orig_ext=".jpg", orig
             "retries_left": MAX_FREE_RETRIES - retries}
 
 
+def _style_label(style, variant=None):
+    """Customer-facing label, e.g. 'Game Day — Tennis'. Used in the preview email and Omnisend."""
+    cfg = STYLES.get(style, {})
+    label = cfg.get("label", style)
+    variants = cfg.get("variants") or {}
+    key = variant if variant in variants else cfg.get("default_variant")
+    if key and key in variants:
+        label += " — " + variants[key]["label"]
+    return label
+
+
 @app.get("/health")
 def health():
     # `commit` is set by Render on every build. Without it there's no way to tell which code is
@@ -279,7 +290,8 @@ def gallery():
 
 @app.post("/generate")
 def generate(file: UploadFile, background: BackgroundTasks,
-             style: str = Form(...), email: str = Form(...)):
+             style: str = Form(...), email: str = Form(...),
+             variant: str = Form(None)):
     if style not in STYLES:
         raise HTTPException(400, f"unknown style '{style}'")
     if not EMAIL_RE.match((email or "").strip()):
@@ -289,20 +301,21 @@ def generate(file: UploadFile, background: BackgroundTasks,
         raise HTTPException(400, "empty upload")
     # TODO: rate-limit per IP/session before spending on generation.
     try:
-        art = gen.generate(style, data, file.content_type or "image/jpeg")
+        art = gen.generate(style, data, file.content_type or "image/jpeg", variant=variant)
     except gen.GenerationError as e:
         raise HTTPException(502, str(e))
     ct = (file.content_type or "").lower()
     ext = ".png" if "png" in ct else (".webp" if "webp" in ct else ".jpg")
     saved = _save(art, style, email.strip(), 0, original=data, orig_ext=ext)
+    label = _style_label(style, variant)
     # Email the customer their preview once the response is on its way out.
     # Runs after the response, is a no-op until RESEND_API_KEY is set, and can
     # never raise into the request (send_preview_email swallows its own errors).
     background.add_task(email_send.send_preview_email, email.strip(),
-                        saved["preview_url"], STYLES[style]["label"])
+                        saved["preview_url"], label)
     # Also push the lead into Omnisend (no-op until OMNISEND_API_KEY is set; never raises).
     background.add_task(omnisend_send.add_contact, email.strip(),
-                        STYLES[style]["label"], saved["preview_url"])
+                        label, saved["preview_url"])
     return saved
 
 
