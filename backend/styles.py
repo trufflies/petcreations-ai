@@ -266,7 +266,7 @@ STYLES = {
         "prompt": _impasto(
             "soft faded vintage light, gently sun-washed as though the paint has aged a little — "
             "dusty sage, muted ochre, faded rose and warm cream, low afternoon sun, nostalgic and quiet.",
-            "Place the pet in a summer meadow of tall wildflowers up around them — loose dabbed heads "
+            "Place the pet a little further back in the scene so its full body is visible, sitting or standing in the open, set within a wide summer meadow of tall wildflowers that rise around and in front of them, with a broad sweep of meadow, a hazy treeline and open sky beyond — the pet nestled into the landscape rather than filling the frame — loose dabbed heads "
             "of poppy, cornflower, daisy and grass seed suggested with quick knife strokes rather than "
             "drawn in detail — with a hazy treeline far behind and long grass catching the light.",
         ),
