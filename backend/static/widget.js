@@ -489,9 +489,6 @@
           "<button class='pc-btn pc-big' id='pc-go' disabled>Create my portrait</button>" +
           "<div class='pc-tiny pc-center' id='pc-gohint' style='margin-top:8px'>Add a photo, your email &amp; a style to preview</div>" +
         "</div>" +
-        // Fills the space that hiding size and frame leaves behind, and puts the reassurance where
-        // people are deciding. Disappears once there's a preview and the real options take over.
-        "<div class='pc-also' id='pc-also' style='display:none'></div>" +
         "<div id='pc-story' class='pc-story'>" +
           "<h3>How it works</h3>" +
           "<ul>" +
@@ -527,6 +524,9 @@
           "Full-resolution download, sent when your proof is approved. Print more, or share it." +
           "</span></label>" +
         "<div class='pc-err' id='pc-err'></div>" +
+        // After the decision, not during it — this is "browse something else", so it belongs
+        // below Add to cart rather than between the frame picker and the buy button.
+        "<div class='pc-also' id='pc-also' style='display:none'></div>" +
       "</div>" +
     "</div>" +
 
@@ -700,18 +700,24 @@
     box.innerHTML = artIn(f, r.preview + "?t=" + r.bust, "pc-fart") +
       "<div><b>" + esc(sz ? sz.label : "") + "</b><span>" + esc(f.label) + "</span></div>";
     box.setAttribute("data-ready", "1");
+    syncMini();
   }
-  // Pin the mini copy only once the real hero has scrolled away, so they are never both on screen.
-  var heroWatch = null;
+  // Show the mini only once the real hero has scrolled away, so they're never both on screen.
+  // This was an IntersectionObserver; it silently never fired on the live page, so it's a plain
+  // scroll check now — same behaviour, and observable from the console.
+  function syncMini() {
+    var box = $("pc-mini"), hero = $("pc-hero");
+    if (!box || !hero) return;
+    var gone = hero.getBoundingClientRect().bottom < 64;
+    box.classList.toggle("on", gone && box.getAttribute("data-ready") === "1");
+  }
+  var miniBound = false;
   function watchHero() {
-    if (heroWatch || !window.IntersectionObserver) return;
-    if (!$("pc-mini") || !$("pc-hero")) return;
-    heroWatch = new IntersectionObserver(function (es) {
-      var box = $("pc-mini");
-      if (!box) return;
-      box.classList.toggle("on", !es[0].isIntersecting && box.getAttribute("data-ready") === "1");
-    }, { threshold: 0.12 });
-    heroWatch.observe($("pc-hero"));
+    if (miniBound) return;
+    miniBound = true;
+    window.addEventListener("scroll", syncMini, { passive: true });
+    window.addEventListener("resize", syncMini, { passive: true });
+    syncMini();
   }
 
   function renderVersions() {
