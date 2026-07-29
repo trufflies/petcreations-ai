@@ -239,7 +239,7 @@
   // ---- Markup -------------------------------------------------------------------------
   root.innerHTML = "" +
     "<style>" +
-    "#pcai-root{--pc-bg:#f3ecde;--pc-ink:#343434;--pc-mut:#6f6552;--pc-line:#dfd2b8;--pc-card:#ffffff;--pc-acc:#5e1622;--pc-gold:#b08d57;--pc-serif:'Playfair Display',Georgia,serif;background:var(--pc-bg);color:var(--pc-ink);font-family:inherit;width:100%;overflow-x:hidden}" +
+    "#pcai-root{--pc-bg:#ffffff;--pc-ink:#2c2c2c;--pc-mut:#6b6b6b;--pc-line:#e6e2da;--pc-card:#fbfaf8;--pc-acc:#5e1622;--pc-gold:#b08d57;--pc-serif:'Playfair Display',Georgia,serif;background:var(--pc-bg);color:var(--pc-ink);font-family:inherit;width:100%;overflow-x:hidden}" +
     "#pcai-root *{box-sizing:border-box}" +
     "#pcai{max-width:100%;overflow-x:clip;width:94%;max-width:1280px;margin:0 auto;padding:34px 0 6px;text-align:left}" +
     "#pcai .pc-wrap{display:grid;grid-template-columns:1fr;gap:28px}" +
@@ -913,13 +913,22 @@
   // caps the width and clips both edges. Widen + unclip every ancestor up to the full-width section
   // so the generator can fill the real product-section width. Re-run on resize for safety.
   function unclip() {
+    // Only widen on desktop. The narrow ~800px wrapper this works around is a desktop layout;
+    // mobile containers are already full-bleed. Stripping overflow:hidden off every ancestor on
+    // a phone removed guards the THEME relies on and let the whole page scroll sideways — that
+    // is what was clipping the header and the artwork on the right.
+    var wide = window.innerWidth >= 750;
     var p = root.parentElement;
     while (p && p !== document.body) {
-      var cs = getComputedStyle(p);
-      var mw = parseFloat(cs.maxWidth);
-      if (!isNaN(mw) && mw < 1400) p.style.maxWidth = "none";
-      if (cs.overflowX === "hidden") p.style.overflowX = "visible";
-      if (cs.overflowY === "hidden") p.style.overflowY = "visible";
+      if (wide) {
+        var cs = getComputedStyle(p);
+        var mw = parseFloat(cs.maxWidth);
+        if (!isNaN(mw) && mw < 1400) p.style.maxWidth = "none";
+        if (cs.overflowX === "hidden") p.style.overflowX = "visible";
+        if (cs.overflowY === "hidden") p.style.overflowY = "visible";
+      } else if (p.style.maxWidth || p.style.overflowX || p.style.overflowY) {
+        p.style.maxWidth = ""; p.style.overflowX = ""; p.style.overflowY = "";
+      }
       p = p.parentElement;
     }
   }
