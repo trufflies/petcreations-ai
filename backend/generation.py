@@ -73,6 +73,13 @@ def _gemini(prompt, image_bytes, mime):
             break
         except urllib.error.HTTPError as e:
             last = (e.code, e.read().decode(errors="replace")[:300])
+            # A depleted-credits 429 is permanent until topped up — retrying just burns 3x the
+            # wait before showing the same message, and hides a billing problem behind "busy".
+            if "credits are depleted" in last[1] or "RESOURCE_EXHAUSTED" in last[1]:
+                print("GEMINI BILLING: credits depleted — all Gemini styles are down")
+                raise GenerationError(
+                    "This style is temporarily unavailable — please try another, "
+                    "or email support@petcreationsart.com and we'll make it for you.")
             if e.code in (429, 500, 502, 503) and attempt < 2:
                 time.sleep(2 * (attempt + 1))
                 continue
