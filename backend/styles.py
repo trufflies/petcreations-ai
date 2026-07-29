@@ -137,6 +137,22 @@ STYLES = {
         "use_reference": True,
         "size": "1536x1024",
     },
+    "watercolor": {
+        "label": "Watercolour",
+        "provider": "gemini",
+        "prompt": _nano(
+            "Render as a delicate fine-art WATERCOLOUR portrait on bright white paper. Soft translucent "
+            "washes with gentle wet-on-wet bleeds, visible pigment granulation and the faint blooms "
+            "where wet colour meets wet colour. CRITICAL: the pet's face stays crisp and clearly "
+            "readable — eyes, nose and markings sharply defined — while the body and outer edges soften "
+            "and dissolve away into loose brushwork and generous CLEAN WHITE SPACE. Use a natural, "
+            "true-to-life palette drawn from the pet's own colouring, with soft grey-blue shadows. "
+            "Delicate, airy, refined and quiet. Completely REPLACE the photo's background with clean "
+            "white paper and only the faintest suggestion of a wash beneath the pet. "
+            "No hard outlines, no cartoon linework, no heavy black, no frame, no border. "
+            "Unlike the other styles this one KEEPS its white paper — the white space is the point."
+        ),
+    },
     "sport": {
         "label": "Game Day",
         "provider": "gemini",

@@ -16,7 +16,25 @@
   // That's what lets each style live on its own Shopify product page (its own URL, ads, reviews)
   // while every page runs this same widget. No attribute = show the full style picker, which is
   // what the original combined product page does.
-  var forcedStyle = (root.getAttribute("data-style") || "").trim() || null;
+  // Accepts one style or a comma list — data-style="monet,watercolor" puts two related styles on
+  // one page, which suits pairs a customer would naturally compare.
+  var forcedStyles = (root.getAttribute("data-style") || "").split(",")
+    .map(function (s) { return s.trim(); }).filter(Boolean);
+  var forcedStyle = forcedStyles.length === 1 ? forcedStyles[0] : null;
+
+  // Per-page copy, so each style product isn't headlined "Custom Heritage Pet Portrait".
+  //   <div id="pcai-root" data-style="sport" data-title="Custom Game Day Pet Portrait">
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function attr(name, fallback) {
+    var v = (root.getAttribute("data-" + name) || "").trim();
+    return esc(v || fallback);
+  }
+  var pageTitle = attr("title", "Custom Heritage Pet Portrait");
+  var pageEyebrow = attr("eyebrow", "Heirloom Pet Art");
 
   // ---- Product data --------------------------------------------------------------------
   // Baked-in FALLBACK only. At load we re-read the real variants from the Shopify product this
@@ -30,6 +48,7 @@
     { code: "monet",    label: "Monet",        sub: "Impressionist" },
     { code: "oil",      label: "Oil Painting", sub: "Museum oil" },
     { code: "heritage", label: "Heritage",     sub: "Regal heirloom" },
+    { code: "watercolor", label: "Watercolour", sub: "Soft & delicate" },
     // soloOnly: lives on its own product page only. Its sport picker needs the room a dedicated
     // page gives it, and offering it in the combined grid would silently default people to tennis.
     { code: "sport",    label: "Game Day",     sub: "Impasto oil", variants: "sports", soloOnly: true }
@@ -127,7 +146,12 @@
   ];
 
   // ---- State --------------------------------------------------------------------------
-  var sel = { style: forcedStyle || null, variant: null, size: "S", frame: "U" };
+  var sel = { style: forcedStyles[0] || null, variant: null, size: "S", frame: "U" };
+  // Which styles this page offers: the ones named in data-style, else everything not soloOnly.
+  function pageStyles() {
+    if (!forcedStyles.length) return STYLES.filter(function (s) { return !s.soloOnly; });
+    return STYLES.filter(function (s) { return forcedStyles.indexOf(s.code) !== -1; });
+  }
   function styleCfg(c) { return STYLES.filter(function (s) { return s.code === (c || sel.style); })[0] || null; }
   function variantsFor(c) { var s = styleCfg(c); return s && s.variants ? VARIANT_SETS[s.variants] : null; }
   // Cache/versions are keyed per style AND variant — tennis and soccer are different portraits.
@@ -326,8 +350,8 @@
       "</div>" +
       // ---- RIGHT: buy box ----
       "<div class='pc-buy'>" +
-        "<div class='pc-eyebrow'>Heirloom Pet Art</div>" +
-        "<h1 class='pc-title'>Custom Heritage Pet Portrait</h1>" +
+        "<div class='pc-eyebrow'>" + pageEyebrow + "</div>" +
+        "<h1 class='pc-title'>" + pageTitle + "</h1>" +
         "<div class='pc-reviews'><span class='pc-stars'>★★★★★</span> <b>4.9</b>/5 &middot; 14,668+ happy customers</div>" +
         "<div class='pc-pricerow' id='pc-pricerow'></div>" +
         "<div class='pc-gift'>🎁 Free shipping — your masterpiece is delivered in 4–7 business days.</div>" +
@@ -337,14 +361,16 @@
           "<div class='pc-badge'><svg viewBox='0 0 24 24' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3l7 3v5c0 4.4-3 7.4-7 8.8-4-1.4-7-4.4-7-8.8V6z'/><path d='M9 12l2 2 4-4'/></svg><b>30-Day</b><small>happiness guarantee</small></div>" +
         "</div>" +
 
-        "<div class='pc-opt'><div class='pc-label'>1 &middot; Your pet’s photo</div>" +
+        "<div class='pc-opt'><div class='pc-label'>Your pet’s photo</div>" +
           "<label class='pc-drop' id='pc-drop'><input type='file' id='pc-file' accept='image/*'>" +
           "<div id='pc-dropin'><div class='pc-dropicon'>🐾</div><div class='pc-tiny'>Click to upload a clear, well-lit photo</div></div></label>" +
           "<input class='pc-field' id='pc-email' type='email' placeholder='Your email (so we can send your preview)'>" +
         "</div>" +
-        "<div class='pc-opt' id='pc-styleopt'><div class='pc-label' id='pc-stylelabel'>2 &middot; Choose your style</div><div class='pc-gridN' id='pc-styles'></div></div>" +
-        "<div class='pc-opt'><div class='pc-label'>3 &middot; Choose your size <span class='pc-guidelink' id='pc-guidelink'>📐 Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
-        "<div class='pc-opt'><div class='pc-label'>4 &middot; Add a frame <span class='pc-optional'>optional</span></div><div class='pc-grid3 pc-frameopts' id='pc-frames'></div></div>" +
+        "<div class='pc-opt' id='pc-styleopt'><div class='pc-label' id='pc-stylelabel'>Choose your style</div><div class='pc-gridN' id='pc-styles'></div></div>" +
+        // Size and frame stay hidden until there's a portrait to apply them to — nobody should be
+        // asked to pick a canvas size before they've seen anything.
+        "<div class='pc-opt' id='pc-sizeopt' style='display:none'><div class='pc-label'>Choose your size <span class='pc-guidelink' id='pc-guidelink'>📐 Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
+        "<div class='pc-opt' id='pc-frameopt' style='display:none'><div class='pc-label'>Add a frame <span class='pc-optional'>optional</span></div><div class='pc-grid3 pc-frameopts' id='pc-frames'></div></div>" +
 
         "<div id='pc-cta'>" +
           "<button class='pc-btn pc-big' id='pc-go' disabled>Create my portrait ✨</button>" +
@@ -378,7 +404,7 @@
     "<div class='pc-info'>" +
       "<details open><summary>Description</summary>" +
         "<p class='pc-lead'>Your pet, immortalized as a masterpiece.</p>" +
-        "<p>We reimagine your beloved pet in the style of an old-world oil painting — capturing their personality and expression in rich, timeless detail. Printed on gallery-grade cotton canvas and hand-stretched over solid wood, it arrives ready to hang straight out of the box. Add an ornate gilt frame if you’d like the full heirloom treatment.</p>" +
+        "<p>We reimagine your beloved pet as an original work of art — capturing their personality and expression in rich detail. Printed on gallery-grade cotton canvas and hand-stretched over solid wood, it arrives ready to hang straight out of the box. Add an ornate gilt frame if you’d like the full heirloom treatment.</p>" +
         "<ul><li>Gallery-grade cotton canvas, made &amp; framed in Florida</li><li>Ready to hang — gallery-wrapped 1.5&quot; edges, hardware included</li><li>Approve your preview before anything is printed</li><li>Unlimited revisions until it’s exactly right</li><li>Free shipping on every order</li></ul>" +
       "</details>" +
       "<details id='pc-guide'><summary>Size guide</summary>" +
@@ -434,19 +460,22 @@
   //   locked page w/ opts -> that style's options (e.g. which sport)
   //   locked page, no opts -> nothing to choose, so the step disappears
   function renderStyles() {
-    var box = $("pc-styleopt"), grid = $("pc-styles"), lab = $("pc-stylelabel"), vs = variantsFor();
-    if (forcedStyle && !vs) { box.style.display = "none"; return; }
+    var box = $("pc-styleopt"), grid = $("pc-styles"), lab = $("pc-stylelabel");
+    var list = pageStyles(), vs = variantsFor();
+    // One style with options -> pick the option. One style without -> nothing to choose, hide the
+    // step entirely. Two or more -> the style grid.
+    if (list.length === 1 && !vs) { box.style.display = "none"; return; }
     box.style.display = "block";
-    if (forcedStyle && vs) {
-      lab.innerHTML = "2 &middot; Choose your sport";
+    if (list.length === 1 && vs) {
+      lab.innerHTML = "Choose your sport";
       grid.innerHTML = vs.map(function (v) {
         return "<div class='pc-oc" + (sel.variant === v.code ? " sel" : "") + "' data-variant='" + v.code + "'>" +
           "<b class='pc-serifname'>" + v.label + "</b></div>";
       }).join("");
       return;
     }
-    lab.innerHTML = "2 &middot; Choose your style";
-    grid.innerHTML = STYLES.filter(function (s) { return !s.soloOnly; }).map(function (s) {
+    lab.innerHTML = "Choose your style";
+    grid.innerHTML = list.map(function (s) {
       return "<div class='pc-oc" + (sel.style === s.code ? " sel" : "") + "' data-style='" + s.code + "'>" +
         "<img class='pc-styleimg' src='" + API + "/app/examples/" + s.code + ".jpg' alt='" + s.label + "'>" +
         "<b class='pc-serifname'>" + s.label + "</b><small>" + s.sub + "</small></div>";
@@ -563,6 +592,12 @@
   function refreshPhase() {
     renderVersions(); renderViewTabs();
     var fresh = !!curRes();
+    // Progressive disclosure: before a preview exists the page asks for a photo and a style and
+    // nothing else. Size, frame and the example strip only appear once there's art to apply them
+    // to — the fewer decisions there are before someone sees their pet, the further they get.
+    $("pc-sizeopt").style.display = fresh ? "block" : "none";
+    $("pc-frameopt").style.display = fresh ? "block" : "none";
+    $("pc-thumbs").style.display = fresh ? "flex" : "none";
     $("pc-post").style.display = fresh ? "block" : "none";
     $("pc-cta").style.display = fresh ? "none" : "block";
     $("pc-go").textContent = "Create my portrait ✨";
