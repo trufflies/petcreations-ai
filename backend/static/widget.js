@@ -128,13 +128,20 @@
   // Read the real variants off whichever Shopify product this widget is embedded on. Matching on
   // option VALUES (not option names or positions) keeps it working if a duplicated product has its
   // options named differently. Any failure leaves the baked-in map in place.
-  var SIZE_BY_OPT = { "24x18 inches": "S", "32x24 inches": "M", "40x30 inches": "L" };
-  var FRAME_BY_OPT = { "Unframed": "U", "Antique Gold": "G", "Antique Silver": "R",
-                       "Baroque Gold (Wide)": "B" };
-  // The baked-in map belongs to THIS product and nothing else. On any other product page the live
-  // lookup must succeed, or we have no idea what we'd be selling.
-  var FALLBACK_HANDLE = "custom-heritage-framed-pet-portrait-draft";
-  var variantsTrusted = true;
+  // Match option values by their NUMBERS, not their exact text. Products duplicated over time
+  // carry drift — "24x18 inches" vs "24x18" vs "24 x 18" — and an exact-string match silently
+  // found zero variants, which tripped the safety guard and blocked checkout on live pages.
+  var SIZE_BY_DIMS = { "24x18": "S", "32x24": "M", "40x30": "L" };
+  var FRAME_BY_OPT = { "unframed": "U", "antique gold": "G", "antique silver": "R",
+                       "baroque gold (wide)": "B" };
+  function sizeCode(v) {
+    var m = String(v).match(/(\d+)\s*[x\u00d7]\s*(\d+)/i);
+    return m ? SIZE_BY_DIMS[m[1] + "x" + m[2]] : null;
+  }
+  function frameCode(v) {
+    return FRAME_BY_OPT[String(v).trim().toLowerCase()] || null;
+  }
+
   function loadLiveVariants() {
     var path = location.pathname.replace(/\/+$/, "");
     if (path.indexOf("/products/") === -1 || typeof fetch !== "function") return Promise.resolve();
@@ -148,8 +155,8 @@
         d.variants.forEach(function (v) {
           var s = null, f = null;
           (v.options || []).forEach(function (o) {
-            if (SIZE_BY_OPT[o]) s = SIZE_BY_OPT[o];
-            if (FRAME_BY_OPT[o]) f = FRAME_BY_OPT[o];
+            s = sizeCode(o) || s;
+            f = frameCode(o) || f;
           });
           if (s && f) m[s + f] = [v.id, v.price, v.compare_at_price || v.price];
         });
