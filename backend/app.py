@@ -163,7 +163,21 @@ def health():
             "styles": {k: v["label"] for k, v in STYLES.items()},
             "frames": {k: v["label"] for k, v in FRAMES.items()},
             "email_configured": bool(os.environ.get("RESEND_API_KEY")),
-            "persistent_storage": bool(os.environ.get("GEN_DIR"))}
+            "persistent_storage": bool(os.environ.get("GEN_DIR")),
+            "disk": _disk_info()}
+
+
+def _disk_info():
+    """Free space on the render disk. A full disk shows up as an OSError deep in _save,
+    long after the art has been paid for and generated — worth being able to see directly."""
+    try:
+        import shutil
+        total, used, free = shutil.disk_usage(GEN_DIR)
+        mb = 1024.0 * 1024.0
+        return {"total_mb": round(total / mb), "used_mb": round(used / mb),
+                "free_mb": round(free / mb), "pct_used": round(100.0 * used / total, 1)}
+    except Exception as e:
+        return {"error": type(e).__name__}
 
 
 def _compute_stats():
