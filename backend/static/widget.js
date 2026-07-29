@@ -33,6 +33,11 @@
     var v = (root.getAttribute("data-" + name) || "").trim();
     return esc(v || fallback);
   }
+  // Digital add-on. Variant and price are page-configurable so the offer can be repriced in
+  // Shopify without a redeploy — but they must be changed together.
+  var DIGITAL_ID = attr("digital-variant", "44746320642266");
+  var DIGITAL_PRICE = attr("digital-price", "15");
+  var ALSO_COLLECTION = attr("also-collection", "best-sellers-1");
   var pageTitle = attr("title", "Custom Heritage Pet Portrait");
   var pageEyebrow = attr("eyebrow", "Heirloom Pet Art");
 
@@ -308,6 +313,16 @@
     "#pcai .pc-memfields{display:grid;grid-template-columns:1fr 1fr;gap:9px}" +
     "@media(max-width:640px){#pcai .pc-memfields{grid-template-columns:1fr}}" +
     "#pcai .pc-memfields .pc-field{margin-top:0}" +
+    "#pcai .pc-digital{display:flex;gap:9px;align-items:flex-start;font-size:13px;margin:14px 0 2px;cursor:pointer;line-height:1.5}" +
+    "#pcai .pc-digital input{flex:0 0 auto;margin-top:3px}" +
+    "#pcai .pc-digital>span{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}" +
+    "#pcai .pc-also{margin:34px 0 0}" +
+    "#pcai .pc-also-h{font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:var(--pc-mut);margin-bottom:12px}" +
+    "#pcai .pc-also-row{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:6px}" +
+    "#pcai .pc-also-card{flex:0 0 158px;scroll-snap-align:start;text-decoration:none;color:inherit}" +
+    "#pcai .pc-also-card img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:10px;display:block;background:var(--pc-card)}" +
+    "#pcai .pc-also-t{font-size:13px;line-height:1.35;margin-top:7px}" +
+    "#pcai .pc-also-p{font-size:13px;color:var(--pc-mut);margin-top:2px}" +
     "#pcai .pc-story{margin:26px 0 0;padding:18px 20px;background:var(--pc-card);border:1px solid var(--pc-line);border-radius:14px}" +
     "#pcai .pc-story h3{font-family:var(--pc-serif);font-size:17px;font-weight:600;margin:0 0 10px;color:var(--pc-ink)}" +
     "#pcai .pc-story ul{margin:0;padding-left:17px}" +
@@ -452,6 +467,7 @@
         "</div>" +
         // Fills the space that hiding size and frame leaves behind, and puts the reassurance where
         // people are deciding. Disappears once there's a preview and the real options take over.
+        "<div class='pc-also' id='pc-also' style='display:none'></div>" +
         "<div id='pc-story' class='pc-story'>" +
           "<h3>How it works</h3>" +
           "<ul>" +
@@ -481,6 +497,11 @@
           "<textarea class='pc-field' id='pc-artist-notes' placeholder='Optional: what should the artist adjust? e.g. brighten the eyes, remove background objects, match the collar color' style='display:none'></textarea>" +
           "<button class='pc-btn pc-big' id='pc-add'>Add to cart →</button>" +
         "</div>" +
+        "<label class='pc-digital' id='pc-digital' style='display:none'>" +
+          "<input type='checkbox' id='pc-digital-check'>" +
+          "<span><b>Add the digital file &mdash; $" + esc(DIGITAL_PRICE) + "</b><br>" +
+          "Full-resolution download, sent when your proof is approved. Print more, or share it." +
+          "</span></label>" +
         "<div class='pc-err' id='pc-err'></div>" +
       "</div>" +
     "</div>" +
@@ -666,6 +687,8 @@
     var cfg = styleCfg();
     $("pc-memopt").style.display = (cfg && cfg.memorial) ? "block" : "none";
     $("pc-defopt").style.display = (cfg && cfg.definition) ? "block" : "none";
+    // Offer the file only once they've seen art. Before that it's an abstract upsell.
+    $("pc-digital").style.display = (fresh && DIGITAL_ID) ? "flex" : "none";
     var fresh = !!curRes();
     // Progressive disclosure: before a preview exists the page asks for a photo and a style and
     // nothing else. Size, frame and the example strip only appear once there's art to apply them
@@ -846,12 +869,41 @@
       var n = $("pc-artist-notes").value.trim(); if (n) props["Artist notes"] = n;
     }
     $("pc-add").disabled = true; $("pc-add").textContent = "Adding…";
+    var items = [{ id: v[0], quantity: 1, properties: props }];
+    if (DIGITAL_ID && $("pc-digital-check").checked) {
+      items.push({ id: parseInt(DIGITAL_ID, 10), quantity: 1,
+                   properties: { "For artwork": props["_job_id"] || "see canvas line" } });
+    }
     fetch("/cart/add.js", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: v[0], quantity: 1, properties: props })
+      body: JSON.stringify({ items: items })
     }).then(function (r) { return r.json(); }).then(function () { window.location.href = "/cart"; })
       .catch(function () { $("pc-add").disabled = false; $("pc-add").textContent = "Add to cart →"; alert("Could not add to cart."); });
   });
+
+  function renderAlsoLike() {
+    var box = $("pc-also");
+    if (!box || !ALSO_COLLECTION) return;
+    var here = (location.pathname.match(/\/products\/([^\/?#]+)/) || [])[1] || "";
+    fetch("/collections/" + ALSO_COLLECTION + "/products.json?limit=16")
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var items = (d.products || []).filter(function (p) { return p.handle !== here; }).slice(0, 8);
+        if (!items.length) return;
+        box.innerHTML = "<div class='pc-also-h'>You may also like</div><div class='pc-also-row'>" +
+          items.map(function (p) {
+            var im = (p.images && p.images[0] && p.images[0].src) || "";
+            if (im) im += (im.indexOf("?") > -1 ? "&" : "?") + "width=420";
+            var pr = p.variants && p.variants[0] ? p.variants[0].price : "";
+            return "<a class='pc-also-card' href='/products/" + esc(p.handle) + "'>" +
+              "<img loading='lazy' src='" + esc(im) + "' alt='" + esc(p.title) + "'>" +
+              "<div class='pc-also-t'>" + esc(p.title) + "</div>" +
+              (pr ? "<div class='pc-also-p'>From $" + esc(pr) + "</div>" : "") + "</a>";
+          }).join("") + "</div>";
+        box.style.display = "block";
+      })
+      .catch(function () { });   // a missing collection shouldn't break the page
+  }
 
   // ---- Init ---------------------------------------------------------------------------
   // The theme's "Embed code" block wraps us in a narrow (~800px), overflow:hidden container that
@@ -870,6 +922,7 @@
   }
   unclip();
   window.addEventListener("resize", unclip);
+  renderAlsoLike();   // independent of the generator — safe to fire once, immediately
 
   // Render immediately from the baked-in map, then silently re-render once the page's real
   // Shopify variants land — so prices are never stale but the widget never waits on a fetch.
