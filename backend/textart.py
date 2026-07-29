@@ -129,16 +129,18 @@ def _definition(art, name, phonetic="", part_of_speech="noun", body=""):
     """Dictionary-entry print: art above, entry beneath."""
     canvas = Image.new("RGB", (CANVAS_W, CANVAS_H), PAPER)
     d = ImageDraw.Draw(canvas)
-    art_h = int(CANVAS_H * 0.58)
+    # 0.58 left the art in a ~2:1 letterbox, which beheads a seated pet. 0.70 gives roughly 16:9
+    # and still leaves room for the entry beneath.
+    art_h = int(CANVAS_H * 0.70)
     pad = int(CANVAS_W * 0.055)
     canvas.paste(_cover(art, CANVAS_W - pad * 2, art_h - pad), (pad, pad))
 
     cx = CANVAS_W // 2
-    y = art_h + int(CANVAS_H * 0.05)
+    y = art_h + int(CANVAS_H * 0.035)
 
-    f = _font(SERIF, 138, "Bold")
-    _draw_tracked(d, cx, y + 92, name.lower(), f, INK, tracking=4)
-    y += 132
+    f = _font(SERIF, 118, "Bold")
+    _draw_tracked(d, cx, y + 80, name.lower(), f, INK, tracking=4)
+    y += 108
 
     bits = []
     if phonetic:
@@ -146,20 +148,20 @@ def _definition(art, name, phonetic="", part_of_speech="noun", body=""):
     if part_of_speech:
         bits.append(part_of_speech)
     if bits:
-        fi = _font(SERIF, 46, "Regular")
-        _draw_tracked(d, cx, y + 66, "   ".join(bits), fi, MUTED, tracking=3)
-        y += 62
+        fi = _font(SERIF, 40, "Regular")
+        _draw_tracked(d, cx, y + 54, "   ".join(bits), fi, MUTED, tracking=3)
+        y += 50
 
     d.line([(cx - int(CANVAS_W * 0.06), y + 46), (cx + int(CANVAS_W * 0.06), y + 46)],
            fill=RULE, width=3)
-    y += 40
+    y += 30
 
     if body:
-        fb = _font(SANS, 52)
+        fb = _font(SANS, 44)
         max_w = int(CANVAS_W * 0.70)
         lines = _wrap(d, body.strip(), fb, max_w)[:3]     # three lines keeps it a caption
         for ln in lines:
-            y += 70
+            y += 58
             _draw_tracked(d, cx, y, ln, fb, INK, tracking=0)
     return canvas
 

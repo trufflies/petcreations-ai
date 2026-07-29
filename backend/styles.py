@@ -116,6 +116,31 @@ SPORT_SCENES = {
         "green field with pale white yard lines.")},
 }
 
+# --- Definition print ------------------------------------------------------------------
+# Pet perched on a stool against a plain painted backdrop; the typeset dictionary entry is
+# composited beneath by textart. The backdrop colour is the customer's choice, so it's a variant.
+_DEF_SCENE = (
+    "Render as a clean, softly painted portrait with gentle visible brushwork — refined and "
+    "characterful, not photographic and not a cartoon. Seat the pet upright and alert on a small "
+    "round UPHOLSTERED STOOL with a pale cushion and slim wooden legs, centred and facing the "
+    "viewer, filling the middle of the frame with clear space around them. "
+    "Behind them a PLAIN, EVEN {BG} backdrop — a simple painted studio wall with no pattern, no "
+    "furniture, no props and no horizon line, so nothing competes with the pet. "
+    "Soft even studio light, gentle shadow beneath the stool. "
+    "Completely REPLACE the photo's background. Fill the image edge to edge — no border, no frame, "
+    "no vignette, and absolutely no text or lettering anywhere."
+)
+
+DEF_BACKDROPS = {
+    "sage":    {"label": "Sage",    "scene": _DEF_SCENE.format(BG="soft muted SAGE GREEN")},
+    "blush":   {"label": "Blush",   "scene": _DEF_SCENE.format(BG="warm pale BLUSH PINK")},
+    "sky":     {"label": "Sky",     "scene": _DEF_SCENE.format(BG="calm powder SKY BLUE")},
+    "cream":   {"label": "Cream",   "scene": _DEF_SCENE.format(BG="warm soft CREAM")},
+    "clay":    {"label": "Clay",    "scene": _DEF_SCENE.format(BG="earthy terracotta CLAY")},
+    "charcoal":{"label": "Charcoal","scene": _DEF_SCENE.format(BG="deep soft CHARCOAL GREY")},
+}
+
+
 STYLES = {
     "monet": {
         "label": "Monet",
@@ -210,6 +235,14 @@ STYLES = {
             "Completely REPLACE the photo's background. Fill the image edge to edge — no border, no "
             "frame, no vignette."
         ),
+    },
+    "definition": {
+        "label": "Definition Print",
+        "provider": "gemini",
+        "prompt": _nano("{SCENE}"),      # scene comes from the chosen backdrop colour
+        "variants": DEF_BACKDROPS,
+        "default_variant": "sage",
+        "layout": "definition",          # textart composes the dictionary entry beneath
     },
     "beach": {
         "label": "Beach Day",
