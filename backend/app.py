@@ -364,9 +364,18 @@ def generate(file: UploadFile, background: BackgroundTasks,
         raise HTTPException(502, str(e))
     ct = (file.content_type or "").lower()
     ext = ".png" if "png" in ct else (".webp" if "webp" in ct else ".jpg")
-    text = _text_spec(text_layout, text_name, text_dates, text_phonetic, text_body)
-    saved = _save(art, style, email.strip(), 0, original=data, orig_ext=ext, text=text)
-    label = _style_label(style, variant)
+    # Everything past this point is our own processing. An unhandled error here used to surface
+    # as a bare "Internal Server Error" with no clue what threw — log the traceback and return
+    # something a customer can act on, with the exception type so it's diagnosable from outside.
+    try:
+        text = _text_spec(text_layout, text_name, text_dates, text_phonetic, text_body)
+        saved = _save(art, style, email.strip(), 0, original=data, orig_ext=ext, text=text)
+        label = _style_label(style, variant)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(502, "We made your artwork but could not save it (%s). "
+                                 "Please try again." % type(e).__name__)
     # Email the customer their preview once the response is on its way out.
     # Runs after the response, is a no-op until RESEND_API_KEY is set, and can
     # never raise into the request (send_preview_email swallows its own errors).
