@@ -242,7 +242,12 @@
     "#pcai-root{--pc-bg:#ffffff;--pc-ink:#2c2c2c;--pc-mut:#6b6b6b;--pc-line:#e6e2da;--pc-card:#fbfaf8;--pc-acc:#5e1622;--pc-gold:#b08d57;--pc-serif:'Playfair Display',Georgia,serif;background:var(--pc-bg);color:var(--pc-ink);font-family:inherit;width:100%;overflow-x:hidden}" +
     "#pcai-root *{box-sizing:border-box}" +
     "#pcai{max-width:100%;overflow-x:clip;width:94%;max-width:1280px;margin:0 auto;padding:34px 0 6px;text-align:left}" +
-    "#pcai .pc-wrap{display:grid;grid-template-columns:1fr;gap:28px}" +
+    // minmax(0,1fr), not 1fr. Plain 1fr means minmax(AUTO,1fr), and that auto floor refuses to
+    // shrink below the widest child's min-content — the "you may also like" flex row is 1362px
+    // unscrolled, so it blew the column out to 1362px inside a 571px page and everything in it
+    // got clipped on the right. The desktop rule already used minmax(0,...); the base one did not.
+    "#pcai .pc-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:28px}" +
+    "#pcai .pc-media,#pcai .pc-buy{min-width:0}" +
     "@media(min-width:880px){#pcai .pc-wrap{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;align-items:start}#pcai .pc-media{position:sticky;top:20px}}" +
     // top CTA (mainly to jump mobile users straight to the upload)
     // mobile tightening
@@ -315,9 +320,9 @@
     "#pcai .pc-memfields .pc-field{margin-top:0}" +
     "#pcai .pc-digital{display:flex;gap:9px;align-items:flex-start;font-size:13px;margin:14px 0 2px;cursor:pointer;line-height:1.5}" +
     "#pcai .pc-digital>span{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}" +
-    "#pcai .pc-also{margin:34px 0 0}" +
+    "#pcai .pc-also{margin:34px 0 0;min-width:0}" +
     "#pcai .pc-also-h{font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:var(--pc-mut);margin-bottom:12px}" +
-    "#pcai .pc-also-row{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:6px}" +
+    "#pcai .pc-also-row{min-width:0;display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:6px}" +
     "#pcai .pc-also-card{flex:0 0 158px;scroll-snap-align:start;text-decoration:none;color:inherit}" +
     "#pcai .pc-also-card img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:10px;display:block;background:var(--pc-card)}" +
     "#pcai .pc-also-t{font-size:13px;line-height:1.35;margin-top:7px}" +
