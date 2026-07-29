@@ -125,9 +125,15 @@
   var SIZE_BY_OPT = { "24x18 inches": "S", "32x24 inches": "M", "40x30 inches": "L" };
   var FRAME_BY_OPT = { "Unframed": "U", "Antique Gold": "G", "Antique Silver": "R",
                        "Baroque Gold (Wide)": "B" };
+  // The baked-in map belongs to THIS product and nothing else. On any other product page the live
+  // lookup must succeed, or we have no idea what we'd be selling.
+  var FALLBACK_HANDLE = "custom-heritage-framed-pet-portrait-draft";
+  var variantsTrusted = true;
   function loadLiveVariants() {
     var path = location.pathname.replace(/\/+$/, "");
     if (path.indexOf("/products/") === -1 || typeof fetch !== "function") return Promise.resolve();
+    var handle = path.split("/products/")[1].split("/")[0];
+    var ownPage = handle === FALLBACK_HANDLE;
     return fetch(path + ".js", { credentials: "same-origin" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
@@ -141,9 +147,10 @@
           });
           if (s && f) m[s + f] = [v.id, v.price, v.compare_at_price || v.price];
         });
-        if (Object.keys(m).length >= 3) VAR = m;   // only trust a map that actually parsed
+        if (Object.keys(m).length >= 3) { VAR = m; variantsTrusted = true; }
+        else if (!ownPage) variantsTrusted = false;   // wrong shape on someone else's product
       })
-      .catch(function () { /* keep the baked-in map */ });
+      .catch(function () { if (!ownPage) variantsTrusted = false; });
   }
 
   var CDN = "https://cdn.shopify.com/s/files/1/0055/0957/8803/files/";
@@ -740,6 +747,10 @@
     post("/retry", fd).then(function (d) { show(d, genStyle); $("pc-instruction").value = ""; }).catch(function (e) { renderHero(); $("pc-err").textContent = e.message; }).then(stop, stop);
   });
   $("pc-add").addEventListener("click", function () {
+    if (!variantsTrusted) {
+      $("pc-err").textContent = "This page isn't set up for checkout yet — please contact support@petcreationsart.com.";
+      return;
+    }
     var v = curVar(), r = curRes();
     var props = {
       "Style": labelOf(STYLES, sel.style) + (sel.variant ? " — " + labelOf(variantsFor() || [], sel.variant) : ""),
