@@ -63,6 +63,7 @@
     { code: "basketball", label: "Basketball" },
     { code: "football",   label: "Football" }
   ];
+  SPORTS.forEach(function (v) { v.img = API + "/app/examples/sportopt_" + v.code + ".jpg"; });
   var VARIANT_SETS = { sports: SPORTS };
   // `in` = canvas width in inches, used to size the art to scale in the room view
   var SIZES = [
@@ -181,7 +182,7 @@
     "<style>" +
     "#pcai-root{--pc-bg:#f3ecde;--pc-ink:#343434;--pc-mut:#6f6552;--pc-line:#dfd2b8;--pc-card:#ffffff;--pc-acc:#5e1622;--pc-gold:#b08d57;--pc-serif:'Playfair Display',Georgia,serif;background:var(--pc-bg);color:var(--pc-ink);font-family:inherit;width:100%;overflow-x:hidden}" +
     "#pcai-root *{box-sizing:border-box}" +
-    "#pcai{width:94%;max-width:1700px;margin:0 auto;padding:34px 0 6px;text-align:left}" +
+    "#pcai{width:94%;max-width:1280px;margin:0 auto;padding:34px 0 6px;text-align:left}" +
     "#pcai .pc-wrap{display:grid;grid-template-columns:1fr;gap:28px}" +
     "@media(min-width:880px){#pcai .pc-wrap{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;align-items:start}#pcai .pc-media{position:sticky;top:20px}}" +
     // top CTA (mainly to jump mobile users straight to the upload)
@@ -192,7 +193,9 @@
       "#pcai .pc-hero>img,#pcai .pc-framed>.pc-fimg,#pcai .pc-canvas>img,#pcai .pc-wallbg{max-height:420px}" +
       "#pcai .pc-viewtabs button{padding:6px 13px;font-size:12px}" +
       "#pcai .pc-title{font-size:24px}" +
-      "#pcai .pc-styleimg{height:100px}" +
+      "#pcai .pc-varimg{width:100%;height:96px;object-fit:cover;object-position:center 22%;border-radius:8px;display:block;margin-bottom:6px}" +
+    "@media(max-width:640px){#pcai .pc-varimg{height:78px}}" +
+    "#pcai .pc-styleimg{height:100px}" +
       "#pcai .pc-oc{padding:8px 5px}" +
       "#pcai #pc-styles .pc-oc{padding:7px 5px 9px}" +
       "#pcai .pc-oc b{font-size:12.5px}#pcai .pc-oc b.pc-serifname{font-size:13.5px}#pcai .pc-oc small{font-size:10px}" +
@@ -286,6 +289,8 @@
     "#pcai .pc-oc small{display:block;font-size:12px;color:var(--pc-mut);margin-top:2px;min-height:14px}" +
     "#pcai .pc-oc small.pc-up{color:var(--pc-acc);font-weight:600}" +
     "#pcai #pc-styles .pc-oc{padding:7px 7px 10px}" +
+    "#pcai .pc-varimg{width:100%;height:96px;object-fit:cover;object-position:center 22%;border-radius:8px;display:block;margin-bottom:6px}" +
+    "@media(max-width:640px){#pcai .pc-varimg{height:78px}}" +
     "#pcai .pc-styleimg{width:100%;height:126px;object-fit:cover;object-position:center 22%;border-radius:8px;display:block;margin-bottom:7px}" +
     "#pcai .pc-pop{display:block;background:var(--pc-acc);color:#fff;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 0;border-radius:6px;margin:-4px -3px 6px}" +
     "#pcai .pc-frameopts{grid-template-columns:repeat(4,1fr)}" +          // 4 options now (Unframed + 3 frames)
@@ -476,6 +481,7 @@
       lab.innerHTML = "Choose your sport";
       grid.innerHTML = vs.map(function (v) {
         return "<div class='pc-oc" + (sel.variant === v.code ? " sel" : "") + "' data-variant='" + v.code + "'>" +
+          (v.img ? "<img class='pc-varimg' src='" + v.img + "' alt='" + v.label + "'>" : "") +
           "<b class='pc-serifname'>" + v.label + "</b></div>";
       }).join("");
       return;
