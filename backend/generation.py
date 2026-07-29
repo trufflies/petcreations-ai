@@ -12,6 +12,7 @@ The FastAPI layer (app.py) will call these; kept separate so the engine is testa
 import base64
 import json
 import os
+import time
 import urllib.request
 import urllib.error
 
@@ -59,16 +60,36 @@ def _gemini(prompt, image_bytes, mime):
         ]}],
         "generationConfig": {"imageConfig": {"aspectRatio": GEMINI_ASPECT}},
     }).encode()
-    req = urllib.request.Request(
-        GEMINI_URL, data=body,
-        headers={"Content-Type": "application/json", "x-goog-api-key": key})
-    try:
-        with urllib.request.urlopen(req, timeout=120) as r:
-            data = json.loads(r.read())
-    except urllib.error.HTTPError as e:
-        raise GenerationError(f"Gemini HTTP {e.code}: {e.read().decode(errors='replace')[:300]}")
-    except urllib.error.URLError as e:
-        raise GenerationError(f"Gemini network error: {e.reason}")
+    # 429/500/503 from Gemini are transient and common under load — a couple of quick retries
+    # turn most of them into a successful render instead of a dead end for the customer.
+    data, last = None, None
+    for attempt in range(3):
+        req = urllib.request.Request(
+            GEMINI_URL, data=body,
+            headers={"Content-Type": "application/json", "x-goog-api-key": key})
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                data = json.loads(r.read())
+            break
+        except urllib.error.HTTPError as e:
+            last = (e.code, e.read().decode(errors="replace")[:300])
+            if e.code in (429, 500, 502, 503) and attempt < 2:
+                time.sleep(2 * (attempt + 1))
+                continue
+            break
+        except urllib.error.URLError as e:
+            last = (0, str(e.reason))
+            if attempt < 2:
+                time.sleep(2 * (attempt + 1))
+                continue
+            break
+    if data is None:
+        code, detail = last or (0, "unknown")
+        # Customers should never be shown raw upstream JSON. Keep the detail on the server.
+        print("Gemini failure %s: %s" % (code, detail))
+        if code in (429, 500, 502, 503) or code == 0:
+            raise GenerationError("Our art service is busy right now — please try again in a moment.")
+        raise GenerationError("That photo could not be processed — please try a different one.")
     for part in (data.get("candidates") or [{}])[0].get("content", {}).get("parts", []):
         blob = part.get("inlineData") or part.get("inline_data")
         if blob and blob.get("data"):

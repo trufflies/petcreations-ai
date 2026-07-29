@@ -475,7 +475,7 @@
           "<input class='pc-field' id='pc-def-quirk' maxlength='200' placeholder='One thing they do that everyone jokes about'>" +
           "<input class='pc-field' id='pc-def-greet' maxlength='200' placeholder='What are they like when you get home? (optional)'>" +
           "<input class='pc-field' id='pc-def-obsess' maxlength='200' placeholder='Weirdly obsessed with… (optional)'>" +
-          "<button class='pc-ghost' id='pc-def-go' style='width:100%;margin-top:10px'>Write my definition</button>" +
+          "<button class='pc-btn ghost' id='pc-def-go' style='width:100%;margin-top:10px'>Write my definition</button>" +
           "<div id='pc-def-out' style='display:none;margin-top:12px'>" +
             "<input class='pc-field' id='pc-def-phonetic' maxlength='32' placeholder='ol-uh-ver'>" +
             "<textarea class='pc-field' id='pc-def-body' maxlength='220' rows='3' placeholder='Your definition'></textarea>" +
@@ -700,25 +700,14 @@
     box.innerHTML = artIn(f, r.preview + "?t=" + r.bust, "pc-fart") +
       "<div><b>" + esc(sz ? sz.label : "") + "</b><span>" + esc(f.label) + "</span></div>";
     box.setAttribute("data-ready", "1");
-    syncMini();
+    box.classList.add("on");
   }
-  // Show the mini only once the real hero has scrolled away, so they're never both on screen.
-  // This was an IntersectionObserver; it silently never fired on the live page, so it's a plain
-  // scroll check now — same behaviour, and observable from the console.
-  function syncMini() {
-    var box = $("pc-mini"), hero = $("pc-hero");
-    if (!box || !hero) return;
-    var gone = hero.getBoundingClientRect().bottom < 64;
-    box.classList.toggle("on", gone && box.getAttribute("data-ready") === "1");
-  }
-  var miniBound = false;
-  function watchHero() {
-    if (miniBound) return;
-    miniBound = true;
-    window.addEventListener("scroll", syncMini, { passive: true });
-    window.addEventListener("resize", syncMini, { passive: true });
-    syncMini();
-  }
+  // No scroll detection. Earlier versions only revealed this once the hero had scrolled out
+  // of view, via an observer and then a scroll listener; neither worked on a real device and I
+  // had no way to observe why. Showing it whenever a preview exists is simpler, cannot silently
+  // fail, and still puts the artwork directly above the size and frame options — which was the
+  // point. The media query keeps it off desktop, where the media column is already sticky.
+  function watchHero() { }
 
   function renderVersions() {
     var s = curSet(), box = $("pc-versions");
