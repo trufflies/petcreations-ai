@@ -46,9 +46,11 @@ def _gemini(prompt, image_bytes, mime):
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
         raise GenerationError("GEMINI_API_KEY not set")
+    # Normalise first: phones upload HEIC and huge CMYK/alpha files that Gemini rejects outright.
+    image_bytes = _prep_image(image_bytes)
     body = json.dumps({"contents": [{"role": "user", "parts": [
         {"text": prompt},
-        {"inline_data": {"mime_type": mime, "data": base64.b64encode(image_bytes).decode()}},
+        {"inline_data": {"mime_type": "image/png", "data": base64.b64encode(image_bytes).decode()}},
     ]}]}).encode()
     req = urllib.request.Request(
         GEMINI_URL, data=body,
@@ -82,7 +84,7 @@ def _multipart(fields, images, image_field):
     return b"\r\n".join(parts), boundary
 
 
-def _prep_openai_image(image_bytes):
+def _prep_image(image_bytes):
     """gpt-image-1's edit endpoint is strict about mode/size/format. Normalize any upload to a
     clean RGB PNG at a sane size so Heritage accepts whatever the other styles do (big phone
     photos, CMYK, alpha channels, odd formats)."""
@@ -106,7 +108,7 @@ def _openai(prompt, image_bytes, mime, use_reference, size, quality="high", extr
     key = os.environ.get("OPENAI_API_KEY")
     if not key:
         raise GenerationError("OPENAI_API_KEY not set")
-    images = [("pet.png", _prep_openai_image(image_bytes), "image/png")]
+    images = [("pet.png", _prep_image(image_bytes), "image/png")]
     for img in (extra_images or []):
         images.append(img)
     if use_reference and os.path.isfile(HERITAGE_REF):
@@ -170,7 +172,7 @@ def mockup(prompt, image_bytes, mime="image/jpeg", size="1536x1024", frame_ref=N
     An optional frame_ref image nudges gpt-image-1 to match a specific frame profile/finish."""
     extra, full = [], prompt
     if frame_ref:
-        extra.append(("frame_ref.png", _prep_openai_image(frame_ref), "image/png"))
+        extra.append(("frame_ref.png", _prep_image(frame_ref), "image/png"))
         full += " Match the exact frame profile and finish shown in the attached frame reference image."
     return _openai(full, image_bytes, mime, use_reference=False, size=size,
                    quality=quality, extra_images=extra)

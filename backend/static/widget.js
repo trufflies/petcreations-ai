@@ -716,7 +716,11 @@
 
   // ---- Events -------------------------------------------------------------------------
   $("pc-styles").addEventListener("click", function (e) {
-    var s = e.target.closest("[data-style]"), v = e.target.closest("[data-variant]");
+    // Scope to cards INSIDE this grid. On a locked page #pcai-root itself carries data-style,
+    // so an unscoped closest("[data-style]") matches the root and swallows every variant click —
+    // which silently pinned the sport picker to its default.
+    var v = e.target.closest("#pc-styles [data-variant]");
+    var s = v ? null : e.target.closest("#pc-styles [data-style]");
     if (s) sel.style = s.getAttribute("data-style");
     else if (v) sel.variant = v.getAttribute("data-variant");
     else return;
