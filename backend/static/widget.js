@@ -59,10 +59,7 @@
       ex: ["watercolor_1.jpg", "watercolor_2.jpg"] },
     { code: "definition", label: "Definition Print", sub: "Dictionary art", soloOnly: true,
       definition: true, ex: ["definition_1.jpg", "definition_2.jpg"],
-      vlabel: "Choose your backdrop", variants: [
-        { code: "sage", label: "Sage" }, { code: "blush", label: "Blush" },
-        { code: "sky", label: "Sky" }, { code: "cream", label: "Cream" },
-        { code: "clay", label: "Clay" }, { code: "charcoal", label: "Charcoal" }] },
+      vlabel: "Choose your backdrop", variants: "backdrops" },
     // soloOnly: lives on its own product page only. Its sport picker needs the room a dedicated
     // page gives it, and offering it in the combined grid would silently default people to tennis.
     { code: "sport",      label: "Game Day",    sub: "Impasto oil",  variants: "sports",   soloOnly: true,
@@ -102,7 +99,16 @@
     { code: "jewel",    label: "Jewel",    sw: ["#0e8f5c", "#1a49c4", "#7a2bb8"] },
     { code: "flame",    label: "Flame",    sw: ["#e01f1f", "#ff7a12", "#f2c14a"] }
   ];
-  var VARIANT_SETS = { sports: SPORTS, palettes: PALETTES };
+  // Backdrop colours for the Definition Print, shown as swatches like the palettes.
+  var BACKDROPS = [
+    { code: "sage",     label: "Sage",     sw: ["#a9b39a"] },
+    { code: "blush",    label: "Blush",    sw: ["#e9c9c2"] },
+    { code: "sky",      label: "Sky",      sw: ["#b9cfe0"] },
+    { code: "cream",    label: "Cream",    sw: ["#efe6d3"] },
+    { code: "clay",     label: "Clay",     sw: ["#c08a6a"] },
+    { code: "charcoal", label: "Charcoal", sw: ["#5a5a5c"] }
+  ];
+  var VARIANT_SETS = { sports: SPORTS, palettes: PALETTES, backdrops: BACKDROPS };
   // `in` = canvas width in inches, used to size the art to scale in the room view
   var SIZES = [
     { code: "S", label: "24 × 18\"", in: 24 },
@@ -322,17 +328,19 @@
     // scrolling back up past the style grid, email and upload to see what it did. This pins a small
     // live copy to the top of the buy column while those options are on screen. Desktop already has
     // a sticky media column, so it stays hidden there.
-    "#pcai .pc-mini{position:sticky;top:6px;z-index:6;display:none;align-items:center;gap:11px;"
-      + "padding:8px 11px;margin:0 0 14px;background:rgba(255,255,255,.93);"
-      + "-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);"
-      + "border:1px solid var(--pc-line);border-radius:13px;box-shadow:0 2px 10px rgba(0,0,0,.05)}" +
-    "#pcai .pc-mini.on{display:flex}" +
-    "#pcai .pc-mini .pc-framed,#pcai .pc-mini .pc-canvas{width:66px;height:50px;flex:0 0 auto}" +
-    "#pcai .pc-mini .pc-canvas>img{width:100%;height:100%;object-fit:cover}" +
-    "#pcai .pc-mini .pc-canvas:after{height:2px}" +
-    "#pcai .pc-mini b{display:block;font-size:12.5px;line-height:1.3}" +
-    "#pcai .pc-mini span{display:block;font-size:11.5px;color:var(--pc-mut);margin-top:2px}" +
-    "@media(min-width:880px){#pcai .pc-mini.on{display:none}}" +
+    // A FIXED floating card, NOT sticky. Sticky failed on iOS Safari — WebKit drops sticky for
+    // descendants of an overflow:clip ancestor (#pcai has it), which is why it worked on desktop
+    // and never on a phone. The node is also reparented to <body> on init so nothing can clip it.
+    // Selectors are unscoped (not under #pcai) and use literal colours, since it lives at body level.
+    "#pc-mini{position:fixed;left:10px;right:10px;bottom:10px;z-index:2147483000;display:none;"
+      + "align-items:center;gap:11px;padding:8px 11px;background:#fff;border:1px solid #e6e2da;"
+      + "border-radius:13px;box-shadow:0 6px 22px rgba(0,0,0,.16);font-family:inherit}" +
+    "#pc-mini.on{display:flex}" +
+    "#pc-mini>img{width:60px;height:46px;object-fit:cover;border-radius:8px;flex:0 0 auto}" +
+    "#pc-mini .m{min-width:0}" +
+    "#pc-mini b{display:block;font-size:12.5px;line-height:1.3;color:#2c2c2c}" +
+    "#pc-mini span{display:block;font-size:11.5px;color:#6b6b6b;margin-top:2px}" +
+    "@media(min-width:880px){#pc-mini.on{display:none}}" +
     "#pcai .pc-digital{display:flex;gap:9px;align-items:flex-start;font-size:13px;margin:14px 0 2px;cursor:pointer;line-height:1.5}" +
     "#pcai .pc-digital>span{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}" +
     "#pcai .pc-also{margin:34px 0 0;min-width:0}" +
@@ -597,7 +605,7 @@
     if (list.length === 1 && !vs) { box.style.display = "none"; return; }
     box.style.display = "block";
     if (list.length === 1 && vs) {
-      lab.innerHTML = "Choose your sport";
+      lab.innerHTML = (styleCfg() && styleCfg().vlabel) || "Choose your sport";
       grid.innerHTML = vs.map(function (v) {
         return "<div class='pc-oc" + (sel.variant === v.code ? " sel" : "") + "' data-variant='" + v.code + "'>" +
           (v.img ? "<img class='pc-varimg' src='" + v.img + "' alt='" + v.label + "'>" : "") +
@@ -693,21 +701,15 @@
   }
   // Only worth showing once there's something to compare against.
   function renderMini() {
-    var box = $("pc-mini"), r = curRes();
-    if (!box) return;              // markup absent: skip, don't take the widget down with it
-    if (!r) { box.setAttribute("data-ready", "0"); box.classList.remove("on"); return; }
+    var box = $("pc-mini");
+    if (!box) return;
+    var r = curRes();
+    if (!r) { box.classList.remove("on"); box.innerHTML = ""; return; }
     var f = frameByCode(sel.frame), sz = SIZES.filter(function (x) { return x.code === sel.size; })[0];
-    box.innerHTML = artIn(f, r.preview + "?t=" + r.bust, "pc-fart") +
-      "<div><b>" + esc(sz ? sz.label : "") + "</b><span>" + esc(f.label) + "</span></div>";
-    box.setAttribute("data-ready", "1");
+    box.innerHTML = "<img src='" + r.preview + "?t=" + r.bust + "' alt=''>" +
+      "<div class='m'><b>" + esc(sz ? sz.label : "") + "</b><span>" + esc(f.label) + "</span></div>";
     box.classList.add("on");
   }
-  // No scroll detection. Earlier versions only revealed this once the hero had scrolled out
-  // of view, via an observer and then a scroll listener; neither worked on a real device and I
-  // had no way to observe why. Showing it whenever a preview exists is simpler, cannot silently
-  // fail, and still puts the artwork directly above the size and frame options — which was the
-  // point. The media query keeps it off desktop, where the media column is already sticky.
-  function watchHero() { }
 
   function renderVersions() {
     var s = curSet(), box = $("pc-versions");
@@ -724,7 +726,7 @@
     renderVersions(); renderFrames(); renderHero();
   }
   function refreshPhase() {
-    renderVersions(); renderViewTabs(); renderMini(); watchHero();
+    renderVersions(); renderViewTabs(); renderMini();
     var cfg = styleCfg();
     $("pc-memopt").style.display = (cfg && cfg.memorial) ? "block" : "none";
     $("pc-defopt").style.display = (cfg && cfg.definition) ? "block" : "none";
@@ -972,6 +974,9 @@
   }
   unclip();
   window.addEventListener("resize", unclip);
+  // Move the fixed mini out to <body>: with no widget ancestors, nothing can clip it
+  // and its containing block is unambiguously the viewport.
+  if ($("pc-mini")) document.body.appendChild($("pc-mini"));
   renderAlsoLike();   // independent of the generator — safe to fire once, immediately
 
   // Render immediately from the baked-in map, then silently re-render once the page's real
