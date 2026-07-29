@@ -674,7 +674,10 @@
     renderFrames(); renderHero();   // renderFrames: swap the unframed swatch to their art
     $("pc-retry").disabled = false; $("pc-instruction").disabled = false;
     refreshPhase();
-    $("pc-post").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    // Land on the artwork, not the buy panel. #pc-post sits below the size and frame pickers,
+    // so scrolling to it dumped people at the bottom of the page having never seen the preview
+    // they just waited a minute for.
+    $("pc-hero").scrollIntoView({ behavior: "smooth", block: "center" });
   }
   function doGenerate(style) {
     if (!file || !style) return;
