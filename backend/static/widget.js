@@ -185,12 +185,6 @@
     "#pcai .pc-wrap{display:grid;grid-template-columns:1fr;gap:28px}" +
     "@media(min-width:880px){#pcai .pc-wrap{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;align-items:start}#pcai .pc-media{position:sticky;top:20px}}" +
     // top CTA (mainly to jump mobile users straight to the upload)
-    "#pcai .pc-topcta{background:var(--pc-card);border:1px solid var(--pc-line);border-radius:14px;padding:15px 20px;margin-bottom:26px}" +
-    "#pcai .pc-topcta-in{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}" +
-    "#pcai .pc-topcta-txt b{display:block;font-family:var(--pc-serif);font-size:19px;color:var(--pc-ink);line-height:1.15}" +
-    "#pcai .pc-topcta-txt span{font-size:12.5px;color:var(--pc-mut)}" +
-    "#pcai .pc-topcta .pc-btn{white-space:nowrap;flex:none}" +
-    "@media(max-width:640px){#pcai .pc-topcta-in{flex-direction:column;align-items:stretch;text-align:center}#pcai .pc-topcta .pc-btn{width:100%;margin-top:2px}}" +
     // mobile tightening
     "@media(max-width:640px){" +
       "#pcai{width:92%;padding-top:22px}" +
@@ -198,12 +192,10 @@
       "#pcai .pc-hero>img,#pcai .pc-framed>.pc-fimg,#pcai .pc-canvas>img,#pcai .pc-wallbg{max-height:420px}" +
       "#pcai .pc-viewtabs button{padding:6px 13px;font-size:12px}" +
       "#pcai .pc-title{font-size:24px}" +
-      "#pcai .pc-topcta-txt b{font-size:17px}" +
       "#pcai .pc-styleimg{height:100px}" +
       "#pcai .pc-oc{padding:8px 5px}" +
       "#pcai #pc-styles .pc-oc{padding:7px 5px 9px}" +
       "#pcai .pc-oc b{font-size:12.5px}#pcai .pc-oc b.pc-serifname{font-size:13.5px}#pcai .pc-oc small{font-size:10px}" +
-      "#pcai .pc-badges{gap:6px}#pcai .pc-badge{padding:9px 3px}#pcai .pc-badge b{font-size:10.5px}#pcai .pc-badge small{font-size:9px}" +
       "#pcai .pc-frameopts .pc-oc img{height:44px}#pcai .pc-swatch{height:44px}" +
       "#pcai .pc-btn{padding:14px 18px;font-size:14.5px}" +
       "#pcai-root .pc-info svg{max-width:100%;height:auto}" +
@@ -260,13 +252,10 @@
     "#pcai .pc-pricerow ins{font-size:26px;font-weight:700;text-decoration:none;font-family:var(--pc-serif)}" +
     "#pcai .pc-pricerow del{color:var(--pc-mut);font-size:16px}" +
     "#pcai .pc-save{background:var(--pc-gold);color:#181311;font-size:11px;font-weight:700;letter-spacing:.03em;padding:3px 9px;border-radius:100px}" +
-    "#pcai .pc-gift{font-size:12.5px;color:var(--pc-acc);background:rgba(94,22,34,.06);border-radius:8px;padding:8px 11px;margin:12px 0 0}" +
-    "#pcai .pc-badges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 4px}" +
-    "#pcai .pc-badge{border:1px solid var(--pc-line);border-radius:12px;padding:10px 6px;text-align:center;background:var(--pc-card)}" +
-    "#pcai .pc-badge svg{width:23px;height:23px;display:block;margin:0 auto 4px;stroke:var(--pc-acc);fill:none}" +
-    "#pcai .pc-badge b{display:block;font-size:12px;margin-top:4px}" +
-    "#pcai .pc-badge small{font-size:10px;color:var(--pc-mut)}" +
-    "#pcai .pc-opt{margin:18px 0 0}" +
+    "#pcai .pc-trust{display:flex;flex-wrap:wrap;gap:6px 18px;margin:14px 0 2px;font-size:12.5px;color:var(--pc-mut)}" +
+    "#pcai .pc-trust span{position:relative;padding-left:15px}" +
+    "#pcai .pc-trust span:before{content:'';position:absolute;left:0;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;border:1.5px solid var(--pc-gold)}" +
+    "#pcai .pc-opt{margin:22px 0 0}" +
     "#pcai .pc-label{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--pc-mut);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}" +
     "#pcai .pc-guidelink{font-size:11px;color:var(--pc-acc);cursor:pointer;text-transform:none;letter-spacing:0;text-decoration:underline}" +
     "#pcai .pc-optional{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--pc-mut);border:1px solid var(--pc-line);border-radius:100px;padding:2px 9px;background:var(--pc-card)}" +
@@ -341,10 +330,6 @@
     "</style>" +
 
     "<div id='pcai'>" +
-      "<div class='pc-topcta'><div class='pc-topcta-in'>" +
-        "<div class='pc-topcta-txt'><b>See your pet reimagined as a masterpiece</b><span>Upload a photo — your free preview appears in ~60 seconds.</span></div>" +
-        "<button class='pc-btn' id='pc-start'>Get my free preview →</button>" +
-      "</div></div>" +
       "<div class='pc-wrap'>" +
       // ---- LEFT: media ----
       "<div class='pc-media'>" +
@@ -354,7 +339,7 @@
         "</div>" +
         "<div class='pc-hero' id='pc-hero'></div>" +
         "<div class='pc-thumbs' id='pc-thumbs'></div>" +
-        "<div class='pc-heronote' id='pc-heronote'>✨ Upload your pet’s photo — your live preview appears here in ~60 seconds.</div>" +
+        "<div class='pc-heronote' id='pc-heronote'>Upload your pet’s photo — your live preview appears here in ~60 seconds.</div>" +
       "</div>" +
       // ---- RIGHT: buy box ----
       "<div class='pc-buy'>" +
@@ -362,26 +347,23 @@
         "<h1 class='pc-title'>" + pageTitle + "</h1>" +
         "<div class='pc-reviews'><span class='pc-stars'>★★★★★</span> <b>4.9</b>/5 &middot; 14,668+ happy customers</div>" +
         "<div class='pc-pricerow' id='pc-pricerow'></div>" +
-        "<div class='pc-gift'>🎁 Free shipping — your masterpiece is delivered in 4–7 business days.</div>" +
-        "<div class='pc-badges'>" +
-          "<div class='pc-badge'><svg viewBox='0 0 24 24' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M3 7h10v8H3z'/><path d='M13 10h4l3 3v2h-7z'/><circle cx='7' cy='17.5' r='1.4'/><circle cx='17' cy='17.5' r='1.4'/></svg><b>Fast &amp; Free</b><small>shipping</small></div>" +
-          "<div class='pc-badge'><svg viewBox='0 0 24 24' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='13.5' r='6.5'/><path d='M12 13.5V10'/><path d='M10 3.5h4'/><path d='M12 3.5v2'/></svg><b>60-Second</b><small>instant preview</small></div>" +
-          "<div class='pc-badge'><svg viewBox='0 0 24 24' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3l7 3v5c0 4.4-3 7.4-7 8.8-4-1.4-7-4.4-7-8.8V6z'/><path d='M9 12l2 2 4-4'/></svg><b>30-Day</b><small>happiness guarantee</small></div>" +
-        "</div>" +
+        "<div class='pc-trust'>" +
+          "<span>Free preview in 60 seconds</span><span>Free shipping, 4&ndash;7 days</span>" +
+          "<span>30-day happiness guarantee</span></div>" +
 
         "<div class='pc-opt'><div class='pc-label'>Your pet’s photo</div>" +
           "<label class='pc-drop' id='pc-drop'><input type='file' id='pc-file' accept='image/*'>" +
-          "<div id='pc-dropin'><div class='pc-dropicon'>🐾</div><div class='pc-tiny'>Click to upload a clear, well-lit photo</div></div></label>" +
+          "<div id='pc-dropin'><div class='pc-dropicon'>+</div><div class='pc-tiny'>Click to upload a clear, well-lit photo</div></div></label>" +
           "<input class='pc-field' id='pc-email' type='email' placeholder='Your email (so we can send your preview)'>" +
         "</div>" +
         "<div class='pc-opt' id='pc-styleopt'><div class='pc-label' id='pc-stylelabel'>Choose your style</div><div class='pc-gridN' id='pc-styles'></div></div>" +
         // Size and frame stay hidden until there's a portrait to apply them to — nobody should be
         // asked to pick a canvas size before they've seen anything.
-        "<div class='pc-opt' id='pc-sizeopt' style='display:none'><div class='pc-label'>Choose your size <span class='pc-guidelink' id='pc-guidelink'>📐 Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
+        "<div class='pc-opt' id='pc-sizeopt' style='display:none'><div class='pc-label'>Choose your size <span class='pc-guidelink' id='pc-guidelink'>Size guide</span></div><div class='pc-grid3' id='pc-sizes'></div></div>" +
         "<div class='pc-opt' id='pc-frameopt' style='display:none'><div class='pc-label'>Add a frame <span class='pc-optional'>optional</span></div><div class='pc-grid3 pc-frameopts' id='pc-frames'></div></div>" +
 
         "<div id='pc-cta'>" +
-          "<button class='pc-btn pc-big' id='pc-go' disabled>Create my portrait ✨</button>" +
+          "<button class='pc-btn pc-big' id='pc-go' disabled>Create my portrait</button>" +
           "<div class='pc-tiny pc-center' id='pc-gohint' style='margin-top:8px'>Add a photo, your email &amp; a style to preview</div>" +
         "</div>" +
 
@@ -609,10 +591,10 @@
     $("pc-thumbs").style.display = fresh ? "flex" : "none";
     $("pc-post").style.display = fresh ? "block" : "none";
     $("pc-cta").style.display = fresh ? "none" : "block";
-    $("pc-go").textContent = "Create my portrait ✨";
+    $("pc-go").textContent = "Create my portrait";
     $("pc-heronote").textContent = fresh
       ? "Preview is watermarked — your final artwork is clean, full-resolution & hand-checked before printing."
-      : "✨ Upload your pet’s photo — your live preview appears here in ~60 seconds.";
+      : "Upload your pet’s photo — your live preview appears here in ~60 seconds.";
     updateGo();
   }
   function selectFrame(code) { sel.frame = code; renderOptions(); renderHero(); renderThumbs(); }
@@ -684,11 +666,6 @@
     else if (b.getAttribute("data-ex")) { heroPick = b.getAttribute("data-ex"); renderHero(); renderThumbs(); }
   });
   $("pc-guidelink").addEventListener("click", function () { var d = $("pc-guide"); d.open = true; d.scrollIntoView({ behavior: "smooth", block: "center" }); });
-  $("pc-start").addEventListener("click", function () {
-    var d = $("pc-drop"); if (!d) return;
-    d.scrollIntoView({ behavior: "smooth", block: "center" });
-    d.style.borderColor = "var(--pc-acc)"; setTimeout(function () { d.style.borderColor = ""; }, 1400);
-  });
   $("pc-file").addEventListener("change", function (e) {
     file = e.target.files[0]; if (!file) return;
     $("pc-dropin").innerHTML = "<img src='" + URL.createObjectURL(file) + "'><div class='pc-tiny'>" + file.name + " &middot; click to change</div>";
