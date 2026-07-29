@@ -336,7 +336,13 @@
       + "align-items:center;gap:11px;padding:8px 11px;background:#fff;border:1px solid #e6e2da;"
       + "border-radius:13px;box-shadow:0 6px 22px rgba(0,0,0,.16);font-family:inherit}" +
     "#pc-mini.on{display:flex}" +
-    "#pc-mini>img{width:60px;height:46px;object-fit:cover;border-radius:8px;flex:0 0 auto}" +
+    // Show the art INSIDE the selected frame, same as the desktop hero, so changing the frame
+    // updates the picture and not just the label. Mirrors #pcai's framed/canvas rules but
+    // scoped to #pc-mini since this lives at <body> level.
+    "#pc-mini .pc-framed,#pc-mini .pc-canvas{position:relative;display:inline-block;line-height:0;flex:0 0 auto}" +
+    "#pc-mini .pc-framed>.pc-fimg{display:block;height:52px;width:auto}" +
+    "#pc-mini .pc-framed>.pc-fart{position:absolute;object-fit:cover;object-position:center 22%}" +
+    "#pc-mini .pc-canvas>img{display:block;height:52px;width:auto;object-fit:cover;border-radius:4px}" +
     "#pc-mini .m{min-width:0}" +
     "#pc-mini b{display:block;font-size:12.5px;line-height:1.3;color:#2c2c2c}" +
     "#pc-mini span{display:block;font-size:11.5px;color:#6b6b6b;margin-top:2px}" +
@@ -706,7 +712,7 @@
     var r = curRes();
     if (!r) { box.classList.remove("on"); box.innerHTML = ""; return; }
     var f = frameByCode(sel.frame), sz = SIZES.filter(function (x) { return x.code === sel.size; })[0];
-    box.innerHTML = "<img src='" + r.preview + "?t=" + r.bust + "' alt=''>" +
+    box.innerHTML = artIn(f, r.preview + "?t=" + r.bust, "pc-fart") +
       "<div class='m'><b>" + esc(sz ? sz.label : "") + "</b><span>" + esc(f.label) + "</span></div>";
     box.classList.add("on");
   }
