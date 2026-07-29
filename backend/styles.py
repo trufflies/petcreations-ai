@@ -174,6 +174,43 @@ STYLES = {
         "variants": SPORT_SCENES,
         "default_variant": "tennis",
     },
+    "sitting": {
+        "label": "Sitting Pretty",
+        "provider": "gemini",
+        "prompt": _nano(
+            "Render as a LOOSE, CONFIDENT OIL PAINTING with generous visible brushwork — thick "
+            "buttery strokes that stay soft and painterly rather than sharp, with the pet's face "
+            "painted carefully and accurately while the surroundings dissolve into broad expressive "
+            "marks. Real oil paint on canvas: NOT photorealistic, NOT a smooth digital render, NOT a "
+            "cartoon, no outlines. "
+            "Seat the pet upright and alert on a small round UPHOLSTERED STOOL with a pale blush "
+            "cushion and slim wooden legs, filling the middle of the frame. Behind them, a decorative "
+            "PATTERNED WALLPAPER of antique damask — soft repeating motifs in muted sage green, dusty "
+            "gold and warm grey, suggested with quick dabs rather than drawn precisely, so it reads as "
+            "pattern without competing with the pet. "
+            "Soft even studio light, a calm muted palette of sage, antique gold, cream and warm grey. "
+            "Completely REPLACE the photo's background. Fill the image edge to edge — no border, no "
+            "frame, no vignette."
+        ),
+    },
+    "cartoon": {
+        "label": "Cartoon",
+        "provider": "gemini",
+        "prompt": _nano(
+            "Render as a friendly modern ANIMATED-FILM CHARACTER illustration: smooth clean shading, "
+            "soft rounded forms, warm rim light, and large expressive glossy eyes with bright catch- "
+            "lights. Cheerful, huggable and full of personality, with a big happy open-mouthed smile. "
+            "Keep the breed, coat colours and markings exactly right so the pet is still recognisable "
+            "as themselves, just stylised. "
+            "Place them in a bright storybook outdoor scene: rolling green hills, simple rounded "
+            "shrubs, scattered little flowers and a soft rainbow arcing through a clear blue sky with "
+            "a few fluffy clouds. "
+            "Saturated, cheerful colours; clean and polished, with soft gradients rather than visible "
+            "brushstrokes. No harsh black outlines, no sketchy linework, no text. "
+            "Completely REPLACE the photo's background. Fill the image edge to edge — no border, no "
+            "frame, no vignette."
+        ),
+    },
     "beach": {
         "label": "Beach Day",
         "provider": "gemini",

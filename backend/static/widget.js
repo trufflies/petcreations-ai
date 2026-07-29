@@ -53,6 +53,10 @@
     // page gives it, and offering it in the combined grid would silently default people to tennis.
     { code: "sport",      label: "Game Day",    sub: "Impasto oil",  variants: "sports",   soloOnly: true,
       ex: ["sport_tennis.jpg", "sport_soccer.jpg", "sport_basketball.jpg", "sport_pickleball.jpg"] },
+    { code: "sitting",    label: "Sitting Pretty", sub: "Painterly oil", soloOnly: true,
+      ex: ["sitting_1.jpg", "sitting_2.jpg"] },
+    { code: "cartoon",    label: "Cartoon",     sub: "Bright & playful", soloOnly: true,
+      ex: ["cartoon_1.jpg", "cartoon_2.jpg"] },
     { code: "beach",      label: "Beach Day",   sub: "Coastal impasto", soloOnly: true,
       ex: ["beach_1.jpg", "beach_2.jpg"] },
     { code: "wildflower", label: "Wildflower",  sub: "Vintage meadow",  soloOnly: true,
