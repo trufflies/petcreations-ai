@@ -34,15 +34,19 @@ _HERITAGE = (
     "Seat the pet naturally in an opulent classical setting: an ornate carved antique "
     "settee or grand armchair with rich damask upholstery, a draped burgundy velvet, a side table "
     "with antique leather-bound books, and an ornate urn of roses, with a soft atmospheric landscape "
-    "behind. Warm aged-varnish palette, deep chiaroscuro lighting, visible oil brushwork; dignified, "
-    "sophisticated and timeless. Preserve the pet's exact breed, coat colours, markings and expression "
+    "behind. Warm aged-varnish palette and visible oil brushwork; dignified, sophisticated and "
+    "timeless. LIGHTING: the pet must be clearly and warmly lit — a soft directional key light on "
+    "its head and chest, with gently modelled shadows. Keep the midtones LIFTED and luminous so the "
+    "coat, face and eyes read brightly and every marking stays legible. The setting behind may fall "
+    "away into deeper tone, but the pet itself must never be dark, murky, muddy or lost in shadow. Preserve the pet's exact breed, coat colours, markings and expression "
     "so it is unmistakably the same pet; keep only its own natural collar and put no clothing on it. "
     "CRITICAL: the painting must be FULL BLEED and fill the entire image right to all four edges. Do NOT "
     "paint, draw, or include ANY picture frame, gilt frame, gold frame, ornate border, mat, canvas edge, "
     "or moulding around the artwork — output only the painting itself with no frame or border of any kind "
     "(the physical frame is added separately afterward). "
     "The SECOND image is ONLY an artistic style-and-setting reference: match its old-master painterly "
-    "quality, warm palette and antique staging, but do NOT depict or include the animal from that "
+    "quality, its warm and clearly-lit palette, and its antique staging, but do NOT depict or "
+    "include the animal from that "
     "reference image."
 )
 
@@ -174,6 +178,7 @@ STYLES = {
         "provider": "openai",
         "prompt": _HERITAGE,
         "use_reference": True,
+        "lift": 0.82,        # see _tone_lift — the model runs dark here and prompting will not fix it
         "size": "1536x1024",
     },
     "watercolor": {

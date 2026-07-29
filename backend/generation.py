@@ -138,6 +138,27 @@ def _openai(prompt, image_bytes, mime, use_reference, size, quality="high", extr
     return base64.b64decode(data["data"][0]["b64_json"])
 
 
+def _tone_lift(image_bytes, gamma):
+    """Raise midtones without clipping highlights.
+
+    gpt-image-1 has a strong dark old-master prior for Heritage and prompt wording barely moves
+    it — an explicit "never dark or murky" instruction changed mean luminance by less than the
+    variance between two runs. A tone curve is deterministic, so the correction lives here
+    rather than in the prompt. 0.82 lifts the subject clear of the shadows while keeping the
+    aged-varnish depth; below ~0.75 the background starts to look hazy.
+    """
+    from io import BytesIO
+    try:
+        from PIL import Image
+        im = Image.open(BytesIO(image_bytes)).convert("RGB")
+        lut = [min(255, int(round(255.0 * ((i / 255.0) ** gamma)))) for i in range(256)]
+        out = BytesIO()
+        im.point(lut * 3).save(out, format="PNG")
+        return out.getvalue()
+    except Exception:
+        return image_bytes          # a failed curve must never cost the render
+
+
 # ---------------------------------------------------------------- Public API
 def style_prompt(style, variant=None):
     """Prompt for a style, with the chosen variant's scene filled in if the style has variants."""
@@ -157,8 +178,10 @@ def generate(style, image_bytes, mime="image/jpeg", variant=None):
     cfg = STYLES[style]
     prompt = style_prompt(style, variant)
     if cfg["provider"] == "gemini":
-        return _gemini(prompt, image_bytes, mime)
-    return _openai(prompt, image_bytes, mime, cfg.get("use_reference", False), cfg.get("size"))
+        art = _gemini(prompt, image_bytes, mime)
+    else:
+        art = _openai(prompt, image_bytes, mime, cfg.get("use_reference", False), cfg.get("size"))
+    return _tone_lift(art, cfg["lift"]) if cfg.get("lift") else art
 
 
 def frame(image_bytes, frame_key, mime="image/png"):
@@ -194,5 +217,7 @@ def recolor(style, image_bytes, instruction, mime="image/png"):
     )
     if cfg.get("provider") == "openai":
         # recolors don't need full fidelity — medium quality cuts Heritage retry cost ~4x
-        return _openai(edit, image_bytes, mime, use_reference=False, size=cfg.get("size"), quality="medium")
-    return _gemini(edit, image_bytes, mime)
+        art = _openai(edit, image_bytes, mime, use_reference=False, size=cfg.get("size"), quality="medium")
+    else:
+        art = _gemini(edit, image_bytes, mime)
+    return _tone_lift(art, cfg["lift"]) if cfg.get("lift") else art
