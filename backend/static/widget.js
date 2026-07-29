@@ -443,6 +443,7 @@
       "</div>" +
       // ---- RIGHT: buy box ----
       "<div class='pc-buy'>" +
+        "<div class='pc-mini' id='pc-mini'></div>" +
         "<div class='pc-eyebrow'>" + pageEyebrow + "</div>" +
         "<h1 class='pc-title'>" + pageTitle + "</h1>" +
         "<div class='pc-reviews'><span class='pc-stars'>★★★★★</span> <b>4.9</b>/5 &middot; 14,668+ happy customers</div>" +
@@ -693,6 +694,7 @@
   // Only worth showing once there's something to compare against.
   function renderMini() {
     var box = $("pc-mini"), r = curRes();
+    if (!box) return;              // markup absent: skip, don't take the widget down with it
     if (!r) { box.setAttribute("data-ready", "0"); box.classList.remove("on"); return; }
     var f = frameByCode(sel.frame), sz = SIZES.filter(function (x) { return x.code === sel.size; })[0];
     box.innerHTML = artIn(f, r.preview + "?t=" + r.bust, "pc-fart") +
@@ -703,8 +705,10 @@
   var heroWatch = null;
   function watchHero() {
     if (heroWatch || !window.IntersectionObserver) return;
+    if (!$("pc-mini") || !$("pc-hero")) return;
     heroWatch = new IntersectionObserver(function (es) {
       var box = $("pc-mini");
+      if (!box) return;
       box.classList.toggle("on", !es[0].isIntersecting && box.getAttribute("data-ready") === "1");
     }, { threshold: 0.12 });
     heroWatch.observe($("pc-hero"));
