@@ -239,7 +239,7 @@
   // ---- Markup -------------------------------------------------------------------------
   root.innerHTML = "" +
     "<style>" +
-    "#pcai-root{--pc-bg:#ffffff;--pc-ink:#2c2c2c;--pc-mut:#6b6b6b;--pc-line:#e6e2da;--pc-card:#fbfaf8;--pc-acc:#5e1622;--pc-gold:#b08d57;--pc-serif:'Playfair Display',Georgia,serif;background:var(--pc-bg);color:var(--pc-ink);font-family:inherit;width:100%;overflow-x:hidden}" +
+    "#pcai-root{--pc-bg:#ffffff;--pc-ink:#2c2c2c;--pc-mut:#6b6b6b;--pc-line:#e6e2da;--pc-card:#fbfaf8;--pc-acc:#5e1622;--pc-gold:#b08d57;--pc-serif:'Playfair Display',Georgia,serif;background:var(--pc-bg);color:var(--pc-ink);font-family:inherit;width:100%;overflow-x:clip}" +
     "#pcai-root *{box-sizing:border-box}" +
     "#pcai{max-width:100%;overflow-x:clip;width:94%;max-width:1280px;margin:0 auto;padding:34px 0 6px;text-align:left}" +
     // minmax(0,1fr), not 1fr. Plain 1fr means minmax(AUTO,1fr), and that auto floor refuses to
