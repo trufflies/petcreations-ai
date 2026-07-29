@@ -48,7 +48,10 @@
     { code: "monet",    label: "Monet",        sub: "Impressionist" },
     { code: "oil",      label: "Oil Painting", sub: "Museum oil" },
     { code: "heritage", label: "Heritage",     sub: "Regal heirloom" },
-    { code: "watercolor", label: "Watercolor", sub: "Soft & delicate" },
+    // soloOnly: Watercolor has its own product page (it carries the memorial text option),
+    // so the combined page offers Monet / Oil / Heritage only.
+    { code: "watercolor", label: "Watercolor", sub: "Soft & delicate", soloOnly: true,
+      ex: ["watercolor.jpg"] },
     // soloOnly: lives on its own product page only. Its sport picker needs the room a dedicated
     // page gives it, and offering it in the combined grid would silently default people to tennis.
     { code: "sport",      label: "Game Day",    sub: "Impasto oil",  variants: "sports",   soloOnly: true,
