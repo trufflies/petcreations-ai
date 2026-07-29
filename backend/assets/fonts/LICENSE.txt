@@ -1,0 +1,4 @@
+Playfair Display and Lato are licensed under the SIL Open Font License v1.1,
+which permits bundling and redistribution with this application.
+  Playfair Display — https://github.com/google/fonts/tree/main/ofl/playfairdisplay
+  Lato            — https://github.com/google/fonts/tree/main/ofl/lato
