@@ -45,13 +45,13 @@
   var VAR = {"SU":[48277732983002,7999,9999],"SG":[48111346254042,15999,19999],"SR":[48111363915994,15999,19999],"SB":[48111363948762,20999,26299],"MU":[48277733015770,10999,13799],"MG":[48111346286810,19999,24999],"MR":[48111363981530,19999,24999],"MB":[48111364014298,25999,32499],"LU":[48277733048538,16999,21299],"LG":[48111346319578,26999,33799],"LR":[48111364047066,26999,33799],"LB":[48111364079834,33999,42499]};
 
   var STYLES = [
-    { code: "monet",    label: "Monet",        sub: "Impressionist" },
-    { code: "oil",      label: "Oil Painting", sub: "Museum oil" },
+    { code: "monet",    label: "Monet",        sub: "Impressionist", ex: ["monet_1.jpg", "monet_2.jpg"] },
+    { code: "oil",      label: "Oil Painting", sub: "Museum oil", ex: ["oil_1.jpg", "oil_2.jpg"] },
     { code: "heritage", label: "Heritage",     sub: "Regal heirloom" },
     // soloOnly: Watercolor has its own product page (it carries the memorial text option),
     // so the combined page offers Monet / Oil / Heritage only.
     { code: "watercolor", label: "Watercolor", sub: "Soft & delicate", soloOnly: true,
-      ex: ["watercolor.jpg"] },
+      ex: ["watercolor_1.jpg", "watercolor_2.jpg"] },
     // soloOnly: lives on its own product page only. Its sport picker needs the room a dedicated
     // page gives it, and offering it in the combined grid would silently default people to tennis.
     { code: "sport",      label: "Game Day",    sub: "Impasto oil",  variants: "sports",   soloOnly: true,

@@ -22,6 +22,10 @@ GEMINI_MODEL = "gemini-2.5-flash-image"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 OPENAI_URL = "https://api.openai.com/v1/images/edits"
 OPENAI_MODEL = "gpt-image-1"
+# Every canvas sold is landscape 4:3 (24x18, 32x24, 40x30). Gemini otherwise mirrors the input
+# photo's shape, so a portrait phone snap produced portrait art that got cropped on the canvas
+# and in the room view. Asking for the ratio up front is the fix.
+GEMINI_ASPECT = "4:3"
 HERITAGE_REF = os.path.join(HERE, "assets", "heritage_reference.png")
 
 
@@ -48,10 +52,13 @@ def _gemini(prompt, image_bytes, mime):
         raise GenerationError("GEMINI_API_KEY not set")
     # Normalise first: phones upload HEIC and huge CMYK/alpha files that Gemini rejects outright.
     image_bytes = _prep_image(image_bytes)
-    body = json.dumps({"contents": [{"role": "user", "parts": [
-        {"text": prompt},
-        {"inline_data": {"mime_type": "image/png", "data": base64.b64encode(image_bytes).decode()}},
-    ]}]}).encode()
+    body = json.dumps({
+        "contents": [{"role": "user", "parts": [
+            {"text": prompt},
+            {"inline_data": {"mime_type": "image/png", "data": base64.b64encode(image_bytes).decode()}},
+        ]}],
+        "generationConfig": {"imageConfig": {"aspectRatio": GEMINI_ASPECT}},
+    }).encode()
     req = urllib.request.Request(
         GEMINI_URL, data=body,
         headers={"Content-Type": "application/json", "x-goog-api-key": key})
