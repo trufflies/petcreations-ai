@@ -347,7 +347,10 @@
     "#pc-mini .pc-framed>.pc-fimg{display:block;height:88px;width:auto}" +
     "#pc-mini .pc-framed>.pc-fart{position:absolute;object-fit:cover;object-position:center 22%}" +
     "#pc-mini .pc-canvas>img{display:block;height:88px;width:auto;object-fit:cover;border-radius:5px}" +
-    "#pc-mini .m{min-width:0}" +
+    "#pc-mini .m{flex:1 1 auto;min-width:0}" +
+    "#pc-mini-wall{flex:0 0 auto;margin-left:auto;max-width:104px;border:1px solid #5e1622;"
+      + "background:#fff;color:#5e1622;font-family:inherit;font-size:12px;font-weight:600;"
+      + "line-height:1.25;padding:9px 12px;border-radius:100px;cursor:pointer;white-space:normal}" +
     "#pc-mini b{display:block;font-size:15px;line-height:1.3;color:#2c2c2c}" +
     "#pc-mini span{display:block;font-size:13px;color:#6b6b6b;margin-top:3px}" +
     "@media(min-width:880px){#pc-mini.on{display:none}}" +
@@ -718,7 +721,8 @@
     if (!r) { box.classList.remove("on"); root.classList.remove("pcmini-pad"); box.innerHTML = ""; return; }
     var f = frameByCode(sel.frame), sz = SIZES.filter(function (x) { return x.code === sel.size; })[0];
     box.innerHTML = artIn(f, r.preview + "?t=" + r.bust, "pc-fart") +
-      "<div class='m'><b>" + esc(sz ? sz.label : "") + "</b><span>" + esc(f.label) + "</span></div>";
+      "<div class='m'><b>" + esc(sz ? sz.label : "") + "</b><span>" + esc(f.label) + "</span></div>" +
+      "<button type='button' class='pc-mini-wall' id='pc-mini-wall'>See it on the wall</button>";
     box.classList.add("on");
   }
 
@@ -843,6 +847,15 @@
   $("pc-viewtabs").addEventListener("click", function (e) {
     var b = e.target.closest("[data-view]"); if (!b) return;
     view = b.getAttribute("data-view"); heroPick = null; renderViewTabs(); renderHero();
+  });
+  // The mini's "See it on the wall" button: switch to the room view and scroll up to the big
+  // preview. Delegated because the mini's innerHTML is rebuilt on every render; the element
+  // itself is stable (only its contents change).
+  $("pc-mini").addEventListener("click", function (e) {
+    if (!e.target.closest("#pc-mini-wall")) return;
+    view = "wall"; heroPick = null;
+    renderViewTabs(); renderHero();
+    $("pc-hero").scrollIntoView({ behavior: "smooth", block: "center" });
   });
   $("pc-def-go").addEventListener("click", function () {
     var btn = this, name = $("pc-def-name").value.trim(), quirk = $("pc-def-quirk").value.trim();
