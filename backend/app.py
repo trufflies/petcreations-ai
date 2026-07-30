@@ -96,6 +96,7 @@ def _save(art_bytes, style, email, retries, original=None, orig_ext=".jpg", orig
         orig_url = f"/generated/{oname}"
     JOBS[jid] = {"style": style, "full": full_path, "raw": raw_path, "email": email,
                  "retries": retries, "original_url": orig_url, "text": text}
+    _log_lead(email, jid, style)
     return {"id": jid, "style": style,
             "preview_url": f"/generated/{jid}_preview.png",
             "full_url": f"/generated/{jid}_full.png",
@@ -333,6 +334,91 @@ GALLERY_PAGE = """<!doctype html>
   <div class="grid">__GRID__</div>
   <p class="foot">Every preview a visitor generated &middot; raw counts at <a href="/stats">/stats</a></p>
 </div></body></html>"""
+
+
+LEADS_LOG = os.path.join(GEN_DIR, "leads.jsonl")
+
+
+def _log_lead(email, jid, style):
+    """Append one line per generated preview: which email made it, and when. This is the only
+    place the email<->preview link is persisted — JOBS is in-memory and lost on restart — so the
+    /leads view can group previews by person. Best-effort; a logging failure must never break a
+    render."""
+    email = (email or "").strip().lower()
+    if not email or "@" not in email:
+        return
+    try:
+        import json as _json
+        import time
+        row = {"email": email, "id": jid, "style": style, "ts": time.time()}
+        with open(LEADS_LOG, "a") as f:
+            f.write(_json.dumps(row) + "\n")
+    except Exception:
+        pass
+
+
+@app.get("/leads", response_class=HTMLResponse)
+def leads():
+    """Every lead (email) and the previews they generated, most-recent person first. Unlisted;
+    shows customer emails, so treat the link as private."""
+    import json as _json
+    import datetime
+    by_email = {}
+    if os.path.isfile(LEADS_LOG):
+        for line in open(LEADS_LOG):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                r = _json.loads(line)
+            except Exception:
+                continue
+            # only show previews whose file still exists (retention may have pruned older ones)
+            if not os.path.isfile(os.path.join(GEN_DIR, "%s_preview.png" % r.get("id", ""))):
+                continue
+            g = by_email.setdefault(r["email"], {"rows": [], "last": 0})
+            g["rows"].append(r)
+            g["last"] = max(g["last"], r.get("ts", 0))
+    people = sorted(by_email.items(), key=lambda kv: kv[1]["last"], reverse=True)
+    blocks = []
+    for email, g in people:
+        rows = sorted(g["rows"], key=lambda r: r.get("ts", 0), reverse=True)
+        try:
+            when = (datetime.datetime.utcfromtimestamp(g["last"]) - datetime.timedelta(hours=4)
+                    ).strftime("%b %d &middot; %I:%M %p")
+        except Exception:
+            when = ""
+        thumbs = "".join(
+            '<a href="/generated/%s_preview.png" target="_blank">'
+            '<img loading="lazy" src="/generated/%s_preview.png" title="%s"></a>'
+            % (r["id"], r["id"], r.get("style", "")) for r in rows)
+        blocks.append(
+            '<section><div class="lh"><a class="em" href="mailto:%s">%s</a>'
+            '<span class="meta">%d preview%s &middot; last %s</span></div>'
+            '<div class="row">%s</div></section>'
+            % (email, email, len(rows), "" if len(rows) == 1 else "s", when, thumbs))
+    body = "\n".join(blocks) or "<p>No leads yet.</p>"
+    return (LEADS_PAGE.replace("__PEOPLE__", str(len(people)))
+            .replace("__BODY__", body))
+
+
+LEADS_PAGE = """<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Leads</title>
+<style>
+ body{margin:0;font:15px/1.5 -apple-system,system-ui,sans-serif;background:#faf9f7;color:#2c2c2c}
+ header{padding:20px 24px;border-bottom:1px solid #e6e2da;position:sticky;top:0;background:#fff}
+ h1{margin:0;font-size:18px} .sub{color:#6b6b6b;font-size:13px;margin-top:3px}
+ section{padding:18px 24px;border-bottom:1px solid #eee}
+ .lh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+ .em{font-weight:600;color:#5e1622;text-decoration:none} .em:hover{text-decoration:underline}
+ .meta{color:#6b6b6b;font-size:12.5px}
+ .row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+ .row img{height:120px;width:auto;border-radius:8px;border:1px solid #e6e2da;flex:0 0 auto;background:#fff}
+</style></head><body>
+<header><h1>Leads &middot; __PEOPLE__ people</h1>
+<div class="sub">Each email and the previews they generated, newest first. Private &mdash; shows customer emails.</div></header>
+__BODY__
+</body></html>"""
 
 
 @app.get("/gallery", response_class=HTMLResponse)
