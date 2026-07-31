@@ -240,8 +240,11 @@ def recolor(style, image_bytes, instruction, mime="image/png"):
     """Retry / recolor / fix: apply a follow-up edit instruction to an already-generated image."""
     cfg = STYLES.get(style, {})
     edit = (
-        "Here is an existing pet portrait. Apply this change while keeping everything else identical, "
-        "and keep the pet exactly the same: " + instruction.strip()
+        "Here is an existing pet portrait. Make the change the customer asks for below. You MAY "
+        "adjust the pet's body, pose, outfit, colours, props or background as needed to carry it out "
+        "— but keep the pet's FACE, breed, coat pattern and markings unmistakably the same animal so "
+        "the owner still recognises them. Change only what is asked and leave the rest as it is. "
+        "Customer's request: " + instruction.strip()
     )
     if cfg.get("provider") == "openai":
         # recolors don't need full fidelity — medium quality cuts Heritage retry cost ~4x

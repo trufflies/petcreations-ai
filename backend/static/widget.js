@@ -906,7 +906,14 @@
     var genStyle = sel.style;
     loading();
     var fd = new FormData(); fd.append("id", r.id); fd.append("instruction", ins);
-    post("/retry", fd).then(function (d) { show(d, genStyle); $("pc-instruction").value = ""; }).catch(function (e) { renderHero(); $("pc-err").textContent = e.message; }).then(stop, stop);
+    post("/retry", fd).then(function (d) { show(d, genStyle); $("pc-instruction").value = ""; })
+      .catch(function (e) {
+        renderHero();
+        // Be explicit that it FAILED and the image is unchanged — a bare old image + tiny red text
+        // reads as "nothing happened", so people don't know to try again.
+        $("pc-err").textContent = "Couldn't apply that change — " + e.message + " Your image is unchanged; please try again.";
+        $("pc-err").scrollIntoView({ behavior: "smooth", block: "center" });
+      }).then(stop, stop);
   });
   $("pc-add").addEventListener("click", function () {
     if (!variantsTrusted) {
