@@ -298,6 +298,11 @@ A `/health` check that pings Gemini + a balance alert would catch these earlier 
 - **Live verification:** always cache-bust; compare `/health` commit to `HEAD`; for layout, the
   browser window here won't go below ~599px, and Shopify blocks iframing — so for true mobile
   behavior, test on an actual phone or accept you're verifying mechanism, not pixels.
+- **⚠️ Test the WIDGET'S DISPLAY, not just the API response.** A `curl` to `/generate` or `/retry`
+  returns the correct image even when the widget then files it under the wrong key and never shows
+  it. A whole class of "I did X and nothing happened" bugs live purely in the browser-side render.
+  When a customer reports "nothing changed", drive the real widget in a browser and watch the hero
+  element — don't conclude "works" from a green API response.
 
 ---
 
@@ -335,6 +340,11 @@ A `/health` check that pings Gemini + a balance alert would catch these earlier 
   examples for a new style.
 - **Measure before theorising.** The disk-full and grid-blowout bugs were each found in ~2 minutes
   by inspecting the live DOM / `/health`, after being chased much longer as code bugs.
+- **Results are bucketed by `resKey()` = `style` + `:variant`.** Every `show(d, key)` call must pass
+  `resKey()` (not `sel.style`). A retry once filed the recolored result under `sel.style` only, so on
+  variant styles (Game Day, Definition, Bold Color) the tweak succeeded server-side but the hero —
+  which reads `results[resKey()]` — kept showing the old image. Symptom: "Apply change does nothing"
+  on variant styles only. If you add another `show(...)` call site, file under `resKey()`.
 
 ---
 
