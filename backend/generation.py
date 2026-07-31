@@ -166,49 +166,22 @@ def _openai(prompt, image_bytes, mime, use_reference, size, quality="high", extr
     return base64.b64decode(data["data"][0]["b64_json"])
 
 
-def _auto_lift(image_bytes, target=72.0, floor=0.60):
-    """Brighten a render TO a target mean luminance, not by a fixed amount.
+def _tone_lift(image_bytes, gamma):
+    """Raise midtones without clipping highlights.
 
     gpt-image-1 has a strong dark old-master prior for Heritage and prompt wording barely moves
     it — an explicit "never dark or murky" instruction changed mean luminance by less than the
-    variance between two runs. So the correction is a deterministic tone curve here, not prompt
-    text. But *how* dark the output runs depends on the pet: a golden lands near mean 49, a
-    black-coated dog near 37. A single fixed gamma therefore left dark dogs muddy while it was
-    about right for light ones. This instead measures each render and solves for the gamma that
-    lifts it to `target`, so every portrait comes out consistently lit regardless of coat colour.
-    `floor` caps how hard we push (gamma never below it) so a genuinely black coat stays black
-    and the background keeps its aged-varnish depth instead of hazing out. Never darkens (gamma
-    capped at 1.0). Any failure returns the input untouched — a tone curve must never cost the
-    render.
+    variance between two runs. A tone curve is deterministic, so the correction lives here
+    rather than in the prompt. 0.82 lifts the subject clear of the shadows while keeping the
+    aged-varnish depth; below ~0.75 the background starts to look hazy.
     """
     from io import BytesIO
     try:
-        from PIL import Image, ImageStat
-
-        def _mean(im):
-            return ImageStat.Stat(im.convert("L")).mean[0]
-
-        def _gamma(im, g):
-            lut = [min(255, int(round(255.0 * ((i / 255.0) ** g)))) for i in range(256)]
-            return im.point(lut * 3)
-
+        from PIL import Image
         im = Image.open(BytesIO(image_bytes)).convert("RGB")
-        if _mean(im) >= target:
-            return image_bytes                      # already bright enough, leave it be
-        # Solve on a thumbnail — mean luminance moves monotonically with gamma, so a bisection
-        # converges in a handful of steps and costs microseconds.
-        thumb = im.copy()
-        thumb.thumbnail((160, 160))
-        lo, hi = floor, 1.0
-        for _ in range(18):
-            g = (lo + hi) / 2.0
-            if _mean(_gamma(thumb, g)) < target:
-                hi = g
-            else:
-                lo = g
-        g = max(floor, (lo + hi) / 2.0)
+        lut = [min(255, int(round(255.0 * ((i / 255.0) ** gamma)))) for i in range(256)]
         out = BytesIO()
-        _gamma(im, g).save(out, format="PNG")
+        im.point(lut * 3).save(out, format="PNG")
         return out.getvalue()
     except Exception:
         return image_bytes          # a failed curve must never cost the render
@@ -236,7 +209,7 @@ def generate(style, image_bytes, mime="image/jpeg", variant=None):
         art = _gemini(prompt, image_bytes, mime)
     else:
         art = _openai(prompt, image_bytes, mime, cfg.get("use_reference", False), cfg.get("size"))
-    return _auto_lift(art, cfg["lift_target"], cfg.get("lift_floor", 0.60)) if cfg.get("lift_target") else art
+    return _tone_lift(art, cfg["lift"]) if cfg.get("lift") else art
 
 
 def frame(image_bytes, frame_key, mime="image/png"):
@@ -278,4 +251,4 @@ def recolor(style, image_bytes, instruction, mime="image/png"):
         art = _openai(edit, image_bytes, mime, use_reference=False, size=cfg.get("size"), quality="medium")
     else:
         art = _gemini(edit, image_bytes, mime)
-    return _auto_lift(art, cfg["lift_target"], cfg.get("lift_floor", 0.60)) if cfg.get("lift_target") else art
+    return _tone_lift(art, cfg["lift"]) if cfg.get("lift") else art
