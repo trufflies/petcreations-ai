@@ -903,10 +903,14 @@
   });
   $("pc-retry").addEventListener("click", function () {
     var r = curRes(), ins = $("pc-instruction").value.trim(); if (!ins || !r) return;
-    var genStyle = sel.style;
+    // File the recolored result under the SAME full key doGenerate used — style + variant.
+    // This was sel.style (style only), so a retry on a variant style (Game Day, Definition, Bold
+    // Color) stored the new image under "sport" while the hero read "sport:pickleball" — the change
+    // landed on the server but the display kept showing the old image ("nothing happened").
+    var genKey = resKey();
     loading();
     var fd = new FormData(); fd.append("id", r.id); fd.append("instruction", ins);
-    post("/retry", fd).then(function (d) { show(d, genStyle); $("pc-instruction").value = ""; })
+    post("/retry", fd).then(function (d) { show(d, genKey); $("pc-instruction").value = ""; })
       .catch(function (e) {
         renderHero();
         // Be explicit that it FAILED and the image is unchanged — a bare old image + tiny red text
