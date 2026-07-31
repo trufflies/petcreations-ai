@@ -230,7 +230,7 @@
   function variantsFor(c) { var s = styleCfg(c); return s && s.variants ? VARIANT_SETS[s.variants] : null; }
   // Cache/versions are keyed per style AND variant — tennis and soccer are different portraits.
   function resKey() { return sel.style + (sel.variant ? ":" + sel.variant : ""); }
-  var file = null, timer = null, heroPick = null, view = "art";   // view: "art" | "wall"
+  var file = null, timer = null, heroPick = null, view = "art", leadFired = false;   // view: "art" | "wall"
   // Per-style session cache so switching styles (and back) never re-generates.
   // Each style keeps EVERY render it produced — retries add a version rather than replacing one,
   // so nobody loses a portrait they liked by tweaking it. code -> {list:[{id,preview,full,...}], i}
@@ -824,8 +824,15 @@
       fd.append("text_name", mname);
       fd.append("text_dates", $("pc-mem-dates").value.trim());
     }
-    post("/generate", fd).then(function (d) { show(d, key); })
-      .catch(function (e) { renderHero(); $("pc-err").textContent = e.message; }).then(stop, stop);
+    post("/generate", fd).then(function (d) {
+      show(d, key);
+      // One Lead per session on the first preview — a real high-intent signal (photo + email +
+      // engaged). Gives the ad pixel something to optimize on before purchases accumulate.
+      if (!leadFired && window.fbq) {
+        try { window.fbq("track", "Lead", { content_name: "Pet portrait preview", content_category: style }); } catch (e) {}
+        leadFired = true;
+      }
+    }).catch(function (e) { renderHero(); $("pc-err").textContent = e.message; }).then(stop, stop);
   }
 
   // ---- Events -------------------------------------------------------------------------
