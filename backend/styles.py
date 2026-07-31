@@ -178,7 +178,10 @@ STYLES = {
         "provider": "openai",
         "prompt": _HERITAGE,
         "use_reference": True,
-        "lift": 0.82,        # see _tone_lift — the model runs dark here and prompting will not fix it
+        # see _auto_lift — the model runs dark here and prompting will not fix it; brighten each
+        # render to a consistent target so dark-coated pets don't come out muddier than light ones.
+        "lift_target": 72,
+        "lift_floor": 0.60,
         "size": "1536x1024",
     },
     "watercolor": {
