@@ -165,12 +165,26 @@ STYLES = {
     "oil": {
         "label": "Oil Painting",
         "provider": "gemini",
+        # Lead with the MEDIUM, not the background. The previous prompt spent one clause on brushwork
+        # and three sentences on replacing the setting, so the model obliged literally: it kept the
+        # photograph and darkened the backdrop. Heritage reads as genuinely painted because it insists
+        # on oil-on-canvas first and negates "photo" explicitly — same approach here.
         "prompt": _nano(
-            "Render as a classical fine-art oil painting of the pet with rich visible brushwork and warm, "
-            "focused gallery lighting. IMPORTANT: completely REPLACE the original photo's background — do "
-            "NOT keep the real-world setting (no grass, floor, furniture, sofa, or room). Set the pet "
-            "against a deep, dark, near-black abstract studio backdrop with a subtle soft gradient, like a "
-            "museum portrait."
+            "Paint this pet as a 17th-century DUTCH & FLEMISH OLD MASTER oil-on-canvas portrait in deep "
+            "chiaroscuro (tenebrism). This must read as a REAL OIL PAINTING, not a photograph: the "
+            "photographic surface must be gone entirely. Build the fur from visible directional "
+            "brushstrokes and layered translucent glazes — soft blended half-tones in the shadowed "
+            "areas, thicker opaque highlights where the light catches, a faint canvas weave through "
+            "the thin passages, and the warm mellow cast of aged varnish. "
+            "LIGHT: a single warm light source from the upper left falling across the head and chest, "
+            "falling off rapidly into deep shadow, so most of the canvas is dark and the face is the "
+            "brightest thing in it. "
+            "BACKGROUND: replace the original setting completely — no grass, floor, furniture or room. "
+            "Use an unlit atmospheric ground of deep olive-brown and near-black, subtly modulated, warm "
+            "rather than neutral grey. "
+            "POSE: a dignified three-quarter view, head slightly raised, gaze turned toward the light. "
+            "Absolutely NOT a photograph with a darkened background, NOT a filtered photo, NOT digital "
+            "airbrushing, NOT a 3D render, NOT an illustration. No photographic depth-of-field blur."
         ),
     },
     "heritage": {

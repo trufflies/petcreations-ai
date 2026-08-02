@@ -63,6 +63,7 @@
     // soloOnly: lives on its own product page only. Its sport picker needs the room a dedicated
     // page gives it, and offering it in the combined grid would silently default people to tennis.
     { code: "sport",      label: "Game Day",    sub: "Impasto oil",  variants: "sports",   soloOnly: true,
+      vlabel: "Choose your sport",
       ex: ["sport_tennis.jpg", "sport_soccer.jpg", "sport_basketball.jpg", "sport_pickleball.jpg"] },
     { code: "sitting",    label: "Sitting Pretty", sub: "Painterly oil", soloOnly: true,
       ex: ["sitting_1.jpg", "sitting_2.jpg"] },
@@ -75,6 +76,7 @@
     { code: "fancy",      label: "Fine Dining", sub: "Steak & wine",    soloOnly: true,
       ex: ["fancy_1.jpg", "fancy_2.jpg"] },
     { code: "bright",     label: "Bold Color", sub: "Modern & vivid",  variants: "palettes", soloOnly: true,
+      vlabel: "Choose your palette",
       ex: ["bright_1.jpg", "bright_2.jpg"] }
   ];
   // Mirrors SPORT_SCENES in styles.py — keep the codes in step.
@@ -235,6 +237,9 @@
   // Each style keeps EVERY render it produced — retries add a version rather than replacing one,
   // so nobody loses a portrait they liked by tweaking it. code -> {list:[{id,preview,full,...}], i}
   var results = {};
+  // Set when a new photo is chosen after a preview already exists, so refreshPhase knows to bring
+  // the Create button back. Cleared once that photo has actually been generated from.
+  var photoDirty = false;
   function curSet() { return results[resKey()] || null; }
   function curRes() { var s = curSet(); return s ? s.list[s.i] : null; }
   function addRes(key, res) {
@@ -619,7 +624,9 @@
     if (list.length === 1 && !vs) { box.style.display = "none"; return; }
     box.style.display = "block";
     if (list.length === 1 && vs) {
-      lab.innerHTML = (styleCfg() && styleCfg().vlabel) || "Choose your sport";
+      // Neutral fallback on purpose: this used to read "Choose your sport", so Bold Color —
+      // which has palettes, not sports — silently shipped a sport label over its colour swatches.
+      lab.innerHTML = (styleCfg() && styleCfg().vlabel) || "Choose your option";
       grid.innerHTML = vs.map(function (v) {
         return "<div class='pc-oc" + (sel.variant === v.code ? " sel" : "") + "' data-variant='" + v.code + "'>" +
           (v.img ? "<img class='pc-varimg' src='" + v.img + "' alt='" + v.label + "'>" : "") +
@@ -745,18 +752,22 @@
     var cfg = styleCfg();
     $("pc-memopt").style.display = (cfg && cfg.memorial) ? "block" : "none";
     $("pc-defopt").style.display = (cfg && cfg.definition) ? "block" : "none";
-    // Offer the file only once they've seen art. Before that it's an abstract upsell.
-    $("pc-digital").style.display = (fresh && DIGITAL_ID) ? "flex" : "none";
     var fresh = !!curRes();
+    // Offer the file only once they've seen art. Before that it's an abstract upsell.
+    // `fresh` was read on this line while being declared on the NEXT one — var hoisting made it
+    // undefined here, so the digital upsell never once rendered. Declaration now comes first.
+    $("pc-digital").style.display = (fresh && DIGITAL_ID) ? "flex" : "none";
     // Progressive disclosure: before a preview exists the page asks for a photo and a style and
     // nothing else. Size, frame and the example strip only appear once there's art to apply them
     // to — the fewer decisions there are before someone sees their pet, the further they get.
     $("pc-sizeopt").style.display = fresh ? "block" : "none";
     $("pc-frameopt").style.display = fresh ? "block" : "none";
     $("pc-post").style.display = fresh ? "block" : "none";
-    $("pc-cta").style.display = fresh ? "none" : "block";
+    // Keep the CTA up when they've swapped in a new photo after a preview: hiding it left them
+    // with an updated thumbnail, an unchanged preview and no button — "nothing happens".
+    $("pc-cta").style.display = (fresh && !photoDirty) ? "none" : "block";
     $("pc-story").style.display = fresh ? "none" : "block";
-    $("pc-go").textContent = "Create my portrait";
+    $("pc-go").textContent = photoDirty ? "Create with this photo" : "Create my portrait";
     $("pc-heronote").textContent = fresh
       ? "Preview is watermarked — your final artwork is clean, full-resolution & hand-checked before printing."
       : "Upload your pet’s photo — your live preview appears here in ~60 seconds.";
@@ -793,6 +804,7 @@
     addRes(key || resKey(), { id: d.id, preview: API + d.preview_url, full: API + d.full_url,
                               original: d.original_url ? API + d.original_url : "", bust: Date.now() });
     heroPick = null;
+    photoDirty = false;             // this photo has now produced art; hide the CTA again
     renderFrames(); renderHero();   // renderFrames: swap the unframed swatch to their art
     $("pc-retry").disabled = false; $("pc-instruction").disabled = false;
     refreshPhase();
@@ -895,7 +907,10 @@
   $("pc-file").addEventListener("change", function (e) {
     file = e.target.files[0]; if (!file) return;
     $("pc-dropin").innerHTML = "<img src='" + URL.createObjectURL(file) + "'><div class='pc-tiny'>" + file.name + " &middot; click to change</div>";
-    updateGo();
+    // A swap after a preview exists has to re-offer the Create button, so refreshPhase — not just
+    // updateGo, which only toggles the button's disabled state and can't un-hide its container.
+    if (curRes()) { photoDirty = true; refreshPhase(); $("pc-cta").scrollIntoView({ behavior: "smooth", block: "center" }); }
+    else { updateGo(); }
   });
   $("pc-email").addEventListener("input", updateGo);
   $("pc-artist-check").addEventListener("change", function () { $("pc-artist-notes").style.display = this.checked ? "block" : "none"; });
